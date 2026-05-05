@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { useWindowSize } from '@vueuse/core'
-import { testQuestions } from '@/assets/test_questions/ssa'
+import { onMounted, shallowRef } from 'vue'
+import type { Question } from '@/types/test_questions'
 
 const { height } = useWindowSize()
+const testQuestions = shallowRef<Question[] | null>(null)
+
+onMounted(async () => {
+    const mod = await import('@/assets/test_questions/ssa')
+    testQuestions.value = mod.testQuestions
+})
 </script>
 
 <template>
     <div class="Page" :style="{ height: height + 'px' }">
         <h1 class="Page__h1">SSA Test</h1>
-        <TestQuestions class="Page__testQuestions" :questions="testQuestions" />
+        <TestQuestions
+            v-if="testQuestions"
+            class="Page__testQuestions"
+            :questions="testQuestions"
+        />
+        <div v-else class="Page__loading">Loading questions...</div>
     </div>
 </template>
 
@@ -31,6 +43,16 @@ const { height } = useWindowSize()
     & &__testQuestions {
         width: 100%;
         height: 100%;
+    }
+
+    &__loading {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        font-size: 14px;
+        font-weight: bold;
+        color: #666;
+        place-items: center;
     }
 
     @media screen and (max-width: 540px) {
