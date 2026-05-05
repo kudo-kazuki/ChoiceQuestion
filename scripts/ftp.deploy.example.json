@@ -1,0 +1,9 @@
+{
+    "host": "ftp.example.com",
+    "port": 21,
+    "user": "ftp-user",
+    "password": "ftp-password",
+    "secure": false,
+    "remoteDir": "/public_html/question",
+    "localDir": "dist"
+}

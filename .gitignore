@@ -1,0 +1,50 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.npm-cache
+dist
+dist-ssr
+scripts/ftp.deploy.json
+.env.develop
+.env.local
+.env.localtest
+.env.production
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+./vendor/
+/api/.env.production
+/api/Db/Seeds/SongsSeeder.php
+
+.codex
+
+# AI Agent settings
+.agent/
+.skill/
+
+# Project documentation
+docs/
+.docs/
+**/docs/
+!docs/
+!docs/*.md
+**/.docs/
+
+**/*.psd
+*.PSD
