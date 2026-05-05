@@ -41,19 +41,19 @@ export const storageQuestions: Question[] = [
         text: "Route 53のレイテンシベースルーティングを有効化する",
         isCorrect: false,
         explanation:
-          "レイテンシベースルーティング（Route 53が最もレイテンシの低いリージョンのエンドポイントのIPをDNSで返す機能）はDNS応答の最適化のみを行い、コンテンツ自体をエッジにキャッシュする機能はありません。",
+          "レイテンシベースルーティング（Route 53が最もレイテンシの低いリージョンのエンドポイントのIPをDNSで返す機能）はDNS応答の最適化のみを行い、コンテンツ自体をエッジ（ユーザーに近い配信拠点）にキャッシュする機能はありません。",
       },
       {
         text: "Amazon CloudFrontをS3の前段に配置する",
         isCorrect: true,
         explanation:
-          "CloudFront（AWSのグローバルCDN）はエッジロケーション（世界各地に配置されたキャッシュ拠点）に静的コンテンツをキャッシュし、ユーザーから最寄りのエッジで配信します。S3と組み合わせる静的サイト配信の標準構成です。",
+          "CloudFront（AWSのグローバルCDN）はエッジ（ユーザーに近い配信拠点）ロケーション（世界各地に配置されたキャッシュ拠点）に静的コンテンツをキャッシュし、ユーザーから最寄りのエッジ（ユーザーに近い配信拠点）で配信します。S3と組み合わせる静的サイト配信の標準構成です。",
       },
       {
         text: "S3 Transfer Accelerationを有効化する",
         isCorrect: false,
         explanation:
-          "S3 Transfer Accelerationは遠隔地からCloudFrontのエッジを経由して特定S3バケットへの大容量アップロードを高速化する機能で、ダウンロード（グローバル配信）のための機能ではありません。",
+          "S3 Transfer Accelerationは遠隔地からCloudFrontのエッジ（ユーザーに近い配信拠点）を経由して特定S3バケットへの大容量アップロードを高速化する機能で、ダウンロード（グローバル配信）のための機能ではありません。",
       },
       {
         text: "各リージョンにS3バケットを作成し手動でレプリケーションする",
@@ -73,19 +73,19 @@ export const storageQuestions: Question[] = [
         text: "Amazon EBSボリュームを1つ作成し、複数AZのEC2インスタンスに同時アタッチする",
         isCorrect: false,
         explanation:
-          "EBS（EC2向けのブロックストレージ）は基本的に単一AZ内のリソースであり、複数AZのインスタンスから共有ファイルシステムとして同時利用する用途には適しません。EBS Multi-Attachにも制約があり、一般的な複数AZ共有ファイル用途の第一選択ではありません。",
+          "EBS（EC2向けのブロックストレージ（ディスクのように扱う低レベルストレージ））は基本的に単一AZ内のリソースであり、複数AZのインスタンスから共有ファイルシステムとして同時利用する用途には適しません。EBS Multi-Attachにも制約があり、一般的な複数AZ共有ファイル用途の第一選択ではありません。",
       },
       {
         text: "Amazon EFSのリージョナルファイルシステムを作成し、各AZにマウントターゲットを配置する",
         isCorrect: true,
         explanation:
-          "Amazon EFS（Elastic File System）はNFSベースのフルマネージド共有ファイルシステムです。リージョナルファイルシステムではデータが複数AZに冗長保存され、各AZのマウントターゲット経由で複数のEC2インスタンスから同時にアクセスできます。",
+          "Amazon EFS（Elastic File System）はNFS（Linuxでよく使うファイル共有プロトコル）ベースのフルマネージド共有ファイルシステムです。リージョナルファイルシステムではデータが複数AZに冗長保存され、各AZのマウントターゲット経由で複数のEC2インスタンスから同時にアクセスできます。",
       },
       {
         text: "Amazon S3をNFSファイルシステムとしてEC2に直接マウントする",
         isCorrect: false,
         explanation:
-          "S3はオブジェクトストレージであり、POSIX互換の共有ファイルシステムではありません。アプリケーションが通常のNFSファイル共有を必要とする場合はEFSの方が適切です。",
+          "S3はオブジェクトストレージであり、POSIX互換の共有ファイルシステムではありません。アプリケーションが通常のNFS（Linuxでよく使うファイル共有プロトコル）ファイル共有を必要とする場合はEFSの方が適切です。",
       },
       {
         text: "各EC2インスタンスのローカルインスタンスストアにファイルを保存し、定期的に同期する",
@@ -105,19 +105,19 @@ export const storageQuestions: Question[] = [
         text: "S3 Object Lockをコンプライアンスモードで有効化し、保持期間を設定する",
         isCorrect: true,
         explanation:
-          "S3 Object Lockのコンプライアンスモードでは、保持期間中のオブジェクトバージョンはルートユーザーを含むどのユーザーからも上書き・削除できません。WORM要件や厳格な規制対応に適しています。",
+          "S3 Object Lockのコンプライアンスモードでは、保持期間中のオブジェクトバージョンはルートユーザーを含むどのユーザーからも上書き・削除できません。WORM要件（Write Once Read Many、一度書いたら変更・削除しない要件）や厳格な規制対応に適しています。",
       },
       {
         text: "S3バケットポリシーでDeleteObjectを明示的に拒否する",
         isCorrect: false,
         explanation:
-          "バケットポリシーによる削除拒否は有効な保護策ですが、ポリシーを変更できる管理者がいる場合は厳格なWORM要件を満たしにくいです。保持期間中の不変性にはObject Lockのコンプライアンスモードが適しています。",
+          "バケットポリシーによる削除拒否は有効な保護策ですが、ポリシーを変更できる管理者がいる場合は厳格なWORM要件（Write Once Read Many、一度書いたら変更・削除しない要件）を満たしにくいです。保持期間中の不変性にはObject Lockのコンプライアンスモードが適しています。",
       },
       {
         text: "S3ライフサイクルルールで7年後にGlacier Deep Archiveへ移行する",
         isCorrect: false,
         explanation:
-          "ライフサイクルルールはストレージクラス移行や有効期限管理のための機能であり、保持期間中の削除・上書きを禁止するWORM機能ではありません。",
+          "ライフサイクルルールはストレージクラス移行や有効期限管理のための機能であり、保持期間中の削除・上書きを禁止するWORM（Write Once Read Many、一度書いたら変更・削除しない方式）機能ではありません。",
       },
       {
         text: "S3 Transfer Accelerationを有効化する",
@@ -137,29 +137,29 @@ export const storageQuestions: Question[] = [
         text: "AWS Storage GatewayのAmazon S3 File Gatewayを利用する",
         isCorrect: true,
         explanation:
-          "S3 File Gatewayはオンプレミス環境にNFS/SMBのファイル共有を提供し、書き込まれたファイルをS3オブジェクトとして保存します。ローカルキャッシュにより頻繁に使うデータへ低レイテンシでアクセスできます。",
+          "S3 File Gatewayはオンプレミス環境にNFS/SMB（ファイル共有プロトコル）のファイル共有を提供し、書き込まれたファイルをS3オブジェクトとして保存します。ローカルキャッシュにより頻繁に使うデータへ低レイテンシでアクセスできます。",
       },
       {
         text: "Amazon S3 Transfer Accelerationを有効化する",
         isCorrect: false,
         explanation:
-          "S3 Transfer Accelerationは遠隔地からS3への転送を高速化する機能ですが、NFS/SMBのファイル共有インターフェースやローカルキャッシュは提供しません。",
+          "S3 Transfer Accelerationは遠隔地からS3への転送を高速化する機能ですが、NFS/SMB（ファイル共有プロトコル）のファイル共有インターフェースやローカルキャッシュは提供しません。",
       },
       {
         text: "Amazon EBSボリュームをオンプレミスサーバーにアタッチする",
         isCorrect: false,
         explanation:
-          "EBSはEC2にアタッチするブロックストレージであり、オンプレミスサーバーへ直接アタッチしてNFS共有として使うサービスではありません。",
+          "EBSはEC2にアタッチするブロックストレージ（ディスクのように扱う低レベルストレージ）であり、オンプレミスサーバーへ直接アタッチしてNFS（Linuxでよく使うファイル共有プロトコル）共有として使うサービスではありません。",
       },
       {
         text: "Amazon S3 Glacier Deep Archiveへ直接ファイルを書き込む",
         isCorrect: false,
         explanation:
-          "S3 Glacier Deep Archiveは長期アーカイブ向けの低コストストレージで、頻繁なファイルアクセスやNFS互換の既存アプリケーション連携には適しません。",
+          "S3 Glacier Deep Archiveは長期アーカイブ向けの低コストストレージで、頻繁なファイルアクセスやNFS（Linuxでよく使うファイル共有プロトコル）互換の既存アプリケーション連携には適しません。",
       },
     ],
     explanation:
-      "Storage GatewayはオンプレミスとAWSストレージをつなぐハイブリッド構成で頻出です。ファイルインターフェースでS3を使いたいならS3 File Gateway、ブロックストレージ用途ならVolume Gateway、仮想テープ置き換えならTape Gatewayです。",
+      "Storage GatewayはオンプレミスとAWSストレージをつなぐハイブリッド構成で頻出です。ファイルインターフェースでS3を使いたいならS3 File Gateway、ブロックストレージ（ディスクのように扱う低レベルストレージ）用途ならVolume Gateway、仮想テープ（テープバックアップ装置をAWS上で模したもの）置き換えならTape Gatewayです。",
   },
   {
     question:
@@ -169,7 +169,7 @@ export const storageQuestions: Question[] = [
         text: "S3 Multi-Region Access Pointsを作成し、必要に応じてクロスリージョンレプリケーションを設定する",
         isCorrect: true,
         explanation:
-          "S3 Multi-Region Access Pointsは単一のグローバルエンドポイントを提供し、リクエスト元に近い関連バケットへルーティングします。各リージョンのバケットに同一データを保持するには、S3 Cross-Region Replicationなどでデータを複製します。",
+          "S3 Multi-Region Access Pointsは単一のグローバルエンドポイントを提供し、リクエスト元に近い関連バケットへルーティングします。各リージョンのバケットに同一データを保持するには、S3 Cross-Region Replication（S3のリージョン間自動複製）などでデータを複製します。",
       },
       {
         text: "各リージョンのS3バケットURLをアプリケーションにハードコードする",
@@ -191,7 +191,7 @@ export const storageQuestions: Question[] = [
       },
     ],
     explanation:
-      "S3 Multi-Region Access Pointsは、複数リージョンのS3バケットを単一エンドポイントで扱い、近接性に基づいてリクエストを振り分ける機能です。ただしデータ内容を自動的に一致させる機能ではないため、必要に応じてCRRと組み合わせます。",
+      "S3 Multi-Region Access Pointsは、複数リージョンのS3バケットを単一エンドポイントで扱い、近接性に基づいてリクエストを振り分ける機能です。ただしデータ内容を自動的に一致させる機能ではないため、必要に応じてCRR（Cross-Region Replication、S3のリージョン間自動複製）と組み合わせます。",
   },
 ]
 

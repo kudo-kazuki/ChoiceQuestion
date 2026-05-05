@@ -21,7 +21,7 @@ export const architectureQuestions: Question[] = [
         text: "大型EC2インスタンス1台にEBSのスナップショットを定期取得する",
         isCorrect: false,
         explanation:
-          "EBS（EC2にアタッチするブロックストレージ）のスナップショット（S3に保存される時点バックアップ）は復旧手段であり、スケールアップだけでは単一障害点が残り可用性を直接高めません。",
+          "EBS（EC2にアタッチするブロックストレージ（ディスクのように扱う低レベルストレージ））のスナップショット（S3に保存される時点バックアップ）は復旧手段であり、スケールアップだけでは単一障害点が残り可用性を直接高めません。",
       },
       {
         text: "複数のEC2インスタンスを同一AZに配置してRoute 53で加重ルーティングする",
@@ -111,7 +111,7 @@ export const architectureQuestions: Question[] = [
         text: "Amazon Data Lifecycle Managerのみを利用する",
         isCorrect: false,
         explanation:
-          "Data Lifecycle Managerは主にEBSスナップショットやEBS-backed AMIのライフサイクル管理に使います。RDSやDynamoDBなど複数サービスを横断したバックアップ一元管理にはAWS Backupが適切です。",
+          "Data Lifecycle Managerは主にEBSスナップショット（EBSの時点バックアップ）やEBS-backed AMI（EBSを起動ディスクにするEC2起動イメージ）のライフサイクル管理に使います。RDSやDynamoDBなど複数サービスを横断したバックアップ一元管理にはAWS Backupが適切です。",
       },
       {
         text: "各サービスの手動スナップショットを運用手順書で管理する",
