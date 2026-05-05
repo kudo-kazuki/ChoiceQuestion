@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import type { ScrollbarInstance } from 'element-plus'
 import type { Question } from '@/types/test_questions'
 
 interface Props {
@@ -31,6 +32,8 @@ const currentIndex = ref(0)
 const selections = ref<Record<number, number>>({})
 const pendingSelection = ref<number | null>(null)
 const showResults = ref(false)
+const bodyScrollbarRef = ref<ScrollbarInstance>()
+const resultsScrollbarRef = ref<ScrollbarInstance>()
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 const total = computed(() => questions.value.length)
@@ -99,10 +102,17 @@ function selectOption(i: number) {
     pendingSelection.value = i
 }
 
+async function scrollContentToTop() {
+    await nextTick()
+    bodyScrollbarRef.value?.setScrollTop(0)
+    resultsScrollbarRef.value?.setScrollTop(0)
+}
+
 function submit() {
     if (!canSubmit.value) return
     selections.value[currentIndex.value] = pendingSelection.value as number
     pendingSelection.value = null
+    scrollContentToTop()
 }
 
 function nextQuestion() {
@@ -113,6 +123,7 @@ function nextQuestion() {
         currentIndex.value++
     }
     pendingSelection.value = null
+    scrollContentToTop()
 }
 
 function prevQuestion() {
@@ -123,6 +134,7 @@ function prevQuestion() {
         currentIndex.value--
     }
     pendingSelection.value = null
+    scrollContentToTop()
 }
 
 function retry() {
@@ -173,7 +185,7 @@ function retry() {
             </header>
 
             <section class="TestQuestions__body">
-                <el-scrollbar>
+                <el-scrollbar ref="bodyScrollbarRef">
                     <div class="TestQuestions__bodyInner">
                         <p class="TestQuestions__questionNumber">
                             Question {{ currentIndex + 1 }}
@@ -261,7 +273,7 @@ function retry() {
             class="TestQuestions__results"
             :class="{ 'TestQuestions__results--perfect': isPerfect }"
         >
-            <el-scrollbar>
+            <el-scrollbar ref="resultsScrollbarRef">
                 <div class="TestQuestions__resultsInner">
                     <div v-if="isPerfect" class="TestQuestions__celebration">
                         <p class="TestQuestions__celebrationEmoji">🎉🎊✨</p>
@@ -961,6 +973,10 @@ function retry() {
         &__question {
             margin: 0 0 12px;
             font-size: 15px;
+        }
+
+        &__questionNumber {
+            margin: 0 0 4px;
         }
 
         &__option {
