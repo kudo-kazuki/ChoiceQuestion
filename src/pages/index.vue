@@ -15,6 +15,12 @@ const { width, height, deviceType } = useWindowSizeAndDevice()
                 <li>
                     <router-link to="/ssa">ssa</router-link>
                 </li>
+                <li>
+                    <router-link to="/dns/dns1">dns1</router-link>
+                </li>
+                <li>
+                    <router-link to="/dns/dns2">dns2</router-link>
+                </li>
             </ul>
         </el-scrollbar>
     </section>

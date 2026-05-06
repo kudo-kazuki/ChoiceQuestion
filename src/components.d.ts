@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+    QuestionSetPage: typeof import('./components/QuestionSetPage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TestQuestions: typeof import('./components/TestQuestions.vue')['default']

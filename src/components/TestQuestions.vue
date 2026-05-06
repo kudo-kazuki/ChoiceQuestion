@@ -1,13 +1,30 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import type { ScrollbarInstance } from 'element-plus'
 import type { Question } from '@/types/test_questions'
 
 interface Props {
     questions: Question[]
+    storageKey?: string
 }
 
 const props = defineProps<Props>()
+
+interface SavedQuizState {
+    version: 1
+    questionSignature: string
+    questions: Question[]
+    currentIndex: number
+    selections: Record<number, number>
+    showResults: boolean
+}
+
+const storageVersion = 1
+const storageKey = computed(() =>
+    props.storageKey
+        ? `choice-question:test-questions:${props.storageKey}`
+        : null,
+)
 
 function shuffle<T>(arr: readonly T[]): T[] {
     const result = [...arr]
@@ -25,15 +42,144 @@ function buildShuffled(): Question[] {
     }))
 }
 
+function buildQuestionSignature(questions: Question[]): string {
+    return JSON.stringify(
+        questions.map((q) => ({
+            question: q.question,
+            options: q.options.map((opt) => ({
+                text: opt.text,
+                isCorrect: opt.isCorrect,
+            })),
+        })),
+    )
+}
+
+const questionSignature = buildQuestionSignature(props.questions)
+
+function isQuestionArray(value: unknown): value is Question[] {
+    return (
+        Array.isArray(value) &&
+        value.every((q: unknown) => {
+            if (typeof q !== 'object' || q === null) return false
+            if (!('question' in q) || typeof q.question !== 'string') {
+                return false
+            }
+            if (!('options' in q) || !Array.isArray(q.options)) return false
+
+            return q.options.every((opt: unknown) => {
+                return (
+                    typeof opt === 'object' &&
+                    opt !== null &&
+                    'text' in opt &&
+                    typeof opt.text === 'string' &&
+                    'isCorrect' in opt &&
+                    typeof opt.isCorrect === 'boolean' &&
+                    'explanation' in opt &&
+                    typeof opt.explanation === 'string'
+                )
+            })
+        })
+    )
+}
+
+function isSelectionRecord(value: unknown): value is Record<number, number> {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.entries(value).every(([i, sel]) => {
+            const questionIndex = Number(i)
+            return (
+                Number.isInteger(questionIndex) &&
+                Number.isInteger(sel) &&
+                questionIndex >= 0 &&
+                questionIndex < props.questions.length &&
+                sel >= 0
+            )
+        })
+    )
+}
+
+function isSavedQuizState(value: unknown): value is SavedQuizState {
+    if (typeof value !== 'object' || value === null) return false
+
+    const state = value as Partial<SavedQuizState>
+    const currentIndex = state.currentIndex
+    return (
+        state.version === storageVersion &&
+        state.questionSignature === questionSignature &&
+        isQuestionArray(state.questions) &&
+        state.questions.length === props.questions.length &&
+        typeof currentIndex === 'number' &&
+        Number.isInteger(currentIndex) &&
+        currentIndex >= 0 &&
+        currentIndex < state.questions.length &&
+        isSelectionRecord(state.selections) &&
+        typeof state.showResults === 'boolean' &&
+        Object.entries(state.selections).every(([i, sel]) => {
+            const question = state.questions?.[Number(i)]
+            return question ? sel < question.options.length : false
+        })
+    )
+}
+
+function loadSavedState(): SavedQuizState | null {
+    if (!storageKey.value) return null
+
+    try {
+        const raw = localStorage.getItem(storageKey.value)
+        if (!raw) return null
+
+        const parsed = JSON.parse(raw) as unknown
+        return isSavedQuizState(parsed) ? parsed : null
+    } catch {
+        return null
+    }
+}
+
+function saveState() {
+    if (!storageKey.value) return
+
+    const state: SavedQuizState = {
+        version: storageVersion,
+        questionSignature,
+        questions: questions.value,
+        currentIndex: currentIndex.value,
+        selections: selections.value,
+        showResults: showResults.value,
+    }
+
+    try {
+        localStorage.setItem(storageKey.value, JSON.stringify(state))
+    } catch {
+        // 保存できない環境では、通常の一時的なクイズ状態として動かす。
+    }
+}
+
+function clearSavedState() {
+    if (!storageKey.value) return
+
+    try {
+        localStorage.removeItem(storageKey.value)
+    } catch {
+        // 削除できない環境では、画面上の状態だけ初期化する。
+    }
+}
+
 const optionLabels = ['A', 'B', 'C', 'D', 'E']
 
-const questions = ref<Question[]>(buildShuffled())
-const currentIndex = ref(0)
-const selections = ref<Record<number, number>>({})
+const savedState = loadSavedState()
+const questions = ref<Question[]>(savedState?.questions ?? buildShuffled())
+const currentIndex = ref(savedState?.currentIndex ?? 0)
+const selections = ref<Record<number, number>>(savedState?.selections ?? {})
 const pendingSelection = ref<number | null>(null)
-const showResults = ref(false)
+const showResults = ref(savedState?.showResults ?? false)
 const bodyScrollbarRef = ref<ScrollbarInstance>()
 const resultsScrollbarRef = ref<ScrollbarInstance>()
+
+watch([questions, currentIndex, selections, showResults], saveState, {
+    deep: true,
+})
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 const total = computed(() => questions.value.length)
@@ -137,12 +283,21 @@ function prevQuestion() {
     scrollContentToTop()
 }
 
-function retry() {
+function resetQuiz() {
+    clearSavedState()
     questions.value = buildShuffled()
     selections.value = {}
     pendingSelection.value = null
     currentIndex.value = 0
     showResults.value = false
+}
+
+function confirmReset() {
+    if (!window.confirm('保存済みの回答を削除して、最初からやり直しますか？')) {
+        return
+    }
+
+    resetQuiz()
 }
 </script>
 
@@ -336,7 +491,7 @@ function retry() {
                     <button
                         type="button"
                         class="TestQuestions__retry"
-                        @click="retry"
+                        @click="resetQuiz"
                     >
                         もう一度挑戦する
                     </button>
@@ -345,6 +500,13 @@ function retry() {
         </section>
 
         <footer class="TestQuestions__footer">
+            <button
+                type="button"
+                class="TestQuestions__btn TestQuestions__btn--reset"
+                @click="confirmReset"
+            >
+                最初から
+            </button>
             <button
                 type="button"
                 class="TestQuestions__btn TestQuestions__btn--ghost"
@@ -385,7 +547,7 @@ function retry() {
     width: 100%;
     max-width: 1200px;
     height: 100%;
-    padding: 12px;
+    padding: 12px 12px 0;
     margin: 0 auto;
     overflow: hidden;
 
@@ -917,8 +1079,10 @@ function retry() {
         display: flex;
         flex-shrink: 1;
         gap: 12px;
-        justify-content: space-between;
-        margin-top: auto;
+        align-items: center;
+        margin: auto -12px;
+        padding: 12px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     }
 
     &__btn {
@@ -939,9 +1103,24 @@ function retry() {
             color: #666;
             background-color: #fff;
             border: 1px solid #e5e5e5;
+            margin-left: auto;
 
             &:hover:not(:disabled) {
                 background-color: #f4f4f4;
+            }
+        }
+
+        &--reset {
+            padding: 8px 14px;
+            font-size: 12px;
+            color: #777;
+            background-color: #fff;
+            border: 1px solid #e5e5e5;
+
+            &:hover:not(:disabled) {
+                color: #d64545;
+                background-color: #fff5f5;
+                border-color: #f0b8b8;
             }
         }
 
@@ -1013,6 +1192,11 @@ function retry() {
         &__btn {
             padding: 8px 18px;
             font-size: 14px;
+
+            &--reset {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
         }
 
         &__resultsInner {
