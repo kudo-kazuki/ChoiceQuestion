@@ -28,6 +28,22 @@ const questionSets = [
         tone: 'red',
     },
     {
+        title: 'CloudFront1',
+        subtitle: 'CloudFrontの基本用語と初歩',
+        description: 'CDN、オリジン、キャッシュの基礎',
+        to: '/cloudfront/cloudfront1',
+        level: 'Basic',
+        tone: 'cyan',
+    },
+    {
+        title: 'CloudFront2',
+        subtitle: 'CloudFrontの設計・運用・高難易度',
+        description: 'キャッシュ制御、証明書、トラブルシュート',
+        to: '/cloudfront/cloudfront2',
+        level: 'Advanced',
+        tone: 'indigo',
+    },
+    {
         title: 'DynamoDB1',
         subtitle: 'DynamoDBの基本用語と初歩',
         description: 'テーブル、キー、アイテム、キャパシティの基礎',
@@ -217,6 +233,28 @@ const questionSets = [
             .Page__badge {
                 color: #5538b7;
                 background-color: #f2eeff;
+            }
+        }
+
+        &--cyan {
+            &::before {
+                background-color: #0891b2;
+            }
+
+            .Page__badge {
+                color: #0e7490;
+                background-color: #ecfeff;
+            }
+        }
+
+        &--indigo {
+            &::before {
+                background-color: #4f46e5;
+            }
+
+            .Page__badge {
+                color: #3730a3;
+                background-color: #eef2ff;
             }
         }
 
