@@ -321,4 +321,164 @@ export const testQuestions: Question[] = [
         explanation:
             'Split-view DNSは便利ですが、内部と外部で同じ名前が異なる値を返すためトラブルシュートが難しくなりがちです。問い合わせ元、関連付けVPC、ホストゾーンの重複を確認します。',
     },
+    {
+        question:
+            'Route 53のフェイルオーバールーティングで、プライマリが異常な場合だけセカンダリへ切り替えたいと考えています。最も重要な設定として適切なものはどれですか?',
+        options: [
+            {
+                text: 'プライマリ/セカンダリのレコードを作成し、ヘルスチェックを関連付けてプライマリの正常性を判定する',
+                isCorrect: true,
+                explanation:
+                    'Route 53のフェイルオーバールーティングでは、プライマリとセカンダリのレコードを用意し、ヘルスチェックの結果に応じて応答を切り替えます。プライマリの異常を正しく検知できるヘルスチェック設計が重要です。',
+            },
+            {
+                text: 'TTLを長くすれば、プライマリ障害時に必ず即時セカンダリへ切り替わる',
+                isCorrect: false,
+                explanation:
+                    'TTLが長いと、リゾルバー側に古い応答が長く残る可能性があります。フェイルオーバー設計ではヘルスチェックに加え、TTLの影響も考えます。',
+            },
+            {
+                text: 'MXレコードを作成すれば、Webトラフィックも自動的にフェイルオーバーする',
+                isCorrect: false,
+                explanation:
+                    'MXレコードはメール配送先の指定です。Webトラフィックのフェイルオーバーには対象名のA/AAAA/CNAME/Aliasなどに対するルーティング設定を使います。',
+            },
+            {
+                text: 'フェイルオーバールーティングではヘルスチェックは一切使えない',
+                isCorrect: false,
+                explanation:
+                    'フェイルオーバールーティングでは、ヘルスチェックによる正常性判定が中心的な役割を持ちます。',
+            },
+        ],
+        explanation:
+            'DNSフェイルオーバーは「DNS応答を切り替える」仕組みです。既にキャッシュされた応答やアプリ側の接続維持までは即時に制御できないため、TTLと復旧要件の理解が必要です。',
+    },
+    {
+        question:
+            'example.com の権威DNSを別プロバイダーへ移行しました。移行後、一部TLD側では古いNSが返り続けています。最も適切な確認箇所はどれですか?',
+        options: [
+            {
+                text: 'レジストラに登録されているネームサーバー情報と、親ゾーン側の委任情報',
+                isCorrect: true,
+                explanation:
+                    '権威DNSの移行では、DNSゾーン内のNSレコードだけでなく、レジストラ経由で親ゾーンへ登録される委任情報が重要です。親側が古いNSを返していると、利用者は古い権威DNSへたどる可能性があります。',
+            },
+            {
+                text: 'WebサーバーのHTMLファイル名',
+                isCorrect: false,
+                explanation:
+                    'HTMLファイル名は権威DNSの委任情報とは関係ありません。TLD側で古いNSが返るなら、レジストラ/親ゾーン側の委任を確認します。',
+            },
+            {
+                text: 'MXレコードの優先度だけ',
+                isCorrect: false,
+                explanation:
+                    'MXレコードはメール配送先です。権威DNSの移行ではNS委任情報が重要です。',
+            },
+            {
+                text: 'ブラウザのCookieだけ',
+                isCorrect: false,
+                explanation:
+                    'CookieはWebアプリの状態管理に使われます。TLD側のNS応答とは関係ありません。',
+            },
+        ],
+        explanation:
+            'DNS移行では「ゾーン内NS」と「親ゾーンの委任NS」を混同しないことが重要です。dig +trace のような確認で、どこで古い情報が返るかをたどれます。',
+    },
+    {
+        question:
+            'DNSSEC有効化後、検証リゾルバーではSERVFAILになりますが、DNSSEC検証をしない環境ではAレコードが返ります。最も疑うべき原因はどれですか?',
+        options: [
+            {
+                text: 'DSレコード、DNSKEY、RRSIGなどの不整合によりDNSSEC検証に失敗している',
+                isCorrect: true,
+                explanation:
+                    'DNSSEC検証を行うリゾルバーだけでSERVFAILになる場合、信頼の連鎖や署名検証の不整合が強く疑われます。親ゾーンのDS、子ゾーンのDNSKEY、RRSIGの整合性を確認します。',
+            },
+            {
+                text: 'Aレコードが存在する場合、DNSSECでは必ずSERVFAILになる',
+                isCorrect: false,
+                explanation:
+                    'AレコードとDNSSECは両立できます。問題はレコードの存在ではなく、署名や鍵、信頼の連鎖の整合性です。',
+            },
+            {
+                text: 'TTLが短すぎるとDNSSEC検証は必ず失敗する',
+                isCorrect: false,
+                explanation:
+                    'TTLが短いこと自体でDNSSEC検証が必ず失敗するわけではありません。署名期限や鍵の整合性などを確認します。',
+            },
+            {
+                text: 'MXレコードが未設定だと、Web用AレコードのDNSSEC検証も必ず失敗する',
+                isCorrect: false,
+                explanation:
+                    'MXレコードの有無はWeb用AレコードのDNSSEC検証失敗と直接関係しません。',
+            },
+        ],
+        explanation:
+            'DNSSEC障害は「レコードがあるか」だけでは判断できません。検証するリゾルバーと検証しないリゾルバーで挙動が違う場合、DNSSEC関連レコードの整合性を優先的に確認します。',
+    },
+    {
+        question:
+            'オンプレミスからAWSのPrivate Hosted Zoneを解決し、AWS VPCからオンプレミスの internal.corp も解決したい双方向のハイブリッドDNSを構成します。最も適切な考え方はどれですか?',
+        options: [
+            {
+                text: 'AWS側にInbound/Outbound Resolver Endpointを用途に応じて作成し、オンプレミスDNSとRoute 53 Resolverルールで条件付き転送を構成する',
+                isCorrect: true,
+                explanation:
+                    'オンプレミスからAWSへ入る問い合わせにはInbound Endpoint、AWSからオンプレミスへ出る問い合わせにはOutbound EndpointとResolver ruleを使います。双方向要件では問い合わせの向きを分けて設計します。',
+            },
+            {
+                text: 'NAT Gatewayを1つ作成すれば、DNSの双方向転送は自動的に完成する',
+                isCorrect: false,
+                explanation:
+                    'NAT GatewayはDNSの条件付き転送を自動構成するものではありません。Route 53 Resolver EndpointとDNS転送設定が必要です。',
+            },
+            {
+                text: 'Public Hosted Zoneにすべての内部レコードを公開すれば、常に最も安全である',
+                isCorrect: false,
+                explanation:
+                    '内部名やプライベートIPをPublic Hosted Zoneに公開するのは、情報公開や設計上のリスクがあります。内部向けにはPrivate Hosted ZoneやハイブリッドDNSを検討します。',
+            },
+            {
+                text: 'MXレコードを設定すれば、オンプレミスとAWS間の全DNS問い合わせが転送される',
+                isCorrect: false,
+                explanation:
+                    'MXはメール配送先を指定するレコードです。DNS問い合わせの転送制御にはResolver Endpointや条件付きフォワーダーを使います。',
+            },
+        ],
+        explanation:
+            'ハイブリッドDNSの設計では、ネットワーク到達性、セキュリティグループ、NACL、オンプレミスDNSのフォワード設定、Route 53 Resolver ruleの関連付けVPCを確認します。',
+    },
+    {
+        question:
+            '多数の利用者から「たまにだけ名前解決が失敗する」と報告があります。調査すると権威DNSのNSレコードに複数のネームサーバーがあり、そのうち1台だけが対象ゾーンに正しく応答していません。最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'lame delegationや権威DNS間の不整合が疑われ、問い合わせが問題のNSへ向いたときだけ失敗する可能性がある',
+                isCorrect: true,
+                explanation:
+                    '複数NSのうち一部だけが正しく応答しない場合、リゾルバーがどのNSへ問い合わせるかによって成功したり失敗したりします。lame delegationやゾーン同期不備を疑います。',
+            },
+            {
+                text: '複数のNSがある場合、1台でも正しく応答すれば他のNSは一切使われない',
+                isCorrect: false,
+                explanation:
+                    'リゾルバーは複数の権威DNSサーバーへ問い合わせる可能性があります。1台だけ正常でも、他のNSの不備が断続的な失敗として現れることがあります。',
+            },
+            {
+                text: 'Aレコードが存在するなら、NSの不整合は名前解決に影響しない',
+                isCorrect: false,
+                explanation:
+                    'Aレコードがゾーン内に存在しても、問い合わせ先の権威DNSが正しく応答しなければ名前解決は失敗する可能性があります。',
+            },
+            {
+                text: 'TTLを長くすれば、不正なNSも必ず正しい応答を返すようになる',
+                isCorrect: false,
+                explanation:
+                    'TTLを長くしても、誤設定されたNSが正しい応答を返すようにはなりません。権威DNS側の設定やゾーン同期を修正する必要があります。',
+            },
+        ],
+        explanation:
+            '断続的なDNS障害では「複数NSのうち一部だけ壊れている」ケースがあります。各権威DNSへ直接問い合わせて応答差を確認するのが有効です。',
+    },
 ]

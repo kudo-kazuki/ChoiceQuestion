@@ -1695,4 +1695,1060 @@ export const testQuestions: Question[] = [
         explanation:
             'SPFだけでメール認証が完結するわけではありません。実運用ではDKIMやDMARCと組み合わせて、なりすまし対策を強化します。',
     },
+    {
+        question:
+            'DNSSECの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNS応答が改ざんされていないことを検証できるようにするための仕組み',
+                isCorrect: true,
+                explanation:
+                    'DNSSECはDNS応答に電子署名を付け、受信側が検証できるようにする仕組みです。DNSの名前解決結果の正当性確認に関係します。',
+            },
+            {
+                text: 'DNS問い合わせの通信内容を必ず暗号化する仕組み',
+                isCorrect: false,
+                explanation:
+                    'DNSSECは応答の正当性を検証する仕組みであり、通信経路を暗号化する仕組みではありません。通信暗号化にはDoHやDoTなどがあります。',
+            },
+            {
+                text: 'WebサーバーのHTMLを圧縮して配信する仕組み',
+                isCorrect: false,
+                explanation:
+                    'HTML圧縮や配信最適化ではありません。DNSSECはDNS応答の署名検証に関係します。',
+            },
+            {
+                text: 'メールサーバーの優先度を指定するDNSレコード',
+                isCorrect: false,
+                explanation:
+                    'メールサーバーの優先度を指定するのはMXレコードです。DNSSECはDNS応答の検証に関する仕組みです。',
+            },
+        ],
+        explanation:
+            'DNSSECは「暗号化」ではなく「改ざん検知・正当性検証」と覚えると混乱しにくいです。',
+    },
+    {
+        question:
+            'DSレコードの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNSSECで親ゾーンから子ゾーンへの信頼の連鎖を作るために使われるレコード',
+                isCorrect: true,
+                explanation:
+                    'DS（Delegation Signer）レコードは、DNSSECで親ゾーンに置かれ、子ゾーンの鍵情報と結び付いて信頼の連鎖を作るために使われます。',
+            },
+            {
+                text: 'ドメイン名をIPv4アドレスに対応付けるレコード',
+                isCorrect: false,
+                explanation:
+                    'IPv4アドレスへの対応付けはAレコードです。DSレコードはDNSSECに関係します。',
+            },
+            {
+                text: 'メール配送先のメールサーバーを指定するレコード',
+                isCorrect: false,
+                explanation:
+                    'メール配送先を指定するのはMXレコードです。DSレコードはDNSSECの信頼関係に使います。',
+            },
+            {
+                text: 'DNS応答のキャッシュ時間だけを示す値',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ時間を示すのはTTLです。DSレコードはDNSSECで使われるレコードです。',
+            },
+        ],
+        explanation:
+            'DNSSECのトラブルでは、親側のDSレコードと子側の鍵情報が一致しているかが重要になることがあります。',
+    },
+    {
+        question:
+            'DNSKEYレコードの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNSSECの署名検証に使う公開鍵情報を持つレコード',
+                isCorrect: true,
+                explanation:
+                    'DNSKEYレコードはDNSSECで署名を検証するための公開鍵情報を含むレコードです。',
+            },
+            {
+                text: 'DynamoDBのパーティションキーを保存するDNSレコード',
+                isCorrect: false,
+                explanation:
+                    'DynamoDBのキーとは関係ありません。DNSKEYはDNSSECで使うDNSレコードです。',
+            },
+            {
+                text: 'WebサイトのURLパスを指定するレコード',
+                isCorrect: false,
+                explanation:
+                    'DNSレコードは通常URLパスまでは扱いません。DNSKEYはDNSSECの公開鍵情報に関係します。',
+            },
+            {
+                text: 'メールサーバーの優先度を表す数値',
+                isCorrect: false,
+                explanation:
+                    'メールサーバーの優先度はMXレコードで使われます。DNSKEYはDNSSECの鍵情報です。',
+            },
+        ],
+        explanation:
+            'DNSKEY、DS、RRSIGはDNSSECを理解するときによく出てくる用語です。DNS1ではまず役割の大枠を押さえます。',
+    },
+    {
+        question:
+            'RRSIGレコードの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNSSECでDNSレコードセットに対する電子署名を格納するレコード',
+                isCorrect: true,
+                explanation:
+                    'RRSIGレコードは、DNSSECにおいて対象のDNSレコードセットに対する電子署名を格納します。検証側はこの署名を確認します。',
+            },
+            {
+                text: 'IPv6アドレスを返すためのレコード',
+                isCorrect: false,
+                explanation:
+                    'IPv6アドレスを返すのはAAAAレコードです。RRSIGはDNSSECの署名情報です。',
+            },
+            {
+                text: 'DNSゾーンの権威DNSサーバーを指定するレコード',
+                isCorrect: false,
+                explanation:
+                    '権威DNSサーバーを指定するのはNSレコードです。RRSIGはDNSSECの署名に関係します。',
+            },
+            {
+                text: '所有確認用の任意文字列を置くレコード',
+                isCorrect: false,
+                explanation:
+                    '所有確認用の文字列にはTXTレコードがよく使われます。RRSIGはDNSSECの署名情報です。',
+            },
+        ],
+        explanation:
+            'DNSSECでは、DNSKEYなどの鍵とRRSIGの署名情報を使って、応答が正しいかを検証します。',
+    },
+    {
+        question:
+            'DoHの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'HTTPS上でDNS問い合わせを行う仕組み',
+                isCorrect: true,
+                explanation:
+                    'DoH（DNS over HTTPS）は、HTTPSを使ってDNS問い合わせを送受信する仕組みです。DNS通信の盗聴や改ざん対策として使われます。',
+            },
+            {
+                text: 'DNSSECで使われる電子署名レコード',
+                isCorrect: false,
+                explanation:
+                    'DNSSECの署名情報はRRSIGレコードなどです。DoHはDNS問い合わせをHTTPSで行う仕組みです。',
+            },
+            {
+                text: 'メール送信元を認証するTXTレコード',
+                isCorrect: false,
+                explanation:
+                    'メール送信元認証にはSPF、DKIM、DMARCなどがあります。DoHはDNS問い合わせの通信方式です。',
+            },
+            {
+                text: 'ドメイン名を販売する事業者',
+                isCorrect: false,
+                explanation:
+                    'ドメイン名の登録を扱う事業者はレジストラです。DoHはDNS問い合わせの通信方式です。',
+            },
+        ],
+        explanation:
+            'DoHはDNSSECと混同しやすいですが、DoHは通信経路の保護、DNSSECは応答内容の正当性検証という違いがあります。',
+    },
+    {
+        question:
+            'DoTの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'TLS上でDNS問い合わせを行う仕組み',
+                isCorrect: true,
+                explanation:
+                    'DoT（DNS over TLS）は、TLSで保護された通信路上でDNS問い合わせを行う仕組みです。',
+            },
+            {
+                text: 'DNS応答が存在しないことを示す応答コード',
+                isCorrect: false,
+                explanation:
+                    '名前が存在しないことを示す応答はNXDOMAINです。DoTはDNS問い合わせの通信方式です。',
+            },
+            {
+                text: 'Webサイトの画像を圧縮するDNSレコード',
+                isCorrect: false,
+                explanation:
+                    '画像圧縮用のDNSレコードではありません。DoTはTLS上でDNS問い合わせを行う仕組みです。',
+            },
+            {
+                text: 'メール配送先のメールサーバーを指定するレコード',
+                isCorrect: false,
+                explanation:
+                    'メール配送先を指定するのはMXレコードです。DoTはDNS通信の保護に関係します。',
+            },
+        ],
+        explanation:
+            'DoHとDoTはどちらもDNS問い合わせの通信を暗号化する仕組みですが、使う通信方式や運用上の扱いが異なります。',
+    },
+    {
+        question:
+            'SRVレコードの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '特定サービスの提供先ホスト名やポート番号などを示すDNSレコード',
+                isCorrect: true,
+                explanation:
+                    'SRVレコードは、特定のサービスを提供するサーバー名やポート番号、優先度、重みなどを示すために使われます。',
+            },
+            {
+                text: 'ドメイン名をIPv4アドレスに直接対応付けるレコード',
+                isCorrect: false,
+                explanation:
+                    'IPv4アドレスに直接対応付けるのはAレコードです。SRVレコードはサービスの場所やポートなどを示します。',
+            },
+            {
+                text: 'DNSSECの公開鍵情報を持つレコード',
+                isCorrect: false,
+                explanation:
+                    'DNSSECの公開鍵情報を持つのはDNSKEYレコードです。SRVレコードはサービス発見に関係します。',
+            },
+            {
+                text: 'DNS応答のキャッシュ時間そのもの',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ時間はTTLです。SRVレコードはDNSレコードの種類です。',
+            },
+        ],
+        explanation:
+            'SRVレコードは、サービス名とプロトコルを含む名前で問い合わせる形式が使われます。通常のWebサイト向けAレコードとは用途が異なります。',
+    },
+    {
+        question:
+            'ネガティブキャッシュの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '存在しない名前などの否定的なDNS応答を一定時間キャッシュすること',
+                isCorrect: true,
+                explanation:
+                    'ネガティブキャッシュは、NXDOMAINのような「存在しない」応答を一定時間キャッシュする仕組みです。不要な再問い合わせを減らします。',
+            },
+            {
+                text: 'DNSサーバーが悪意ある応答だけを永久保存すること',
+                isCorrect: false,
+                explanation:
+                    '悪意ある応答を永久保存する仕組みではありません。否定的な応答を一定時間キャッシュする仕組みです。',
+            },
+            {
+                text: 'TTLを必ず負の数にする設定',
+                isCorrect: false,
+                explanation:
+                    'TTLを負の数にする設定ではありません。存在しない名前の応答にもキャッシュ期間が関係します。',
+            },
+            {
+                text: 'メール本文を迷惑メールフォルダへ入れること',
+                isCorrect: false,
+                explanation:
+                    'メールの迷惑メール判定とは別です。ネガティブキャッシュはDNS応答のキャッシュに関する用語です。',
+            },
+        ],
+        explanation:
+            'レコードを作った直後なのにしばらくNXDOMAINが返る場合、ネガティブキャッシュが関係していることがあります。',
+    },
+    {
+        question:
+            'Anycastの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '同じIPアドレスを複数拠点で広告し、ネットワーク的に近い拠点へ到達させる仕組み',
+                isCorrect: true,
+                explanation:
+                    'Anycastは同じIPアドレスを複数の場所から広告し、ルーティング上近い拠点へ通信を届ける仕組みです。DNSサービスの可用性や低レイテンシ化で使われます。',
+            },
+            {
+                text: '1つのDNSレコードに必ず1つのIPアドレスしか書けないという制約',
+                isCorrect: false,
+                explanation:
+                    'AnycastはDNSレコードの記述制約ではありません。ネットワークのルーティングに関係する仕組みです。',
+            },
+            {
+                text: 'メールを全員に一斉送信する機能',
+                isCorrect: false,
+                explanation:
+                    'メール一斉送信ではありません。Anycastはネットワーク経路制御に関係します。',
+            },
+            {
+                text: 'DNSSECの署名鍵を毎日交換する運用',
+                isCorrect: false,
+                explanation:
+                    'DNSSECの鍵交換とは別です。Anycastは同じIPアドレスを複数拠点で使うネットワーク技術です。',
+            },
+        ],
+        explanation:
+            'ルートDNSサーバーや大規模なパブリックDNSサービスでは、Anycastによって世界中から安定して近い拠点へ到達しやすくしています。',
+    },
+    {
+        question:
+            'EDNSの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNSの機能を拡張するための仕組み',
+                isCorrect: true,
+                explanation:
+                    'EDNS（Extension Mechanisms for DNS）は、従来のDNSに追加情報や拡張機能を持たせるための仕組みです。大きな応答サイズなどに関係します。',
+            },
+            {
+                text: 'ドメイン名を販売する会社の総称',
+                isCorrect: false,
+                explanation:
+                    'ドメイン名を登録する事業者はレジストラです。EDNSはDNSプロトコルの拡張に関係します。',
+            },
+            {
+                text: 'メールサーバーの優先度を示すレコード',
+                isCorrect: false,
+                explanation:
+                    'メールサーバーの優先度はMXレコードで使われます。EDNSはDNSの拡張機構です。',
+            },
+            {
+                text: 'WebページのURLパスをDNSに保存するレコード',
+                isCorrect: false,
+                explanation:
+                    'DNSは通常URLパスを保存しません。EDNSはDNSの拡張機構です。',
+            },
+        ],
+        explanation:
+            'DNSSECなどで応答サイズが大きくなる場面では、EDNSやUDPサイズ、TCPフォールバックなどが話題になることがあります。',
+    },
+    {
+        question:
+            'SPFのinclude機構の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '別ドメインで公開されているSPF設定を、自分のSPF評価に含めるための仕組み',
+                isCorrect: true,
+                explanation:
+                    'SPFのincludeは、外部メール配信サービスなどが公開しているSPF設定を、自分のドメインのSPF評価に含めるために使われます。',
+            },
+            {
+                text: 'DNSレコードをすべて暗号化して非公開にする仕組み',
+                isCorrect: false,
+                explanation:
+                    'includeはDNSレコードを暗号化する仕組みではありません。SPF評価時に別ドメインのSPF設定を参照する仕組みです。',
+            },
+            {
+                text: 'AレコードをMXレコードへ自動変換する仕組み',
+                isCorrect: false,
+                explanation:
+                    'includeはレコード種別を変換するものではありません。メール送信元認証でSPF設定を参照するための仕組みです。',
+            },
+            {
+                text: 'DNS問い合わせをHTTPS上で行う仕組み',
+                isCorrect: false,
+                explanation:
+                    'DNS問い合わせをHTTPS上で行う仕組みはDoHです。SPF includeはメール認証のSPF設定に関係します。',
+            },
+        ],
+        explanation:
+            '例えば外部メール配信サービスを使う場合、サービス側から include:_spf.example-service.com のような設定を案内されることがあります。',
+    },
+    {
+        question:
+            'Envelope Fromの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'SMTP配送で使われる送信者アドレスで、バウンスメールの戻り先などに関係するもの',
+                isCorrect: true,
+                explanation:
+                    'Envelope FromはSMTPの配送上使われる送信者アドレスです。Return-Pathとして見えることもあり、SPFの評価対象になるドメインに関係します。',
+            },
+            {
+                text: 'メール本文の一番上に表示される件名',
+                isCorrect: false,
+                explanation:
+                    '件名はSubjectヘッダーです。Envelope FromはSMTP配送上の送信者情報です。',
+            },
+            {
+                text: 'DNSゾーンの権威DNSサーバーを指定する値',
+                isCorrect: false,
+                explanation:
+                    '権威DNSサーバーを指定するのはNSレコードです。Envelope Fromはメール配送に関係します。',
+            },
+            {
+                text: 'WebサイトのHTTPS証明書を発行する認証局',
+                isCorrect: false,
+                explanation:
+                    '証明書を発行するのは認証局です。Envelope Fromはメールの配送上の送信者アドレスです。',
+            },
+        ],
+        explanation:
+            'メール認証では、画面に表示されるFromだけでなく、SMTP配送上のEnvelope Fromも重要です。',
+    },
+    {
+        question:
+            'Header Fromの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'メールクライアント上で送信者として表示されるFromヘッダーのアドレス',
+                isCorrect: true,
+                explanation:
+                    'Header Fromはメールヘッダー内のFromで、受信者がメールソフト上で送信者として見るアドレスです。',
+            },
+            {
+                text: 'DNS応答が存在しないことを示す応答コード',
+                isCorrect: false,
+                explanation:
+                    '存在しない名前を示す応答はNXDOMAINです。Header Fromはメールヘッダーに関する用語です。',
+            },
+            {
+                text: 'DynamoDBのパーティションキーの別名',
+                isCorrect: false,
+                explanation:
+                    'DynamoDBのキーとは関係ありません。Header Fromはメールの送信者表示に関係します。',
+            },
+            {
+                text: 'DNS問い合わせをTLSで暗号化する方式',
+                isCorrect: false,
+                explanation:
+                    'DNS over TLSはDoTです。Header FromはメールヘッダーのFromアドレスです。',
+            },
+        ],
+        explanation:
+            'DMARCでは、Header FromのドメインとSPF/DKIMで認証されたドメインの整合性が重要になります。',
+    },
+    {
+        question:
+            'メールなりすましの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '第三者が別のドメインや人物を装ってメールを送ること',
+                isCorrect: true,
+                explanation:
+                    'メールなりすましは、攻撃者などが正規の送信者やドメインを装ってメールを送る行為です。フィッシングや詐欺メールで使われます。',
+            },
+            {
+                text: 'DNSレコードのTTLを短くする運用',
+                isCorrect: false,
+                explanation:
+                    'TTLを短くすること自体はメールなりすましではありません。メールなりすましは送信者を偽る行為です。',
+            },
+            {
+                text: 'Webページの画像を圧縮すること',
+                isCorrect: false,
+                explanation:
+                    '画像圧縮とは関係ありません。メールなりすましはメール送信者を偽る行為です。',
+            },
+            {
+                text: 'DNSSECで署名済み応答を検証すること',
+                isCorrect: false,
+                explanation:
+                    'DNSSECの検証はDNS応答の正当性確認です。メールなりすましはメール送信者を偽る問題です。',
+            },
+        ],
+        explanation:
+            'メールなりすまし対策として、SPF、DKIM、DMARCなどの送信ドメイン認証が使われます。',
+    },
+    {
+        question:
+            '送信ドメイン認証の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'メールが正当なドメインから送られたかを確認しやすくするための仕組みの総称',
+                isCorrect: true,
+                explanation:
+                    '送信ドメイン認証は、送信元ドメインの正当性を確認するための仕組みです。代表例としてSPF、DKIM、DMARCがあります。',
+            },
+            {
+                text: 'ドメイン名をIPv4アドレスに変換することだけを指す',
+                isCorrect: false,
+                explanation:
+                    'ドメイン名をIPv4アドレスへ変換するのはAレコードによる名前解決です。送信ドメイン認証はメール送信元の確認に関係します。',
+            },
+            {
+                text: 'DNSゾーンを別のネームサーバーへ委任すること',
+                isCorrect: false,
+                explanation:
+                    'DNSの委任とは別の概念です。送信ドメイン認証はメールのなりすまし対策に関係します。',
+            },
+            {
+                text: 'WebサイトのTLS証明書を自動更新すること',
+                isCorrect: false,
+                explanation:
+                    'TLS証明書の自動更新とは別です。送信ドメイン認証はメール認証に関係します。',
+            },
+        ],
+        explanation:
+            '送信ドメイン認証はDNS設定と深く関係します。SPFやDKIM、DMARCのレコードを正しく公開することが重要です。',
+    },
+    {
+        question:
+            'DNS伝播という言い方で説明される現象として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNS変更後、リゾルバーや端末のキャッシュ状態により新しい値が見えるまで時間差が出ること',
+                isCorrect: true,
+                explanation:
+                    'DNS伝播と呼ばれる現象の多くは、各リゾルバーや端末に残るキャッシュの影響です。権威DNSで変更済みでも、利用者によって見える値がしばらく異なることがあります。',
+            },
+            {
+                text: 'DNSレコードが世界中のWebサーバーへHTMLとしてコピーされること',
+                isCorrect: false,
+                explanation:
+                    'DNSレコードがHTMLとしてWebサーバーへコピーされるわけではありません。名前解決結果の見え方に時間差が出る現象です。',
+            },
+            {
+                text: 'Aレコードを作ると自動的にMXレコードも作られること',
+                isCorrect: false,
+                explanation:
+                    'Aレコード作成でMXレコードが自動作成されるわけではありません。DNS伝播とは別の話です。',
+            },
+            {
+                text: 'ドメイン名を購入すると必ず即時に全レコードが消えること',
+                isCorrect: false,
+                explanation:
+                    'ドメイン購入時に全レコードが消えるという意味ではありません。DNS変更の見え方に時間差が出ることを指して使われます。',
+            },
+        ],
+        explanation:
+            '厳密には「世界中へコピーされるのを待つ」というより、キャッシュの期限切れを待つ要素が大きいです。TTLの理解が重要です。',
+    },
+    {
+        question:
+            'キャッシュDNSサーバーの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNS問い合わせ結果を一定時間保存し、次回以降の問い合わせに再利用するDNSサーバー',
+                isCorrect: true,
+                explanation:
+                    'キャッシュDNSサーバーは、取得したDNS応答をTTLに従って保存し、同じ問い合わせに対して再利用します。問い合わせ負荷や応答時間を減らせます。',
+            },
+            {
+                text: 'DNSゾーンの正式な原本だけを必ず管理するサーバー',
+                isCorrect: false,
+                explanation:
+                    'ゾーンの正式な情報を持つのは権威DNSサーバーです。キャッシュDNSサーバーは問い合わせ結果を一時保存します。',
+            },
+            {
+                text: 'メール本文を暗号化して保存するサーバー',
+                isCorrect: false,
+                explanation:
+                    'メール本文の暗号化保存ではありません。DNS応答のキャッシュに関係します。',
+            },
+            {
+                text: 'Webサイトの画像だけを配信するCDN',
+                isCorrect: false,
+                explanation:
+                    'CDNとは別です。キャッシュDNSサーバーはDNS問い合わせ結果をキャッシュします。',
+            },
+        ],
+        explanation:
+            'ISPのDNSやパブリックDNSは、利用者から見るとキャッシュDNSサーバーとして動作します。',
+    },
+    {
+        question:
+            '8.8.8.8 や 1.1.1.1 の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Google Public DNSやCloudflare DNSとして知られるパブリックDNSリゾルバーのIPアドレス',
+                isCorrect: true,
+                explanation:
+                    '8.8.8.8はGoogle Public DNS、1.1.1.1はCloudflare DNSとしてよく知られるパブリックDNSリゾルバーのIPアドレスです。',
+            },
+            {
+                text: 'すべてのWebサイトのIPアドレス',
+                isCorrect: false,
+                explanation:
+                    'すべてのWebサイトがこのIPアドレスを使うわけではありません。これらは有名なパブリックDNSリゾルバーのIPアドレスです。',
+            },
+            {
+                text: 'DNSSECの署名鍵そのもの',
+                isCorrect: false,
+                explanation:
+                    'DNSSECの鍵ではありません。DNS問い合わせ先として使われるパブリックDNSのIPアドレスです。',
+            },
+            {
+                text: 'メール送信元認証のSPFレコード値として必ず設定する文字列',
+                isCorrect: false,
+                explanation:
+                    'SPFに必ず設定する文字列ではありません。DNSリゾルバーとして利用できるIPアドレスです。',
+            },
+        ],
+        explanation:
+            'DNSトラブルシュートでは、普段使っているDNSと 8.8.8.8 や 1.1.1.1 の応答を比較することがあります。',
+    },
+    {
+        question:
+            'DNSのNOERROR/NODATAの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '名前自体は存在するが、問い合わせた種類のレコードは存在しない状態',
+                isCorrect: true,
+                explanation:
+                    'NOERROR/NODATAは、DNS問い合わせ自体は成功し名前も存在するが、AやMXなど問い合わせたレコードタイプのデータがない状態を指します。',
+            },
+            {
+                text: '問い合わせたドメイン名そのものが存在しない状態',
+                isCorrect: false,
+                explanation:
+                    '問い合わせた名前が存在しない場合はNXDOMAINです。NOERROR/NODATAは名前は存在するが指定タイプのデータがない状態です。',
+            },
+            {
+                text: 'DNSサーバーが問い合わせ処理に失敗した状態',
+                isCorrect: false,
+                explanation:
+                    'DNSサーバー側の処理失敗はSERVFAILです。NOERROR/NODATAは処理自体は成功しています。',
+            },
+            {
+                text: 'DNSサーバーが問い合わせを拒否した状態',
+                isCorrect: false,
+                explanation:
+                    '問い合わせ拒否はREFUSEDです。NOERROR/NODATAは拒否ではなく、指定タイプのレコードがない状態です。',
+            },
+        ],
+        explanation:
+            'DNSトラブルでは、NXDOMAIN、SERVFAIL、REFUSED、NOERROR/NODATAを区別すると原因を絞りやすくなります。',
+    },
+    {
+        question:
+            'DNSのREFUSED応答の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNSサーバーがポリシーや設定により問い合わせへの応答を拒否したことを示す応答',
+                isCorrect: true,
+                explanation:
+                    'REFUSEDは、DNSサーバーが問い合わせを処理しない、または応答を拒否することを示します。再帰問い合わせを許可していない相手からの問い合わせなどで見られます。',
+            },
+            {
+                text: '名前は存在するが、指定タイプのレコードだけがない状態',
+                isCorrect: false,
+                explanation:
+                    'それはNOERROR/NODATAです。REFUSEDはDNSサーバーが問い合わせを拒否した状態です。',
+            },
+            {
+                text: '問い合わせた名前が存在しない状態',
+                isCorrect: false,
+                explanation:
+                    '名前が存在しない状態はNXDOMAINです。REFUSEDは問い合わせ拒否を示します。',
+            },
+            {
+                text: 'DNS応答がキャッシュされていることを示す正常応答',
+                isCorrect: false,
+                explanation:
+                    'キャッシュされていることを示す正常応答ではありません。REFUSEDは拒否を示す応答コードです。',
+            },
+        ],
+        explanation:
+            '権威DNSとキャッシュDNSでは許可すべき問い合わせが違います。誰に再帰問い合わせを許可するかの設定ミスでもREFUSEDに遭遇します。',
+    },
+    {
+        question:
+            'DNSのレコードセットの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '同じ名前・同じレコードタイプに属するDNSレコードのまとまり',
+                isCorrect: true,
+                explanation:
+                    'レコードセットは、同じ名前と同じタイプを持つDNSレコードのまとまりです。例えば example.com のAレコードが複数ある場合、それらを1つのAレコードセットとして扱うことがあります。',
+            },
+            {
+                text: 'DNSサーバーのCPUとメモリをまとめたもの',
+                isCorrect: false,
+                explanation:
+                    'サーバーリソースのまとまりではありません。DNSレコードの管理単位に関する用語です。',
+            },
+            {
+                text: 'メール本文を複数まとめて送るための仕組み',
+                isCorrect: false,
+                explanation:
+                    'メール送信の仕組みではありません。DNSレコードのまとまりを指します。',
+            },
+            {
+                text: 'ドメイン名を購入する契約セット',
+                isCorrect: false,
+                explanation:
+                    'ドメイン契約ではありません。DNSの同名・同タイプのレコード群に関する用語です。',
+            },
+        ],
+        explanation:
+            'Route 53などのDNSサービスでは、レコードをレコードセットとして扱う表現が出てきます。複数値Aレコードなどの理解につながります。',
+    },
+    {
+        question:
+            'DNSフォワーダーの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '受け取ったDNS問い合わせを別のDNSサーバーへ転送するDNSサーバーや機能',
+                isCorrect: true,
+                explanation:
+                    'DNSフォワーダーは、自分で再帰的に解決する代わりに、受け取った問い合わせを指定した別のDNSサーバーへ転送します。',
+            },
+            {
+                text: 'メールを別のメールアドレスへ転送するDNSレコード',
+                isCorrect: false,
+                explanation:
+                    'メール転送とは別です。DNSフォワーダーはDNS問い合わせの転送に関係します。',
+            },
+            {
+                text: 'Webページをブラウザへ転送するHTTPヘッダー',
+                isCorrect: false,
+                explanation:
+                    'HTTPリダイレクトとは別の概念です。DNSフォワーダーはDNS問い合わせを別DNSへ送ります。',
+            },
+            {
+                text: 'AレコードをMXレコードへ変換する機能',
+                isCorrect: false,
+                explanation:
+                    'レコードタイプを変換する機能ではありません。問い合わせ先を転送する機能です。',
+            },
+        ],
+        explanation:
+            '社内DNSが外部DNSへ問い合わせを転送する、オンプレミスDNSとクラウドDNSをつなぐ、といった場面で登場します。',
+    },
+    {
+        question:
+            '条件付きフォワーダーの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '特定のドメイン名に対するDNS問い合わせだけを指定したDNSサーバーへ転送する設定',
+                isCorrect: true,
+                explanation:
+                    '条件付きフォワーダーは、example.internal など特定のドメインに一致する問い合わせだけを別のDNSサーバーへ転送する設定です。',
+            },
+            {
+                text: 'DNS問い合わせを必ず全世界のDNSサーバーへ同時送信する設定',
+                isCorrect: false,
+                explanation:
+                    '全世界へ同時送信する設定ではありません。条件に合うドメインだけを指定先へ転送します。',
+            },
+            {
+                text: 'TTLが短いレコードだけを自動削除する設定',
+                isCorrect: false,
+                explanation:
+                    'TTLによる自動削除ではありません。問い合わせ転送先を条件で分ける設定です。',
+            },
+            {
+                text: 'メールの件名に応じてMXレコードを切り替える設定',
+                isCorrect: false,
+                explanation:
+                    'メール件名でMXを切り替える設定ではありません。DNS問い合わせのドメイン名に基づく転送設定です。',
+            },
+        ],
+        explanation:
+            'AWS Route 53 ResolverのルールやオンプレミスDNSとの連携を理解するときにも、条件付きフォワーダーの考え方が役立ちます。',
+    },
+    {
+        question:
+            'オープンリゾルバーの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'インターネット上の誰からでも再帰問い合わせを受け付けてしまうDNSリゾルバー',
+                isCorrect: true,
+                explanation:
+                    'オープンリゾルバーは、制限なく誰からでも再帰問い合わせを受けるDNSリゾルバーです。DNS増幅攻撃などに悪用されるリスクがあります。',
+            },
+            {
+                text: 'DNSレコードを誰でも自由に編集できる管理画面',
+                isCorrect: false,
+                explanation:
+                    '管理画面の編集権限の話ではありません。オープンリゾルバーは再帰問い合わせの受け付け範囲に関する用語です。',
+            },
+            {
+                text: 'すべてのDNS応答を必ず暗号化する安全な仕組み',
+                isCorrect: false,
+                explanation:
+                    'オープンリゾルバーは安全な暗号化方式という意味ではありません。むしろ不適切に公開されていると悪用リスクがあります。',
+            },
+            {
+                text: '権威DNSサーバーだけが持つ正式なゾーンファイル',
+                isCorrect: false,
+                explanation:
+                    'ゾーンファイルではありません。再帰問い合わせを誰に許可するかの問題です。',
+            },
+        ],
+        explanation:
+            'キャッシュDNSサーバーは、基本的に利用者や社内ネットワークなど許可した範囲からの再帰問い合わせだけを受けるようにします。',
+    },
+    {
+        question:
+            'DNSでよく使われる53番ポートの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DNS問い合わせで主に使われるポートで、UDPとTCPの両方が使われる',
+                isCorrect: true,
+                explanation:
+                    'DNSは主にUDP 53番を使いますが、応答サイズが大きい場合やゾーン転送などではTCP 53番も使われます。',
+            },
+            {
+                text: 'HTTPS通信だけに使われるポート',
+                isCorrect: false,
+                explanation:
+                    'HTTPSの標準ポートは443番です。DNSでは53番ポートが使われます。',
+            },
+            {
+                text: 'メール送信のSMTPだけに使われるポート',
+                isCorrect: false,
+                explanation:
+                    'SMTPでは25番、587番などが使われます。53番はDNSで使われるポートです。',
+            },
+            {
+                text: 'DNSではTCPもUDPも使わないため、53番ポートは関係ない',
+                isCorrect: false,
+                explanation:
+                    'DNSではUDP/TCP 53番が使われます。ファイアウォール設定でも重要な基本知識です。',
+            },
+        ],
+        explanation:
+            'DNSトラブルでは、UDP 53番だけでなくTCP 53番も通っているか確認が必要になる場合があります。',
+    },
+    {
+        question:
+            'DNSのTCPフォールバックの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'UDP応答が大きすぎる場合などに、TCPで再問い合わせして完全な応答を取得する動き',
+                isCorrect: true,
+                explanation:
+                    'DNSでは通常UDPがよく使われますが、応答が大きい場合などに切り詰められ、TCPで再問い合わせすることがあります。これをTCPフォールバックと呼ぶことがあります。',
+            },
+            {
+                text: 'DNSサーバーが壊れたらWebサーバーへ自動変換する仕組み',
+                isCorrect: false,
+                explanation:
+                    'Webサーバーへ変換する仕組みではありません。DNS問い合わせの通信方式がUDPからTCPへ切り替わる話です。',
+            },
+            {
+                text: 'メール配送に失敗したらMXレコードを削除する仕組み',
+                isCorrect: false,
+                explanation:
+                    'MXレコード削除とは関係ありません。DNS応答サイズや通信方式に関係します。',
+            },
+            {
+                text: 'TTLが切れたら必ずDNSSECを無効化する仕組み',
+                isCorrect: false,
+                explanation:
+                    'DNSSEC無効化の仕組みではありません。TCPフォールバックはDNS問い合わせの再試行方法に関係します。',
+            },
+        ],
+        explanation:
+            'DNSSECや多数のレコードを含む応答ではサイズが大きくなりやすいため、TCP 53番が塞がっていると名前解決に問題が出ることがあります。',
+    },
+    {
+        question:
+            '新しいWebサーバーへ切り替える前に、DNS変更後の反映時間を短くしたいと考えています。初歩的な事前対応として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '切り替え前から対象レコードのTTLを短めにしておき、既存キャッシュが更新される時間を待つ',
+                isCorrect: true,
+                explanation:
+                    'DNS応答はTTLの間キャッシュされます。切り替え前からTTLを短くしておくと、変更後に古い値が残る時間を短くしやすくなります。',
+            },
+            {
+                text: '切り替え後にTTLを短くすれば、過去にキャッシュされた古い応答も必ず即時消える',
+                isCorrect: false,
+                explanation:
+                    '既に長いTTLでキャッシュされた応答は、その期限まで残る可能性があります。切り替え前の準備が重要です。',
+            },
+            {
+                text: 'Aレコードを削除すれば、全利用者のキャッシュが即時クリアされる',
+                isCorrect: false,
+                explanation:
+                    'レコード削除で全利用者のキャッシュが消えるわけではありません。むしろ一時的な名前解決失敗を招く可能性があります。',
+            },
+            {
+                text: 'NSレコードをメールサーバーへ向ければ、Webの切り替えが早くなる',
+                isCorrect: false,
+                explanation:
+                    'NSレコードは権威DNSサーバーを指定するものです。Webサーバー切り替えの反映時間短縮にはTTL設計が関係します。',
+            },
+        ],
+        explanation:
+            'DNS切り替えの基本運用では、変更当日ではなく事前にTTLを下げておくことがよくあります。',
+    },
+    {
+        question:
+            '外部メール配信サービスを導入したところ、SPF用のTXTレコードを追加するよう案内されました。初歩的な対応として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'サービスの案内に従い、既存SPFとの重複や上書きに注意してTXTレコードを設定する',
+                isCorrect: true,
+                explanation:
+                    'SPFはTXTレコードとして設定します。同じドメインにSPFレコードを複数作ると問題になることがあるため、既存SPFへincludeを追加するなど案内に沿って整理します。',
+            },
+            {
+                text: '既存のMXレコードをすべて削除する',
+                isCorrect: false,
+                explanation:
+                    'SPF設定のためにMXレコードを削除する必要はありません。MXはメール受信先に関係するため、誤削除すると受信に影響します。',
+            },
+            {
+                text: 'WebサイトのAレコードをメール配信サービスのIPへ変更する',
+                isCorrect: false,
+                explanation:
+                    'メール配信サービスのSPF設定とWebサイトのAレコードは別です。Aレコード変更はWebサイトの向き先に影響します。',
+            },
+            {
+                text: 'TTLを1秒にすればSPF設定は不要になる',
+                isCorrect: false,
+                explanation:
+                    'TTLを短くしてもSPFの代わりにはなりません。SPFは送信元として許可するサーバーを示す設定です。',
+            },
+        ],
+        explanation:
+            'メール系のDNS設定では、SPF、DKIM、DMARC、MXを混同しないことが重要です。それぞれ役割が違います。',
+    },
+    {
+        question:
+            '自分のPCだけ新しいWebサイトではなく古いWebサイトへアクセスしてしまいます。初歩的な切り分けとして確認すべきものはどれですか?',
+        options: [
+            {
+                text: 'ブラウザやOSのDNSキャッシュ、hostsファイル、利用中DNSリゾルバーの応答',
+                isCorrect: true,
+                explanation:
+                    '自分の端末だけ挙動が違う場合、端末側のキャッシュ、hostsファイル、利用しているDNSリゾルバーのキャッシュを確認します。',
+            },
+            {
+                text: 'DNSとは無関係なので、必ずHTMLの文字コードだけを確認する',
+                isCorrect: false,
+                explanation:
+                    'HTMLの問題とは限りません。名前解決先が古いIPになっていないか確認するのが初歩的な切り分けです。',
+            },
+            {
+                text: 'MXレコードの優先度だけを変更する',
+                isCorrect: false,
+                explanation:
+                    'MXレコードはメール配送先に関係します。Webサイトのアクセス先切り分けにはA/AAAA/CNAMEやキャッシュを確認します。',
+            },
+            {
+                text: 'ドメインを必ず再購入する',
+                isCorrect: false,
+                explanation:
+                    '自分の端末だけ古いサイトへ行く原因として、ドメイン再購入は通常関係ありません。まずローカルやリゾルバーの名前解決を確認します。',
+            },
+        ],
+        explanation:
+            'DNSトラブルは「全員に起きているのか」「特定端末だけか」「特定ネットワークだけか」で切り分けると効率的です。',
+    },
+    {
+        question:
+            'DNS変更後、権威DNSでは新しいIPアドレスが返っているのに、社内ネットワークでは古いIPアドレスが返ります。初歩的に疑うべきものはどれですか?',
+        options: [
+            {
+                text: '社内のキャッシュDNSサーバーが古い応答をTTLの間保持している',
+                isCorrect: true,
+                explanation:
+                    '権威DNSが新しい値を返していても、社内のキャッシュDNSサーバーが古い応答を保持している場合、社内からは古いIPが返ることがあります。',
+            },
+            {
+                text: '権威DNSが新しい値を返しているなら、社内DNSは必ず同時に新しくなる',
+                isCorrect: false,
+                explanation:
+                    'キャッシュDNSサーバーはTTLに従って応答を保存します。権威DNSの変更と同時に全キャッシュが更新されるわけではありません。',
+            },
+            {
+                text: 'Aレコードは社内ネットワークでは絶対に使えない',
+                isCorrect: false,
+                explanation:
+                    'Aレコードは社内外どちらでも使われます。問題はキャッシュや利用しているDNSサーバーの違いです。',
+            },
+            {
+                text: 'WebサーバーのCPU使用率だけが原因である',
+                isCorrect: false,
+                explanation:
+                    'CPU使用率がWeb表示に影響することはありますが、DNS応答のIPアドレスが古い問題とは直接別です。',
+            },
+        ],
+        explanation:
+            '権威DNS、社内DNS、パブリックDNSなど、問い合わせ先を変えて応答を比べると切り分けやすくなります。',
+    },
+    {
+        question:
+            'www.example.com は正しく表示されるのに、example.com では表示されません。初歩的に確認すべきDNS設定はどれですか?',
+        options: [
+            {
+                text: 'www.example.com と example.com の両方に必要なA/AAAA/CNAMEなどの設定があるか',
+                isCorrect: true,
+                explanation:
+                    'www.example.com と example.com は別の名前です。片方だけDNSレコードが設定されていると、もう片方は解決できないことがあります。',
+            },
+            {
+                text: 'MXレコードの優先度が必ず0か',
+                isCorrect: false,
+                explanation:
+                    'MXレコードはメール配送先です。Web表示の名前解決ではA/AAAA/CNAMEなどを確認します。',
+            },
+            {
+                text: 'DNSSECを無効にすれば、必ず両方表示される',
+                isCorrect: false,
+                explanation:
+                    'DNSSECは応答の検証に関係します。片方の名前だけ未設定なら、必要なDNSレコードを設定する必要があります。',
+            },
+            {
+                text: 'TXTレコードにHTMLを書けば表示される',
+                isCorrect: false,
+                explanation:
+                    'TXTレコードにHTMLを書いてもWebページとして表示されるわけではありません。Webサーバーへ向けるDNS設定が必要です。',
+            },
+        ],
+        explanation:
+            'apexのexample.comと、www.example.comは別名です。両方使いたいなら、それぞれのDNS設定とWebサーバー側の受け入れ設定を確認します。',
+    },
+    {
+        question:
+            'digでDNS確認をするとき、普段使っているDNSではなくGoogle Public DNSへ直接問い合わせたい場合の考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '@8.8.8.8 のように問い合わせ先DNSサーバーを指定して確認する',
+                isCorrect: true,
+                explanation:
+                    'digでは @8.8.8.8 のように問い合わせ先DNSサーバーを指定できます。これにより特定のリゾルバーが何を返すか確認できます。',
+            },
+            {
+                text: 'Aレコードを削除しないとGoogle Public DNSには問い合わせられない',
+                isCorrect: false,
+                explanation:
+                    'DNSレコードを削除する必要はありません。digの問い合わせ先を指定すれば確認できます。',
+            },
+            {
+                text: 'MXレコードの優先度を8.8.8.8に変更する',
+                isCorrect: false,
+                explanation:
+                    'MXの優先度と問い合わせ先DNSサーバー指定は別です。@8.8.8.8はdigで問い合わせ先を指定する考え方です。',
+            },
+            {
+                text: 'hostsファイルに8.8.8.8と書くと、必ずGoogle Public DNSへ問い合わせる',
+                isCorrect: false,
+                explanation:
+                    'hostsファイルは名前とIPのローカル対応付けに使います。DNS問い合わせ先の指定とは別です。',
+            },
+        ],
+        explanation:
+            '問い合わせ先を変えて確認すると、キャッシュ差やリゾルバーごとの応答差を見分けやすくなります。',
+    },
+    {
+        question:
+            '社内用の internal.example.com だけ社内DNSへ問い合わせ、それ以外は通常のインターネットDNSへ問い合わせたい場合、初歩的に近い設定はどれですか?',
+        options: [
+            {
+                text: '条件付きフォワーダー',
+                isCorrect: true,
+                explanation:
+                    '条件付きフォワーダーは、特定ドメインに一致する問い合わせだけを指定したDNSサーバーへ転送します。社内ドメインだけ社内DNSへ向ける用途に合います。',
+            },
+            {
+                text: 'すべてのAレコードを削除する',
+                isCorrect: false,
+                explanation:
+                    'Aレコード削除では問い合わせ先の制御はできません。名前解決失敗を招く可能性があります。',
+            },
+            {
+                text: 'SPF include',
+                isCorrect: false,
+                explanation:
+                    'SPF includeはメール送信元認証で別ドメインのSPF設定を参照する仕組みです。DNS問い合わせの転送先制御ではありません。',
+            },
+            {
+                text: 'CAAレコード',
+                isCorrect: false,
+                explanation:
+                    'CAAレコードは証明書を発行できる認証局の指定に使います。問い合わせ先DNSサーバーの振り分けではありません。',
+            },
+        ],
+        explanation:
+            'オンプレミスとクラウドをつなぐDNS設計では、条件付きフォワーダーやRoute 53 Resolverルールの考え方が重要になります。',
+    },
 ]
