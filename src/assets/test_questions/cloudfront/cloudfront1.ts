@@ -769,4 +769,388 @@ export const testQuestions: Question[] = [
         explanation:
             'ファイルを更新したのに古い内容が表示される場合、TTLが切れるのを待つか、Invalidationで対象パスのキャッシュを無効化します。ワイルドカード `*` を使う場合は、`/images/*` のようにパスの末尾に置きます。',
     },
+    {
+        question:
+            'CloudFrontで扱う「HTTPメソッド」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'GET、HEAD、POSTなど、HTTPリクエストでクライアントが実行したい操作を示す種類',
+                isCorrect: true,
+                explanation:
+                    'HTTPメソッド（HTTPリクエストの操作種別）には、GET、HEAD、OPTIONS、PUT、PATCH、POST、DELETEなどがあります。CloudFrontでは、キャッシュビヘイビア（パスごとの配信・キャッシュ設定）ごとに処理するメソッドを設定します。',
+            },
+            {
+                text: 'CloudFrontのディストリビューションIDを暗号化する方式',
+                isCorrect: false,
+                explanation:
+                    '暗号化方式ではありません。HTTPメソッドは、Webリクエストがどのような操作を意図しているかを示す値です。',
+            },
+            {
+                text: 'S3バケットのリージョンを自動判定するための名前',
+                isCorrect: false,
+                explanation:
+                    'S3バケットのリージョン判定名ではありません。HTTPメソッドはHTTP通信で使われる操作種別です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLを秒単位で指定する項目',
+                isCorrect: false,
+                explanation:
+                    'TTL（キャッシュを保持してよい時間）とは別です。HTTPメソッドはGETやPOSTなどのリクエスト種別です。',
+            },
+        ],
+        explanation:
+            'Webページの取得ではGETがよく使われ、APIではPOSTやPUTなどが使われることがあります。CloudFrontの前段にAPIを置く場合は、必要なHTTPメソッドを許可する必要があります。',
+    },
+    {
+        question:
+            'CloudFrontの「許可HTTPメソッド」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontが受け付け、必要に応じてオリジンへ転送するHTTPメソッドの範囲を決める設定',
+                isCorrect: true,
+                explanation:
+                    '許可HTTPメソッド（CloudFrontが処理・転送するメソッドの設定）では、GET/HEAD、GET/HEAD/OPTIONS、またはGET/HEAD/OPTIONS/PUT/PATCH/POST/DELETEの組み合わせを選びます。これはCloudFrontが受け付けてオリジンへ転送できるメソッドの範囲であり、キャッシュ対象HTTPメソッドとは別です。',
+            },
+            {
+                text: 'CloudFrontが必ずキャッシュするHTTPメソッドを7種類すべてに広げる設定',
+                isCorrect: false,
+                explanation:
+                    '許可HTTPメソッドは、CloudFrontが受け付けてオリジンへ転送できるメソッドの範囲です。キャッシュ対象HTTPメソッドとは別で、すべてのメソッドがキャッシュ対象になるわけではありません。',
+            },
+            {
+                text: 'オリジンのOSユーザーに付与するLinux権限',
+                isCorrect: false,
+                explanation:
+                    'OSユーザー権限ではありません。CloudFrontの配信設定として、どのHTTPメソッドを扱うかを指定します。',
+            },
+            {
+                text: 'ビューワーのブラウザ種類を許可リスト化する設定',
+                isCorrect: false,
+                explanation:
+                    'ブラウザ種類の許可リストではありません。許可HTTPメソッドはGETやPOSTなどのリクエスト操作種別を扱います。',
+            },
+        ],
+        explanation:
+            '許可していないメソッドでアクセスすると、CloudFrontはInvalid methodとして403を返すことがあります。PUTやDELETEなどを許可する場合は、オリジン側で不要な更新・削除ができないようにアクセス制御も必要です。',
+    },
+    {
+        question:
+            'CloudFrontの「キャッシュ対象HTTPメソッド」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontがレスポンスをキャッシュする対象のHTTPメソッドを決める設定で、GET/HEADまたはGET/HEAD/OPTIONSを選べる',
+                isCorrect: true,
+                explanation:
+                    'キャッシュ対象HTTPメソッド（レスポンスをキャッシュするメソッドの設定）は、GETとHEAD、またはGET、HEAD、OPTIONSから選びます。CloudFrontはPOST、PUT、PATCH、DELETEのレスポンスを通常のキャッシュ対象にはしません。',
+            },
+            {
+                text: '許可HTTPメソッドで選んだすべてのメソッドを必ずキャッシュする設定',
+                isCorrect: false,
+                explanation:
+                    '許可HTTPメソッドとキャッシュ対象HTTPメソッドは別です。例えばPOSTを許可してオリジンへ転送できても、POSTレスポンスがCloudFrontの通常キャッシュ対象になるわけではありません。',
+            },
+            {
+                text: 'CloudFrontがオリジンへ送るHTTPヘッダーをすべて削除する設定',
+                isCorrect: false,
+                explanation:
+                    'HTTPヘッダー（リクエストやレスポンスに付く追加情報）の転送制御ではありません。どのメソッドのレスポンスをキャッシュするかを決めます。',
+            },
+            {
+                text: 'CloudFrontのログに記録するメソッド名を非表示にする設定',
+                isCorrect: false,
+                explanation:
+                    'ログ表示の設定ではありません。キャッシュ対象HTTPメソッドはキャッシュ動作に関する設定です。',
+            },
+        ],
+        explanation:
+            'CORS（別オリジンからのブラウザアクセス制御）のプリフライトで使うOPTIONSをキャッシュしたい場合は、GET/HEAD/OPTIONSを選びます。あわせて、OriginやAccess-Control-Request-Methodなど、CORSの判定に必要なヘッダーを適切に扱う必要があります。',
+    },
+    {
+        question:
+            'CloudFrontにおける「クエリ文字列」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'URLの `?` 以降に付くパラメータで、キャッシュキーやオリジンへの転送対象に含めるかを設定できる値',
+                isCorrect: true,
+                explanation:
+                    'クエリ文字列（URLの `?a=1` のような追加パラメータ）は、CloudFrontでキャッシュキー（キャッシュを区別する識別子）に含めたり、オリジンリクエスト（CloudFrontからオリジンへのリクエスト）へ転送したりできます。',
+            },
+            {
+                text: 'CloudFrontのディストリビューションを削除するための確認文字列',
+                isCorrect: false,
+                explanation:
+                    '削除確認文字列ではありません。クエリ文字列はURLに付くパラメータです。',
+            },
+            {
+                text: 'S3バケットの中に作られる隠しフォルダ',
+                isCorrect: false,
+                explanation:
+                    'S3のフォルダではありません。クエリ文字列はHTTPリクエストURLの一部です。',
+            },
+            {
+                text: 'HTTPメソッドをGETからPOSTへ自動変換する設定',
+                isCorrect: false,
+                explanation:
+                    'HTTPメソッド変換の設定ではありません。クエリ文字列はリクエストに付く追加パラメータです。',
+            },
+        ],
+        explanation:
+            '例えば `/search?q=cloudfront` の `q=cloudfront` がクエリ文字列です。内容がクエリ文字列で変わるページでは、必要なクエリ文字列をキャッシュキーに含めないと誤った内容を返す可能性があります。',
+    },
+    {
+        question:
+            'CloudFrontにおける「Cookie」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ブラウザなどがリクエストに付ける状態管理用データで、必要に応じてキャッシュキーやオリジンへの転送対象にできる値',
+                isCorrect: true,
+                explanation:
+                    'Cookie（ブラウザなどが保持して送信する状態管理用データ）は、ログイン状態、表示言語、ABテストなどに使われます。CloudFrontでは、どのCookieをキャッシュキーに含めるか、またはオリジンへ転送するかを設定できます。',
+            },
+            {
+                text: 'CloudFrontのエッジロケーションを増やすための申請データ',
+                isCorrect: false,
+                explanation:
+                    'エッジロケーション（世界各地にある配信用の拠点）を増やす申請データではありません。CookieはHTTPリクエストに含まれる状態管理用データです。',
+            },
+            {
+                text: 'CloudFrontがキャッシュを完全に無効化するための専用コマンド',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ無効化の操作はInvalidation（無効化）です。Cookieはリクエストに付くデータです。',
+            },
+            {
+                text: 'S3オブジェクトを暗号化するための鍵',
+                isCorrect: false,
+                explanation:
+                    '暗号鍵ではありません。CookieはHTTP通信でクライアントとサーバーの間で使われる状態管理用データです。',
+            },
+        ],
+        explanation:
+            'Cookieをキャッシュキーに含めない設定では、Cookieだけが違うリクエストは同じキャッシュとして扱われることがあります。ユーザーごとに内容が変わるCookieは慎重に扱います。',
+    },
+    {
+        question:
+            'CloudFrontにおける「HTTPヘッダー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'HTTPリクエストやレスポンスに付く追加情報で、必要に応じてキャッシュキーやオリジンへの転送対象にできる値',
+                isCorrect: true,
+                explanation:
+                    'HTTPヘッダー（リクエストやレスポンスに付く追加情報）には、`Accept-Encoding`、`Origin`、`Authorization`、`User-Agent` などがあります。CloudFrontでは一部のヘッダーをキャッシュキーに含めたり、オリジンへ転送したりできます。',
+            },
+            {
+                text: 'Webページの一番上に表示される見出し画像だけを指す用語',
+                isCorrect: false,
+                explanation:
+                    '画面上の見出し画像ではありません。HTTPヘッダーはHTTP通信のメタデータです。',
+            },
+            {
+                text: 'CloudFrontの料金明細の先頭行',
+                isCorrect: false,
+                explanation:
+                    '料金明細の行ではありません。HTTPヘッダーはWeb通信のリクエストやレスポンスに含まれる情報です。',
+            },
+            {
+                text: 'S3バケットのオブジェクト名を必ず変更する設定',
+                isCorrect: false,
+                explanation:
+                    'オブジェクト名を変更する設定ではありません。ヘッダーはリクエストやレスポンスの追加情報です。',
+            },
+        ],
+        explanation:
+            'ヘッダーをキャッシュキーに含めると、ヘッダー値ごとに別キャッシュになります。Authorization（認証情報を送るためのヘッダー）のような認証に関係するヘッダーを扱う場合は、ユーザーごとのレスポンスを誤って共有キャッシュしないよう注意が必要です。',
+    },
+    {
+        question:
+            'CloudFrontにおける「圧縮配信」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ビューワーが対応している場合に、GzipやBrotliなどでコンテンツサイズを小さくして配信する仕組み',
+                isCorrect: true,
+                explanation:
+                    '圧縮配信（ファイルサイズを小さくして送る仕組み）では、ビューワーが `Accept-Encoding` ヘッダーでGzipやBrotliに対応していることを示した場合、CloudFrontが圧縮済みオブジェクトを返したり、条件を満たすオブジェクトを圧縮したりできます。',
+            },
+            {
+                text: 'CloudFrontが画像の意味を解析して自動で別画像に差し替える機能',
+                isCorrect: false,
+                explanation:
+                    '画像差し替え機能ではありません。圧縮配信は、同じ内容をより小さいデータ量で送るための仕組みです。',
+            },
+            {
+                text: 'オリジンのディスク容量を必ず削減するバックアップ機能',
+                isCorrect: false,
+                explanation:
+                    'オリジンの保存容量を削減するバックアップ機能ではありません。CloudFrontからビューワーへの配信データ量を減らすことに関係します。',
+            },
+            {
+                text: 'HTTPメソッドを自動的にGETだけへ変換する機能',
+                isCorrect: false,
+                explanation:
+                    'HTTPメソッド変換ではありません。圧縮配信はレスポンス本文のサイズを小さくする仕組みです。',
+            },
+        ],
+        explanation:
+            'CloudFrontが自動圧縮するには、ビューワーがAccept-Encodingでgzipまたはbrに対応していることに加え、対象Content-Type（レスポンス本文の種類を示すヘッダー）やサイズなどの条件を満たす必要があります。圧縮を有効にすると、`Accept-Encoding` はキャッシュキーやオリジンリクエストで特別に扱われます。',
+    },
+    {
+        question:
+            'CloudFrontの「キャッシュポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'キャッシュキーに含めるクエリ文字列、Cookie、HTTPヘッダーや、TTLなどをまとめて管理する設定',
+                isCorrect: true,
+                explanation:
+                    'キャッシュポリシー（キャッシュキーやTTLを管理する設定）では、キャッシュキーに含めるクエリ文字列、Cookie、HTTPヘッダー、最小TTL、デフォルトTTL、最大TTL、圧縮サポートなどを指定します。',
+            },
+            {
+                text: 'CloudFrontからビューワーへ返すHTTPレスポンスヘッダーだけを追加・削除する設定',
+                isCorrect: false,
+                explanation:
+                    'レスポンスヘッダーの追加・削除はレスポンスヘッダーポリシーの役割です。キャッシュポリシーはキャッシュキーやTTLを扱います。',
+            },
+            {
+                text: 'CloudFrontのオリジンを自動的に作成する設定',
+                isCorrect: false,
+                explanation:
+                    'オリジン作成機能ではありません。キャッシュポリシーは既存のキャッシュビヘイビアに付けて、キャッシュ動作を制御する設定です。',
+            },
+            {
+                text: 'S3バケットのパブリックアクセスブロックを解除する設定',
+                isCorrect: false,
+                explanation:
+                    'S3の公開設定ではありません。CloudFrontのキャッシュ判定と保持時間に関する設定です。',
+            },
+        ],
+        explanation:
+            'キャッシュポリシーでキャッシュキーに含めたクエリ文字列、Cookie、HTTPヘッダーは、CloudFrontからオリジンへのリクエストにも自動的に含まれます。キャッシュに関係しない追加情報をオリジンへ送りたい場合は、オリジンリクエストポリシーを使います。',
+    },
+    {
+        question:
+            'CloudFrontの「オリジンリクエストポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'キャッシュキーには含めず、CloudFrontからオリジンへ転送するクエリ文字列、Cookie、HTTPヘッダーを決める設定',
+                isCorrect: true,
+                explanation:
+                    'オリジンリクエストポリシー（オリジンへ渡す情報を決める設定）は、CloudFrontがオリジンへ送る追加のクエリ文字列、Cookie、HTTPヘッダーを制御します。ここで指定した値はオリジンへ送られますが、キャッシュキーには含まれません。',
+            },
+            {
+                text: 'CloudFrontがビューワーへ返すレスポンスヘッダーだけを追加する設定',
+                isCorrect: false,
+                explanation:
+                    'ビューワーへ返すレスポンスヘッダーの追加・削除はレスポンスヘッダーポリシーの役割です。オリジンリクエストポリシーはオリジンへ送るリクエストを制御します。',
+            },
+            {
+                text: 'CloudFrontのキャッシュをすべて無効化する操作',
+                isCorrect: false,
+                explanation:
+                    'キャッシュを無効化する操作はInvalidationです。オリジンリクエストポリシーはオリジンへ転送する値を決める設定です。',
+            },
+            {
+                text: 'CloudFrontのディストリビューションを別リージョンへ移動する設定',
+                isCorrect: false,
+                explanation:
+                    'リージョン移動の設定ではありません。CloudFrontはグローバルサービスであり、オリジンリクエストポリシーはリクエストに含める値を扱います。',
+            },
+        ],
+        explanation:
+            'キャッシュポリシーと一緒に使うと、キャッシュキーに入れる値と、オリジンへ送るだけの値を分けられます。これにより、キャッシュヒット率を下げすぎずにオリジンへ必要情報を渡せます。',
+    },
+    {
+        question:
+            'CloudFrontの「レスポンスヘッダーポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontがビューワーへ返すレスポンスに、HTTPヘッダーを追加・削除するための設定',
+                isCorrect: true,
+                explanation:
+                    'レスポンスヘッダーポリシー（レスポンスに付けるHTTPヘッダーを管理する設定）では、CORSヘッダー（別オリジンアクセス制御用ヘッダー）、セキュリティヘッダー、カスタムヘッダーの追加や、不要なヘッダーの削除を設定できます。',
+            },
+            {
+                text: 'CloudFrontがオリジンへ送るCookieだけをキャッシュキーに含める設定',
+                isCorrect: false,
+                explanation:
+                    'Cookieをキャッシュキーに含める設定はキャッシュポリシーの役割です。レスポンスヘッダーポリシーはビューワーへ返すレスポンスヘッダーを扱います。',
+            },
+            {
+                text: 'CloudFrontの許可HTTPメソッドを7種類に固定する設定',
+                isCorrect: false,
+                explanation:
+                    '許可HTTPメソッドの設定ではありません。レスポンスヘッダーポリシーはHTTPレスポンスのヘッダーを制御します。',
+            },
+            {
+                text: 'CloudFrontのオリジンフェイルオーバー条件を設定する項目',
+                isCorrect: false,
+                explanation:
+                    'オリジンフェイルオーバー条件ではありません。レスポンスヘッダーポリシーは、CloudFrontが返すレスポンスに含めるヘッダーを管理します。',
+            },
+        ],
+        explanation:
+            '例えばセキュリティヘッダーを全ページに付けたい場合、アプリケーション側を変更せずにCloudFrontのレスポンスヘッダーポリシーで付与できる場合があります。',
+    },
+    {
+        question:
+            'CloudFrontの「マネージドポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'AWSが用意している定番用途向けのキャッシュポリシー、オリジンリクエストポリシー、レスポンスヘッダーポリシー',
+                isCorrect: true,
+                explanation:
+                    'マネージドポリシー（AWSが管理する定番設定）は、CloudFrontでよく使う用途向けにAWSが用意したポリシーです。例えば、キャッシュ最適化、キャッシュ無効化、CORS（別オリジンからのブラウザアクセス制御）、セキュリティヘッダー向けの管理ポリシーがあります。',
+            },
+            {
+                text: '利用者が作成し、自由に名前や設定を変更できるポリシーだけを指す用語',
+                isCorrect: false,
+                explanation:
+                    '利用者が作成するものはカスタムポリシーです。マネージドポリシーはAWSが用意・管理しているポリシーです。',
+            },
+            {
+                text: 'CloudFrontディストリビューションを自動的に削除するポリシー',
+                isCorrect: false,
+                explanation:
+                    '削除ポリシーではありません。マネージドポリシーはキャッシュ、オリジンリクエスト、レスポンスヘッダーなどの設定テンプレートとして使えます。',
+            },
+            {
+                text: 'S3バケットポリシーをCloudFrontが自動生成する機能',
+                isCorrect: false,
+                explanation:
+                    'S3バケットポリシー自動生成機能ではありません。CloudFrontの各種ポリシー設定として、AWSが用意したものを指します。',
+            },
+        ],
+        explanation:
+            'まずはマネージドポリシーで用途に合うものがないか確認し、合わない場合にカスタムポリシーを作ると設定ミスを減らしやすくなります。',
+    },
+    {
+        question:
+            'CloudFrontの「カスタムポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '用途に合わせて利用者が作成する、キャッシュやオリジンリクエストやレスポンスヘッダーの独自設定',
+                isCorrect: true,
+                explanation:
+                    'カスタムポリシー（利用者が作る用途別設定）は、マネージドポリシーでは合わない場合に作成します。種類に応じて、キャッシュキー、TTL、オリジンへ転送する値、ビューワーへ返すレスポンスヘッダーなどを用途に合わせて指定できます。',
+            },
+            {
+                text: 'AWSが内容を固定しており、利用者が設定を一切選べないポリシー',
+                isCorrect: false,
+                explanation:
+                    '内容がAWS側で用意されているものはマネージドポリシーです。カスタムポリシーは利用者が要件に合わせて作成します。',
+            },
+            {
+                text: 'CloudFrontのエッジロケーションを物理的に追加するための申請',
+                isCorrect: false,
+                explanation:
+                    'エッジロケーション追加申請ではありません。カスタムポリシーはCloudFrontの配信動作を細かく調整する設定です。',
+            },
+            {
+                text: 'CloudFrontのアクセスログを自動的に翻訳する機能',
+                isCorrect: false,
+                explanation:
+                    'ログ翻訳機能ではありません。カスタムポリシーはキャッシュやリクエスト、レスポンスヘッダーの扱いを自分で定義する設定です。',
+            },
+        ],
+        explanation:
+            'カスタムポリシーは便利ですが、不要なヘッダーやCookieを含めすぎるとキャッシュが細かく分かれてヒット率が下がることがあります。必要な値だけを選ぶのが基本です。',
+    },
 ]
