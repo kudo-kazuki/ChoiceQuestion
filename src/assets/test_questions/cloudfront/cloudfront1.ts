@@ -1473,4 +1473,388 @@ export const testQuestions: Question[] = [
         explanation:
             'S3静的ファイル配信では、S3をパブリック公開するよりも、パブリックアクセスブロックを有効にしたままCloudFront OAC経由にする構成がよく使われます。',
     },
+    {
+        question:
+            'CloudFrontの「署名付きURL」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '期限などの条件を含む署名をURLに付け、特定ファイルへのアクセスを制限する仕組み',
+                isCorrect: true,
+                explanation:
+                    '署名付きURL（条件付きで特定URLへのアクセスを許可する仕組み）は、個別ファイルへのアクセス制限に向いています。CloudFrontはURLに含まれる署名を公開鍵で検証し、有効期限などの条件に合う場合だけコンテンツを返します。カスタムポリシーを使う場合はIPアドレス制限なども指定できます。',
+            },
+            {
+                text: 'CloudFrontの標準ドメイン名を自動で独自ドメインへ変更する機能',
+                isCorrect: false,
+                explanation:
+                    '独自ドメインの設定ではありません。署名付きURLは、制限付きコンテンツへアクセスできる利用者や時間を制御するために使います。',
+            },
+            {
+                text: 'CloudFrontのすべてのキャッシュを即時削除する操作',
+                isCorrect: false,
+                explanation:
+                    'キャッシュを削除・更新対象にする操作はInvalidation（無効化）です。署名付きURLはアクセス制御の仕組みです。',
+            },
+            {
+                text: 'S3バケットを自動的にパブリック公開する設定',
+                isCorrect: false,
+                explanation:
+                    'S3を公開する設定ではありません。むしろOAC（Origin Access Control）などと組み合わせ、CloudFront経由で制限付き配信する用途に使われます。',
+            },
+        ],
+        explanation:
+            'ソフトウェアの一時ダウンロードURLなど、1つのファイルへのアクセスを短時間だけ許可したい場合に使いやすい方式です。',
+    },
+    {
+        question:
+            'CloudFrontの「署名付きCookie」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Cookieに署名情報を持たせ、複数の制限付きファイルへまとめてアクセスを許可する仕組み',
+                isCorrect: true,
+                explanation:
+                    '署名付きCookie（複数ファイルなどへのアクセスをCookieでまとめて許可する仕組み）は、会員向けページや動画配信の複数ファイルなど、URLを変えずに範囲単位でアクセス制限したい場合に向いています。',
+            },
+            {
+                text: 'CloudFrontがビューワーのブラウザ設定を自動で変更する仕組み',
+                isCorrect: false,
+                explanation:
+                    'ブラウザ設定変更の仕組みではありません。署名付きCookieは、CloudFrontがCookie内の署名やポリシーを検証してアクセス可否を判断する仕組みです。',
+            },
+            {
+                text: 'CloudFrontのアクセスログをCookie形式に変換する機能',
+                isCorrect: false,
+                explanation:
+                    'ログ変換機能ではありません。署名付きCookieは制限付きコンテンツのアクセス制御に使います。',
+            },
+            {
+                text: 'HTTPメソッドをGETだけに制限するためのCookie',
+                isCorrect: false,
+                explanation:
+                    'HTTPメソッド制限用ではありません。許可HTTPメソッドはキャッシュビヘイビアで設定します。',
+            },
+        ],
+        explanation:
+            '署名付きURLと署名付きCookieは基本的な目的は同じですが、個別ファイルなら署名付きURL、複数ファイルや既存URLを変えたくない場合は署名付きCookieが向いています。',
+    },
+    {
+        question:
+            'CloudFrontの「キーグループ」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '署名付きURLや署名付きCookieの検証に使う公開鍵をまとめ、信頼された署名者としてディストリビューションに指定する設定',
+                isCorrect: true,
+                explanation:
+                    'キーグループ（署名検証用の公開鍵をまとめる設定）は、CloudFrontが署名付きURLや署名付きCookieを検証するために使います。アプリケーションは対応する秘密鍵で署名し、CloudFrontはキーグループ内の公開鍵で検証します。',
+            },
+            {
+                text: 'CloudFrontのキャッシュキーをすべて自動生成するグループ',
+                isCorrect: false,
+                explanation:
+                    'キャッシュキー（キャッシュを区別する識別子）の自動生成グループではありません。キーグループは署名付きURL/Cookieのアクセス制御に使います。',
+            },
+            {
+                text: 'S3バケットを複数まとめて同じ名前にする設定',
+                isCorrect: false,
+                explanation:
+                    'S3バケット名のグループ化ではありません。キーグループはCloudFrontの制限付き配信で使う公開鍵のまとまりです。',
+            },
+            {
+                text: 'CloudFrontの標準ログを複数のS3バケットへ同時配送する設定',
+                isCorrect: false,
+                explanation:
+                    'ログ配送設定ではありません。キーグループは署名検証のための設定です。',
+            },
+        ],
+        explanation:
+            'CloudFrontでは、従来のAWSアカウントのCloudFrontキーペアより、キーグループを信頼された署名者として使う方式が推奨されています。キーグループをキャッシュビヘイビアに関連付けると、そのビヘイビアに一致するリクエストでは署名付きURLまたは署名付きCookieが必要になります。',
+    },
+    {
+        question:
+            'CloudFrontと「WAF（Web Application Firewall）」の関係として最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'CloudFrontディストリビューションにWeb ACLを関連付け、SQLインジェクションや不審なリクエストなどをルールで検査・ブロックできる',
+                isCorrect: true,
+                explanation:
+                    'WAF（Web Application Firewall。Webアプリケーション向けの通信検査・防御サービス）をCloudFrontディストリビューションに関連付けると、CloudFrontで受けたリクエストをWeb ACL（WAFルールをまとめた設定）のルールで検査し、条件に合うリクエストを許可、ブロック、カウントできます。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLを自動で最適化する機能',
+                isCorrect: false,
+                explanation:
+                    'TTL最適化の機能ではありません。WAFはWeb攻撃や不審なリクエストへの防御に使います。',
+            },
+            {
+                text: 'S3バケットのオブジェクトを圧縮して配信する機能',
+                isCorrect: false,
+                explanation:
+                    '圧縮配信とは別です。WAFはHTTPリクエストを条件で検査・制御するサービスです。',
+            },
+            {
+                text: 'CloudFrontの独自ドメイン用証明書を発行するサービス',
+                isCorrect: false,
+                explanation:
+                    '証明書発行はACM（AWS Certificate Manager）などで行います。WAFは通信内容を検査するセキュリティサービスです。',
+            },
+        ],
+        explanation:
+            'CloudFrontにWAFを組み合わせると、オリジンへ到達する前に攻撃的なリクエストを抑止できます。IP制限、レート制限、マネージドルールなどを使うことがあります。',
+    },
+    {
+        question:
+            'CloudFrontの「地理的制限」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ビューワーの国・地域に基づいて、CloudFrontコンテンツへのアクセスを許可または拒否する設定',
+                isCorrect: true,
+                explanation:
+                    '地理的制限（国や地域に基づくアクセス制御）は、許可リストまたはブロックリストで国単位のアクセスを制御します。CloudFrontはビューワーのIPアドレスから推定した国情報に基づいて判断します。',
+            },
+            {
+                text: 'CloudFrontのエッジロケーションを特定の都市に固定する設定',
+                isCorrect: false,
+                explanation:
+                    'エッジロケーション固定の設定ではありません。地理的制限はビューワーの国に基づくアクセス許可・拒否です。',
+            },
+            {
+                text: 'S3バケットを特定リージョンに移動する設定',
+                isCorrect: false,
+                explanation:
+                    'S3バケットの移動設定ではありません。地理的制限はCloudFront配信へのアクセス制御です。',
+            },
+            {
+                text: 'CloudFrontのログ保存先を国ごとに自動分割する機能',
+                isCorrect: false,
+                explanation:
+                    'ログ保存先の分割機能ではありません。アクセス元の国に基づいて許可・拒否する設定です。',
+            },
+        ],
+        explanation:
+            '国単位の簡易的な制限には地理的制限を使えます。より細かい条件や複雑な制御が必要な場合は、AWS WAFの地域条件なども検討します。',
+    },
+    {
+        question:
+            'CloudFrontの「標準ログ / アクセスログ」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontが受け取ったビューワーリクエストの詳細を記録し、後から分析や監査に使えるログ',
+                isCorrect: true,
+                explanation:
+                    '標準ログ / アクセスログ（CloudFrontへのリクエスト記録）は、リクエスト時刻、処理時間、リクエストパス、ステータスコードなどを後から確認するために使います。標準ログは履歴分析、監査、長期保存に向いています。',
+            },
+            {
+                text: 'CloudFrontのキャッシュを即時削除するためのログ',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ削除の操作はInvalidation（無効化）です。アクセスログはリクエストの記録です。',
+            },
+            {
+                text: 'ACM証明書の秘密鍵を保存するログ',
+                isCorrect: false,
+                explanation:
+                    '秘密鍵保存用ではありません。アクセスログにはリクエストに関する情報が記録されます。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名をDNSへ自動登録する機能',
+                isCorrect: false,
+                explanation:
+                    'DNS登録機能ではありません。標準ログはリクエストの分析や監査に使うログです。',
+            },
+        ],
+        explanation:
+            'CloudFrontの標準ログ v2 は、S3、CloudWatch Logs、Firehoseへ配送できます。従来の標準ログは主にS3へ保存する形式でしたが、標準ログ v2 では配送先や形式の選択肢が増えています。',
+    },
+    {
+        question:
+            'CloudFrontの「リアルタイムログ」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'リクエスト情報を数秒以内にKinesis Data Streamsへ配信し、ライブ監視や運用分析に使うログ',
+                isCorrect: true,
+                explanation:
+                    'リアルタイムログ（ほぼリアルタイムで取得できるアクセスログ）は、リクエスト受信後数秒以内にAmazon Kinesis Data Streamsへ配信されます。サンプリング率（どの割合のリクエストを記録するか）や記録フィールド、対象キャッシュビヘイビアを選べます。',
+            },
+            {
+                text: 'CloudFrontの標準ログを必ず24時間遅らせて配信する仕組み',
+                isCorrect: false,
+                explanation:
+                    'リアルタイムログは標準ログを遅延させる仕組みではありません。ライブ監視向けに短い遅延で配信されるログです。',
+            },
+            {
+                text: 'CloudFrontがすべてのエラーを自動修復する機能',
+                isCorrect: false,
+                explanation:
+                    '自動修復機能ではありません。リアルタイムログは問題の検知や分析に役立つ情報を提供します。',
+            },
+            {
+                text: 'S3バケットのパブリックアクセスブロックを自動で解除する機能',
+                isCorrect: false,
+                explanation:
+                    'S3の公開設定変更機能ではありません。リアルタイムログはCloudFrontリクエストのログ配送機能です。',
+            },
+        ],
+        explanation:
+            'リアルタイムログはライブダッシュボードや障害調査に向いていますが、Kinesis Data Streamsなどの料金も発生します。完全な課金明細としてではなく、運用監視用のログとして使います。',
+    },
+    {
+        question:
+            'CloudFrontの「CloudWatchメトリクス」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'リクエスト数、エラー率、データ転送量などをCloudWatchで監視するための数値指標',
+                isCorrect: true,
+                explanation:
+                    'CloudWatchメトリクス（AWSリソースの状態や利用状況を表す数値指標）では、CloudFrontのRequests、TotalErrorRate、4xxErrorRate、5xxErrorRate、BytesDownloadedなどを確認できます。アラームを作成して異常検知にも使えます。',
+            },
+            {
+                text: 'CloudFrontのログファイルそのものを必ず全文保存する機能',
+                isCorrect: false,
+                explanation:
+                    'ログファイルそのものではありません。メトリクスは数値化された監視指標です。詳細なリクエスト単位の確認にはアクセスログを使います。',
+            },
+            {
+                text: 'CloudFrontの証明書を自動発行するサービス',
+                isCorrect: false,
+                explanation:
+                    '証明書発行はACMなどで行います。CloudWatchメトリクスは監視指標です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュビヘイビアを自動で並べ替える機能',
+                isCorrect: false,
+                explanation:
+                    '設定を自動並べ替えする機能ではありません。CloudWatchメトリクスはリクエスト数やエラー率などの監視に使います。',
+            },
+        ],
+        explanation:
+            '運用では、アクセスログで詳細を追い、CloudWatchメトリクスで全体傾向やアラームを管理する、と分けて考えると扱いやすくなります。',
+    },
+    {
+        question:
+            'CloudFrontでいう「4xxエラー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'リクエストの内容や権限など、主にクライアント側要因を示すHTTPステータスコード群',
+                isCorrect: true,
+                explanation:
+                    '4xxエラー（クライアント側要因のHTTPエラー）は、403 Forbidden、404 Not Foundなどのステータスコードです。CloudFrontでは、WAF、地理的制限、署名付きURLの失敗、オリジン側の404など、さまざまな理由で4xxが返ることがあります。',
+            },
+            {
+                text: 'オリジンが必ずダウンしていることを示すエラー',
+                isCorrect: false,
+                explanation:
+                    'オリジン障害だけを示すものではありません。4xxはリクエスト内容、権限、存在しないパスなどが原因になることが多いです。',
+            },
+            {
+                text: 'CloudFrontがキャッシュヒットしたことを示す成功コード',
+                isCorrect: false,
+                explanation:
+                    '成功コードではありません。キャッシュヒットはキャッシュから返せる状態であり、HTTP 4xxとは別です。',
+            },
+            {
+                text: 'CloudFrontの標準ログが有効でないことを示す専用コード',
+                isCorrect: false,
+                explanation:
+                    'ログ設定専用のコードではありません。4xxはHTTPレスポンスのエラーコード群です。',
+            },
+        ],
+        explanation:
+            '4xxが増えた場合は、どのステータスコードか、CloudFrontが返しているのかオリジンが返しているのか、WAFや署名付きURLなどの制限が関係していないかを切り分けます。',
+    },
+    {
+        question:
+            'CloudFrontでいう「5xxエラー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'オリジンやCloudFront側の処理失敗など、主にサーバー側要因を示すHTTPステータスコード群',
+                isCorrect: true,
+                explanation:
+                    '5xxエラー（サーバー側要因のHTTPエラー）は、500、502、503、504などのステータスコードです。CloudFrontでは、オリジンの障害、証明書やTLS設定の問題、接続タイムアウト、過負荷などで発生することがあります。',
+            },
+            {
+                text: 'ビューワーが存在しないURLへアクセスしたことだけを示すエラー',
+                isCorrect: false,
+                explanation:
+                    '存在しないURLは一般に404などの4xxエラーになりやすいです。5xxはサーバー側の処理失敗やオリジン接続問題を示すことが多いです。',
+            },
+            {
+                text: 'CloudFrontのキャッシュが正常に使われたことを示すコード',
+                isCorrect: false,
+                explanation:
+                    '正常コードではありません。5xxはエラーコード群です。正常応答は200などの2xxです。',
+            },
+            {
+                text: 'DNSレコードが必ずCNAMEであることを示すステータス',
+                isCorrect: false,
+                explanation:
+                    'DNSレコード種別を示すものではありません。HTTPレスポンスのエラーコードです。',
+            },
+        ],
+        explanation:
+            '5xxが増えた場合は、オリジンのヘルス、CloudFrontからオリジンへの接続、TLS証明書、タイムアウト、オリジンフェイルオーバー設定などを確認します。',
+    },
+    {
+        question:
+            'CloudFrontの「オリジンタイムアウト」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontがオリジンへの接続確立や応答待ちを一定時間で打ち切る設定・状態',
+                isCorrect: true,
+                explanation:
+                    'オリジンタイムアウト（CloudFrontがオリジンを待つ時間の制限）には、接続タイムアウトやオリジン応答タイムアウトなどがあります。オリジンが時間内に接続・応答しない場合、CloudFrontは504 Gateway Timeoutなどを返すことがあります。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLが必ず0秒になる状態',
+                isCorrect: false,
+                explanation:
+                    'TTLとは別です。オリジンタイムアウトはCloudFrontとオリジン間の接続や応答待ちに関係します。',
+            },
+            {
+                text: '署名付きURLの有効期限が切れた状態だけを指す用語',
+                isCorrect: false,
+                explanation:
+                    '署名付きURLの期限切れとは別です。オリジンタイムアウトはCloudFrontがオリジンからの応答を待ち切れない状態です。',
+            },
+            {
+                text: 'CloudFrontの標準ログ配送が遅延している状態',
+                isCorrect: false,
+                explanation:
+                    'ログ配送の遅延ではありません。オリジンタイムアウトは配信時のオリジン接続や応答に関する問題です。',
+            },
+        ],
+        explanation:
+            'GET/HEADでは応答タイムアウト時に再試行される場合がありますが、DELETE、OPTIONS、PATCH、PUT、POSTでは再試行されません。タイムアウト値を伸ばす前に、オリジンの応答性能や接続設定を確認します。',
+    },
+    {
+        question:
+            'CloudFrontの「カスタムエラーレスポンス」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '特定の4xx/5xxエラーに対して、返すエラーページ、HTTPステータスコード、エラーキャッシュ時間を調整する設定',
+                isCorrect: true,
+                explanation:
+                    'カスタムエラーレスポンス（エラー時の応答を調整する設定）では、例えば404時に独自のエラーページを返したり、オリジンの500に対してビューワーへ別のステータスコードを返したりできます。エラーキャッシュ最小TTL（エラー応答をキャッシュする最小時間）も設定できます。',
+            },
+            {
+                text: 'CloudFrontが正常な200レスポンスを必ず404へ変換する固定機能',
+                isCorrect: false,
+                explanation:
+                    '正常応答を必ずエラーに変換する機能ではありません。特定のエラー発生時に、返すページやステータスコードを調整できます。',
+            },
+            {
+                text: 'S3バケット内のすべてのオブジェクトを削除する操作',
+                isCorrect: false,
+                explanation:
+                    'S3オブジェクト削除ではありません。CloudFrontがエラー時にビューワーへ返すレスポンスを制御する設定です。',
+            },
+            {
+                text: 'CloudFrontのWAFルールを自動的に削除する設定',
+                isCorrect: false,
+                explanation:
+                    'WAFルール削除ではありません。カスタムエラーレスポンスはHTTPエラー時の表示やステータスコードに関する設定です。',
+            },
+        ],
+        explanation:
+            'CloudFrontはエラーレスポンスを既定で短時間キャッシュします。SPA（単一ページアプリケーション）配信では、S3オリジンの403/404を `/index.html` に差し替えて200を返す構成で使われることもあります。',
+    },
 ]
