@@ -1953,4 +1953,36 @@ export const testQuestions: Question[] = [
         explanation:
             'まずは高速・軽量なCloudFront Functionsで足りるかを検討し、オリジン側イベントやより複雑な処理が必要な場合にLambda@Edgeを検討すると整理しやすいです。例えば、簡単なURLリダイレクトやヘッダー正規化ならCloudFront Functionsが候補になります。',
     },
+    {
+        question:
+            'CloudFrontで `us-east-1` が関係するケースとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontのビューワー向けACM証明書やLambda@Edge関数では、us-east-1が関係する',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontのビューワー向けACM証明書（HTTPS通信で使う証明書）は、CloudFrontがグローバルサービスであるため `us-east-1` に作成またはインポートする必要があります。また、Lambda@Edge関数も、コードがグローバルに配布されるため `us-east-1` に作成し、発行済みバージョンをCloudFrontに関連付けます。',
+            },
+            {
+                text: 'CloudFrontディストリビューション自体は必ずus-east-1リージョンに作成する',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontはグローバルサービスであり、ディストリビューション自体を特定のAWSリージョンに作成するという考え方ではありません。ただし、関連するACM証明書やLambda@Edgeでは `us-east-1` が関係します。',
+            },
+            {
+                text: 'S3オリジンは必ずus-east-1に作成しなければCloudFrontで使えない',
+                isCorrect: false,
+                explanation:
+                    'S3オリジンは `us-east-1` に限定されません。別リージョンのS3バケットもCloudFrontのオリジンとして使えます。',
+            },
+            {
+                text: 'CloudFrontの標準ログは必ずus-east-1のS3バケットにしか保存できない',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontの標準ログ保存先が `us-east-1` に限定されるわけではありません。`us-east-1` が特に重要になる代表例は、ビューワー向けACM証明書とLambda@Edgeです。',
+            },
+        ],
+        explanation:
+            '`us-east-1` はCloudFrontそのものの配置先ではなく、CloudFrontと組み合わせる一部機能で必要になるリージョンです。CloudFront自体はグローバルサービスである一方、ACMやLambda@Edgeなどの関連機能はリージョン依存であり、その中で `us-east-1` が特別に扱われます。',
+    },
 ]
