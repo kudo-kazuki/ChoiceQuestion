@@ -1057,4 +1057,260 @@ export const testQuestions: Question[] = [
         explanation:
             'エッジ処理の設計では「どのイベントで処理するか」が最重要です。viewer request、viewer response、origin request、origin responseのどこで処理したいか、処理の重さ、レイテンシ要求、外部連携の有無を整理します。SAAでは、CloudFront FunctionsとLambda@Edgeのイベント範囲と制約の違いが判断軸になります。',
     },
+    {
+        question:
+            'CloudFrontで「末尾スラッシュの補正」「大文字小文字の正規化」「単純なHTTPリダイレクト」を、できるだけ低レイテンシで大量リクエストに適用したいです。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'CloudFront Functionsをviewer requestイベントに関連付ける',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functionsは、viewer request（CloudFrontがビューワーからリクエストを受け取った直後）で動く軽量・低レイテンシなJavaScript処理に向きます。キャッシュキー確定前にURLを正規化できるため、正規化前のURLが別キャッシュとして分散するのを防ぎやすく、オリジン到達前にリダイレクトできます。大量リクエストでは低レイテンシ・低コスト面でも有利です。',
+            },
+            {
+                text: 'Lambda@Edgeのorigin responseイベントで必ず処理する',
+                isCorrect: false,
+                explanation:
+                    'origin responseはCloudFrontがオリジンからレスポンスを受け取った後のイベントです。オリジンへ行く前にURLを正規化したい用途には遅すぎます。',
+            },
+            {
+                text: '標準ログを有効にすれば、URL正規化とリダイレクトが自動実行される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはリクエストの記録であり、リクエストを書き換える機能ではありません。',
+            },
+            {
+                text: 'WAFのレートベースルールでURLパスを必ず書き換える',
+                isCorrect: false,
+                explanation:
+                    'WAFは攻撃検査やレート制限に使うサービスです。一般的なURL正規化やリダイレクト処理はCloudFront FunctionsやLambda@Edgeで検討します。',
+            },
+        ],
+        explanation:
+            'エッジ処理では、処理したいタイミングが重要です。viewer requestで処理すれば、キャッシュキーが決まる前にURIやヘッダーを整えられます。軽量処理ならCloudFront Functionsを優先し、外部通信や重い処理が必要ならLambda@Edgeを検討します。',
+    },
+    {
+        question:
+            'CloudFrontでオリジンへリクエストを送る直前に、ユーザー属性に応じてオリジンパスやオリジン向けヘッダーを変更したいです。最も適切な選択はどれですか?',
+        options: [
+            {
+                text: 'Lambda@Edgeをorigin requestイベントに関連付ける',
+                isCorrect: true,
+                explanation:
+                    'origin request（CloudFrontがオリジンへリクエストを送る直前）で処理したい場合はLambda@Edgeが候補です。オリジン選択、パス書き換え、オリジン向けヘッダー追加などに向きます。CloudFront Functionsはviewer request/viewer response向けで、origin requestやorigin responseでは使えません。',
+            },
+            {
+                text: 'CloudFront Functionsをorigin requestイベントに関連付ける',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsはorigin requestイベントに関連付けられません。オリジン向けリクエストの直前処理にはLambda@Edgeを検討します。',
+            },
+            {
+                text: 'CloudFrontの地理的制限を使えば、任意のオリジンヘッダーを追加できる',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス許可/拒否です。オリジン向けヘッダー追加やパス書き換えを行う機能ではありません。',
+            },
+            {
+                text: 'レスポンスヘッダーポリシーでオリジンへ送るリクエストヘッダーを変更する',
+                isCorrect: false,
+                explanation:
+                    'レスポンスヘッダーポリシーはCloudFrontがビューワーへ返すレスポンスヘッダーを管理します。オリジンへ送るリクエストの変更とは別です。',
+            },
+        ],
+        explanation:
+            'Lambda@Edgeはviewer request、viewer response、origin request、origin responseの4種類のイベントに対応します。特にorigin requestは、CloudFront cache/routingの後、オリジンへ送る直前の判断に使います。',
+    },
+    {
+        question:
+            'Lambda@Edgeを使った認証補助処理を本番CloudFrontに関連付けたいです。デプロイ上の注意として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda関数はus-east-1に作成し、$LATESTではなく発行済みの番号付きバージョンをCloudFrontに関連付ける',
+                isCorrect: true,
+                explanation:
+                    'Lambda@Edgeは米国東部（バージニア北部）リージョンである `us-east-1` に作成し、CloudFrontには `$LATEST` やエイリアスではなく発行済みの番号付きバージョンを関連付けます。関連付け後はエッジへ複製されるため、反映にも時間がかかります。ロールバックも別バージョンへの付け替えとして事前に考えます。',
+            },
+            {
+                text: '任意のリージョンの$LATESTを関連付ければ、CloudFrontが自動で安定版として固定する',
+                isCorrect: false,
+                explanation:
+                    'Lambda@Edgeでは任意リージョンや `$LATEST` は使えません。`us-east-1` の発行済みバージョンが必要です。',
+            },
+            {
+                text: '通常のLambdaと同じく、VPC接続、レイヤー、環境変数を制約なく使える',
+                isCorrect: false,
+                explanation:
+                    'Lambda@Edgeは通常のLambdaと同じ感覚では使えません。VPC接続、Lambda Layers、ユーザー定義の環境変数などはサポートされません。その他の通常Lambdaとの差分も確認が必要です。',
+            },
+            {
+                text: 'CloudFront Functionsとして作成すれば、origin requestイベントにも関連付けられる',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsはorigin requestイベントでは使えません。origin requestで認証補助やオリジン向け処理をしたい場合はLambda@Edgeを検討します。',
+            },
+        ],
+        explanation:
+            'Lambda@Edgeは強力ですが、通常のLambdaと同じ感覚で使うとつまずきます。`us-east-1`、番号付きバージョン、`$LATEST`/alias不可、機能制限、デプロイ反映時間を前提に、リリース手順とロールバック手順を設計します。',
+    },
+    {
+        question:
+            'CloudFrontでJWTの形式チェックや簡単な認可判定をエッジで行いたいです。外部IdPへ問い合わせず、Authorizationヘッダー内のトークンだけを軽く検査します。最も適切な選択はどれですか?',
+        options: [
+            {
+                text: 'CloudFront Functionsをviewer requestイベントで使うことを検討する',
+                isCorrect: true,
+                explanation:
+                    '外部ネットワークアクセスを伴わず、Authorizationヘッダーの存在確認、JWTの形式チェック、軽量な署名検証やクレーム確認のようにリクエストメタデータだけで判定するなら、CloudFront Functionsが候補になります。viewer requestで早期に拒否できれば、不要なオリジンアクセスも減らせます。',
+            },
+            {
+                text: '外部IdPへ毎回問い合わせる処理でもCloudFront Functionsが最適である',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsは外部ネットワークアクセスを前提にした処理には向きません。外部サービス連携や重い処理が必要な場合はLambda@Edgeやアプリケーション側の認証を検討します。',
+            },
+            {
+                text: '地理的制限を使えば、JWTの署名検証や認可判定を自動で行える',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。JWT（認証・認可情報を含むトークン）の検査を自動で行う機能ではありません。',
+            },
+            {
+                text: '標準ログを有効化すれば、JWTが不正なリクエストは自動拒否される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはリクエスト記録です。認可判定を実行する機能ではありません。',
+            },
+        ],
+        explanation:
+            '認証補助では、外部連携の有無と処理の重さが判断軸です。CloudFront Functionsは外部IdP（認証プロバイダー）への問い合わせには向きません。複雑な認可、外部連携、状態確認が必要ならLambda@Edgeまたはオリジン側での処理を検討します。',
+    },
+    {
+        question:
+            'CloudFrontで急に5xxエラー率が上昇しました。まず全体傾向を監視し、しきい値を超えたら通知したい場合に最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudWatchメトリクスの5xxErrorRateやTotalErrorRateを監視し、CloudWatchアラームを設定する',
+                isCorrect: true,
+                explanation:
+                    'CloudWatchメトリクス（AWSリソースの状態や利用状況を表す数値指標）は、CloudFrontの全体傾向監視に向いています。5xxErrorRate、4xxErrorRate、TotalErrorRate、Requestsなどを見て、CloudWatchアラームで通知できます。',
+            },
+            {
+                text: '標準ログだけを保存すれば、しきい値通知は自動で設定される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはリクエスト詳細の記録です。しきい値通知を行うにはCloudWatchメトリクスとアラームなどを設計します。',
+            },
+            {
+                text: 'Invalidationを定期実行すれば、5xxErrorRateの監視は不要になる',
+                isCorrect: false,
+                explanation:
+                    'Invalidation（CloudFrontキャッシュの無効化）は監視機能ではありません。5xxの増加はオリジン障害や接続問題の可能性があり、監視と切り分けが必要です。',
+            },
+            {
+                text: 'Route 53 aliasを設定すれば、CloudFrontの5xxはCloudWatchに出なくなる',
+                isCorrect: false,
+                explanation:
+                    'DNS設定でCloudFrontメトリクスが消えるわけではありません。CloudFrontのエラー率はCloudWatchメトリクスで監視します。',
+            },
+        ],
+        explanation:
+            '運用では、CloudWatchメトリクスで全体傾向とアラーム、標準ログ/リアルタイムログでリクエスト単位の詳細、ALB/S3/API Gatewayなどのオリジンログで原因追跡、という役割分担が基本です。5xxErrorRateだけでは原因特定まではできません。',
+    },
+    {
+        question:
+            'CloudFrontで一部の利用者だけ403が発生しています。署名付きURL、WAF、地理的制限、S3バケットポリシーのどれが原因か切り分けたいです。最も適切な進め方はどれですか?',
+        options: [
+            {
+                text: 'CloudFront標準ログやリアルタイムログの結果タイプ、WAFログ、S3/オリジン側ログを突き合わせて、CloudFront側で拒否したのかオリジンが拒否したのかを切り分ける',
+                isCorrect: true,
+                explanation:
+                    '403は、CloudFrontの地理的制限、WAF、署名付きURL/Cookieの失敗、S3バケットポリシー、OAC設定など複数の原因で発生します。署名付きURL/CookieならCloudFrontログの結果タイプ、署名パラメータ、有効期限、キーグループを確認します。WAFならWAFログとWeb ACLのルール一致、S3/OACならS3側権限、OAC設定、バケットポリシーを確認します。',
+            },
+            {
+                text: '403は必ずS3バケットポリシーの問題なので、CloudFrontやWAFのログは確認しない',
+                isCorrect: false,
+                explanation:
+                    '403の原因はS3だけとは限りません。CloudFront側の制限付き配信、WAF、地理的制限などでも403が返ります。',
+            },
+            {
+                text: 'すべての制限を解除すれば原因が分かるため、本番でもまずWAFと署名付きURLを無効化する',
+                isCorrect: false,
+                explanation:
+                    '本番で制限を一斉解除するとセキュリティリスクが高くなります。ログとメトリクスで層ごとに切り分けるのが基本です。',
+            },
+            {
+                text: 'CloudWatchメトリクスだけを見れば、署名付きURLの失敗かWAFブロックかを必ず判定できる',
+                isCorrect: false,
+                explanation:
+                    'メトリクスは全体傾向には有効ですが、個々の403原因の特定にはログの確認が必要です。',
+            },
+        ],
+        explanation:
+            'トラブルシュートでは「CloudFrontが拒否したのか」「WAFが拒否したのか」「オリジンが拒否したのか」を分けます。地理的制限はCloudFront側設定、S3由来ならオリジン側権限を見ます。4xxはクライアント側要因に見えても、設定ミスやアクセス制御の組み合わせが原因のことがあります。',
+    },
+    {
+        question:
+            'CloudFrontで障害発生中に、数秒以内のリクエスト詳細を見て、特定パスや特定ヘッダーの状況を分析したいです。最も適切なログ設計はどれですか?',
+        options: [
+            {
+                text: 'リアルタイムログを設定し、必要なフィールドとサンプリング率を選んでKinesis Data Streamsへ配信する',
+                isCorrect: true,
+                explanation:
+                    'リアルタイムログ（ほぼリアルタイムで取得できるリクエストログ）は、数秒以内のライブ分析向けで、Kinesis Data Streamsへ配信されます。対象キャッシュビヘイビア、記録フィールド、サンプリング率を選べるため、障害中の特定パスや特定ヘッダーの分析に向いています。',
+            },
+            {
+                text: '標準ログだけを使えば、常に数秒以内に全リクエストを分析できる',
+                isCorrect: false,
+                explanation:
+                    '標準ログは履歴分析や監査、長期保存に向きますが、数秒以内のライブ分析にはリアルタイムログの方が適しています。',
+            },
+            {
+                text: 'CloudWatchメトリクスだけで、個々のリクエストヘッダーやパスをすべて確認できる',
+                isCorrect: false,
+                explanation:
+                    'CloudWatchメトリクスは数値指標です。個々のリクエスト詳細を見るにはアクセスログやリアルタイムログを使います。',
+            },
+            {
+                text: 'CloudFront Functionsのconsole.logだけで、全リクエストの完全なアクセスログとして使える',
+                isCorrect: false,
+                explanation:
+                    'エッジ関数ログはデバッグには使えますが、完全なアクセスログや課金明細の代わりにはなりません。CloudFrontのログ機能と使い分けます。',
+            },
+        ],
+        explanation:
+            'ログ設計では、履歴分析・監査・長期保存には標準ログ、ライブ調査にはリアルタイムログ、全体傾向にはCloudWatchメトリクス、関数デバッグにはエッジ関数ログ、という使い分けが重要です。リアルタイムログはKinesis Data Streamsの利用料金やサンプリング率も考慮します。',
+    },
+    {
+        question:
+            'CloudFront Functionsを本番に公開したところ、想定外の挙動が出ています。関数のデバッグとアクセス影響の確認として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFront Functionsのテスト出力、CloudWatch Logsの関数ログ、標準ログ/リアルタイムログの結果タイプを確認する',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functionsはconsole.logを使うとCloudWatch Logsへログを送れます。ただし関数ログは完全なアクセス記録ではなく、ベストエフォートです。全リクエストの証跡として依存せず、関数テスト出力、関数ログ、CloudFront標準ログ/リアルタイムログの `x-edge-result-type` などを組み合わせて確認します。',
+            },
+            {
+                text: 'CloudFront Functionsのログは必ずすべてのリクエストで完全に記録されるため、標準ログは不要である',
+                isCorrect: false,
+                explanation:
+                    'エッジ関数ログはベストエフォートであり、完全なアクセスログではありません。標準ログやリアルタイムログと役割が違います。',
+            },
+            {
+                text: 'Lambda@Edgeのメトリクスだけを見れば、CloudFront Functionsの実行エラーも必ず分かる',
+                isCorrect: false,
+                explanation:
+                    'CloudFront FunctionsとLambda@Edgeは別のエッジ関数機能です。確認すべきログやメトリクスも分けて考えます。',
+            },
+            {
+                text: 'WAFログだけを見れば、関数によるヘッダー変更やリダイレクトの失敗を完全に把握できる',
+                isCorrect: false,
+                explanation:
+                    'WAFログはWAFルールによる検査結果を見るものです。エッジ関数の実行結果やリダイレクト挙動はCloudFront側のログや関数ログで確認します。',
+            },
+        ],
+        explanation:
+            'エッジ関数のトラブルシュートでは、関数単体のログだけに依存しないことが重要です。Viewer request、CloudFront Functions/Lambda@Edge、WAF、CloudFront cache/routing、Origin、Logs/Metricsのどの層で何が起きたかを分けて確認します。',
+    },
 ]
