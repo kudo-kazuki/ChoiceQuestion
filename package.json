@@ -4,7 +4,10 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
+        "generate:question-manifest": "node scripts/generate-question-manifest.mjs",
+        "predev": "npm run generate:question-manifest",
         "dev": "vite --host",
+        "prebuild": "npm run generate:question-manifest",
         "build": "vue-tsc -b && vite build",
         "deploy": "node scripts/deploy-ftp.mjs",
         "preview": "vite preview"

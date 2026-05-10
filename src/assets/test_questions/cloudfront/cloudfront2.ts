@@ -1569,4 +1569,196 @@ export const testQuestions: Question[] = [
         explanation:
             '複合シナリオでは、1つの機能ですべて解決しようとしないことが重要です。地理的制限は国単位制御、WAFはリクエスト内容の検査とレート制御、署名付きCookieは認可、CloudWatch/リアルタイムログは監視という役割です。CloudFrontは単なるCDNではなく、キャッシュ、ルーティング、セキュリティ、監視を組み合わせる設計対象として考えます。',
     },
+    {
+        question:
+            'SAA風シナリオです。React/VueなどのSPAをS3 + CloudFrontで配信します。S3は直接公開せず、独自ドメインHTTPS、低運用負荷、SPAルーティング対応が必要です。最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'S3 REST APIエンドポイントをオリジンにし、OACとバケットポリシーでCloudFront経由だけ許可し、us-east-1のACM証明書、DNS、403/404の/index.htmlフォールバックを設定する',
+                isCorrect: true,
+                explanation:
+                    'S3 REST APIエンドポイント + OAC（CloudFrontからS3へ署名付きリクエストを送る仕組み）なら、S3を非公開にしたままCloudFront経由で配信できます。OAC/OAIを使えるのは通常のS3 bucket originであり、S3 Website endpointはカスタムオリジン扱いでOAC/OAIを使えず、HTTPS接続にも対応しません。そのためセキュアなSPA配信ではREST APIエンドポイント + OACが前提になります。SPAでは存在しないキーに対してS3が403/404を返すことがあり、CloudFrontのカスタムエラーレスポンスで `/index.html` にフォールバックします。返すステータスコードを200に変えるかは、SEOや監視への影響を含めた設計判断です。',
+            },
+            {
+                text: 'S3静的ウェブサイトエンドポイントをOACで保護し、CloudFrontからHTTPSで接続する',
+                isCorrect: false,
+                explanation:
+                    'S3静的ウェブサイトエンドポイントはカスタムオリジン扱いで、OAC/OAIを使えません。またS3 Website endpointはHTTPS接続をサポートしないため、非公開HTTPS配信の基本構成には向きません。',
+            },
+            {
+                text: 'S3バケットをパブリック公開し、CloudFrontは独自ドメイン変換だけに使う',
+                isCorrect: false,
+                explanation:
+                    'S3をパブリック公開するとCloudFrontを迂回されます。セキュアにするなら、S3 Public Access Block（パブリック許可を防ぐ設定）を有効にし、OACとバケットポリシーでCloudFrontからのアクセスだけを許可します。',
+            },
+            {
+                text: 'CloudFront FunctionsでS3のバケットポリシーを動的に書き換え、SPAのルーティングを制御する',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsはviewer eventで軽量なリクエスト処理を行う機能です。S3の権限管理を動的に書き換える用途ではありません。SPAのフォールバックはCloudFrontのカスタムエラーレスポンスやエッジ処理で設計します。',
+            },
+        ],
+        explanation:
+            '静的サイト + SPA + S3 + CloudFrontでは、S3非公開化、独自ドメインHTTPS、SPAルーティング、キャッシュ設計をセットで考えます。S3 REST APIエンドポイントを使う理由は、OAC/OAIでCloudFront経由だけを許可でき、Website endpointのHTTPS非対応や非公開化できない問題を避けられるためです。低運用負荷を重視するなら、サーバーを持たずにS3 REST APIエンドポイント、OAC、CloudFront、ACM、Route 53を組み合わせる構成が基本です。',
+    },
+    {
+        question:
+            'API GatewayをCloudFrontのオリジンにして、`/api/*` をAPIへ、`/assets/*` をS3へ配信します。認証付きAPIと静的アセットを安全に扱う設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '`/api/*` と `/assets/*` でキャッシュビヘイビアを分け、API側は必要なHTTPメソッドとオリジンリクエストポリシーを設定し、静的アセット側は長期キャッシュする',
+                isCorrect: true,
+                explanation:
+                    'API GatewayとS3ではキャッシュ特性が異なるため、パスパターンごとにキャッシュビヘイビアを分けます。APIではAuthorization、Cookie、必要なヘッダーやクエリをオリジンへ渡す必要がありますが、「オリジンへ転送すること」と「キャッシュキーに含めること」は独立した設計要素です。認証系ヘッダーは通常キャッシュしない、またはユーザーや条件ごとに厳密に分離します。静的アセットはハッシュ付きファイル名と長いTTLで効率よくキャッシュできます。',
+            },
+            {
+                text: 'APIと静的アセットを同じキャッシュビヘイビアにまとめ、すべてのレスポンスを長期キャッシュする',
+                isCorrect: false,
+                explanation:
+                    'APIレスポンスはユーザーや認可状態で変わることがあります。静的アセットと同じ長期キャッシュにすると、古いデータや別ユーザー向けレスポンスを返すリスクがあります。',
+            },
+            {
+                text: 'API Gatewayの前にCloudFrontを置く場合、AuthorizationヘッダーはCloudFrontが必ず自動転送するため設定不要である',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontからオリジンへ送るヘッダーは、キャッシュポリシーやオリジンリクエストポリシーで制御します。認証に必要なAuthorizationヘッダーなどは、意図通り転送されるよう明示的に設計します。',
+            },
+            {
+                text: 'API Gatewayの前段にCloudFrontを置くと、POSTレスポンスも自動でキャッシュされる',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontの通常のキャッシュ対象HTTPメソッドはGET/HEAD、またはGET/HEAD/OPTIONSです。POSTはキャッシュ対象外であり、APIの可用性や整合性はAPI Gatewayやバックエンド側でも設計します。',
+            },
+        ],
+        explanation:
+            'API Gateway前段のCloudFrontでは、APIをキャッシュするかだけでなく、ルーティング、TLS終端、WAF適用、ヘッダー転送、静的コンテンツとの同一ドメイン化も含めて設計します。Authorizationヘッダーなどは必要に応じて明示的に転送し、キャッシュキーへ含めるかは別に判断します。公開GETはキャッシュ候補、ユーザー依存GETはキャッシュキー分離または非キャッシュ、POST/更新系はキャッシュ対象外、という整理が基本です。',
+    },
+    {
+        question:
+            'ALBをCloudFrontのオリジンにして動的Webアプリを配信します。低レイテンシとセキュリティを両立しつつ、静的ファイルは効率よく配信したい場合に最も適切な設計はどれですか?',
+        options: [
+            {
+                text: '静的ファイルはS3オリジン + 長期キャッシュ、動的パスはALBオリジン + 短いTTL/キャッシュ無効に分け、WAFやHTTPSをCloudFront側でも適用する',
+                isCorrect: true,
+                explanation:
+                    '静的コンテンツと動的コンテンツは更新頻度、認可、キャッシュ可能性が異なります。`/static/*` はS3 + 長期キャッシュ + ハッシュ付きファイル名、`/app/*` や `/api/*` はALB/API + 短いTTLまたは非キャッシュのように分けると、低レイテンシと正確性を両立しやすくなります。Viewer -> CloudFront と CloudFront -> ALB は別の通信経路なので、両方HTTPSにするエンドツーエンドHTTPSはセキュリティ要件に応じて判断します。',
+            },
+            {
+                text: 'すべてALBへ転送し、CloudFrontのキャッシュは常に無効化するのが最も低レイテンシである',
+                isCorrect: false,
+                explanation:
+                    'すべてをALBへ転送すると、静的ファイルでも毎回オリジン負荷とネットワーク遅延が発生しやすくなります。キャッシュ可能な静的ファイルはCloudFrontでキャッシュする方が低レイテンシになりやすいです。',
+            },
+            {
+                text: '動的レスポンスもユーザー差分に関係なく1年キャッシュし、ALB負荷を最小化する',
+                isCorrect: false,
+                explanation:
+                    '動的レスポンスはユーザー、Cookie、Authorization、クエリ文字列で内容が変わることがあります。無条件の長期キャッシュは誤配信や古い情報の表示につながります。',
+            },
+            {
+                text: 'ALBオリジンではHTTPSを使えないため、CloudFrontからALBへは必ずHTTPで接続する',
+                isCorrect: false,
+                explanation:
+                    'ALBはHTTPSリスナーを持てます。Viewer -> CloudFrontとCloudFront -> Originは別設定なので、セキュリティ要件に応じてエンドツーエンドHTTPS（利用者からオリジンまでHTTPSにする設計）を検討します。',
+            },
+        ],
+        explanation:
+            'ALB前段のCloudFrontでは、全部をキャッシュするのではなく、静的/動的の境界を明確にします。静的はS3 + 長期キャッシュ + ハッシュ、動的はALB/API + 短TTLまたは非キャッシュに分け、混在させないことが性能と正確性の両立につながります。CloudFrontはエッジキャッシュ、WAF、TLS終端、圧縮、ルーティングを担い、ALBはアプリケーション処理とターゲット分散を担う、という役割分担が実務的です。',
+    },
+    {
+        question:
+            '1つのCloudFrontディストリビューションで、`/assets/*` はS3、`/api/*` はAPI Gateway、`/admin/*` はALBへ転送します。ビヘイビア設計で最も重要な考え方はどれですか?',
+        options: [
+            {
+                text: 'パスパターンの一致順序、各ビヘイビアのオリジン、キャッシュポリシー、オリジンリクエストポリシー、許可HTTPメソッドを用途ごとに分ける',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontはキャッシュビヘイビアを上から順に評価し、最初に一致したパスパターンを使います。ここを誤ると、`/api/*` や `/admin/*` が意図しないオリジンへ流れたり、認可が必要なパスに静的アセット向けの緩い設定が適用されたりします。より具体的なパスを上に置き、各ビヘイビアで対象オリジン、キャッシュキー、TTL、オリジンへ転送するヘッダー/Cookie/クエリ、許可HTTPメソッドを用途ごとに分けます。',
+            },
+            {
+                text: 'CloudFrontは最も長いパスパターンを自動で優先するため、ビヘイビアの並び順は考えなくてよい',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontはキャッシュビヘイビアの一覧を上から順に評価し、最初に一致したものを適用します。より具体的なパターンを上に置くなど、順序設計が重要です。',
+            },
+            {
+                text: '複数オリジンを設定すれば、CloudFrontがリクエスト内容から最適なオリジンを自動推測する',
+                isCorrect: false,
+                explanation:
+                    '複数オリジンを設定するだけでは使い分けられません。どのパスをどのオリジンへ送るかはキャッシュビヘイビアで明示します。',
+            },
+            {
+                text: 'すべてのビヘイビアで同じキャッシュポリシーを使うと、認可と性能を常に最適化できる',
+                isCorrect: false,
+                explanation:
+                    '静的ファイル、API、管理画面では、必要なヘッダー、Cookie、クエリ、TTLが違います。同じポリシーを使い回すと、キャッシュ効率低下や誤配信につながる場合があります。',
+            },
+        ],
+        explanation:
+            '動的コンテンツと静的コンテンツを同じCloudFrontで扱う場合、ビヘイビア分離が設計の中心です。特に順序が最重要で、CloudFrontは上から順に評価して最初の一致を使います。より具体的なパスを上に置き、パスパターンの順序、オリジン、キャッシュキー、オリジン転送、HTTPメソッド、WAFや署名付きURL/Cookieの適用範囲をセットで考えます。',
+    },
+    {
+        question:
+            'セキュアで低レイテンシ、かつ運用負荷が低い構成を選びたいです。静的フロントエンド、画像、API、認証があるWebサービスで最もバランスがよい考え方はどれですか?',
+        options: [
+            {
+                text: 'CloudFrontを入口にし、静的ファイルはS3 + OAC + 長期キャッシュ、APIはAPI GatewayまたはALBへ分離し、WAF、HTTPS、ログ/メトリクスを組み合わせる',
+                isCorrect: true,
+                explanation:
+                    '低運用負荷を重視するなら、静的配信はS3 + OAC + CloudFrontに寄せ、動的処理はAPI Gateway、Lambda、ALB、ECSなど適切なマネージドサービスへ分けます。CloudFrontを入口にすると、キャッシュ、ルーティング、TLS終端、WAF適用、認可補助、圧縮、ログ/メトリクスを一元的に適用しやすくなります。ただし認可情報を扱うAPIはキャッシュしない、またはキャッシュキーを厳密に分けます。',
+            },
+            {
+                text: 'すべてEC2単体で配信し、CloudFrontやS3は使わない方が低運用負荷である',
+                isCorrect: false,
+                explanation:
+                    'EC2単体運用ではOSパッチ、スケーリング、可用性、TLS、静的ファイル配信などの運用負荷が増えやすくなります。CloudFrontやS3などのマネージドサービスを使う方が運用負荷を下げやすいです。',
+            },
+            {
+                text: 'すべてCloudFront Functionsで実装すれば、APIも認証もDBアクセスも不要になる',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsは軽量なviewer event処理向けです。外部ネットワークアクセスや重い認可、DBアクセス、ビジネスロジックを担うものではありません。APIや認証は適切なバックエンドで設計します。',
+            },
+            {
+                text: 'セキュリティを高めるため、S3、ALB、API Gatewayをすべてパブリックにし、CloudFrontは任意で使う',
+                isCorrect: false,
+                explanation:
+                    'オリジンを広く公開するとCloudFrontやWAFを迂回される可能性があります。S3はOACでCloudFront経由のみ許可し、ALB/API Gatewayも可能ならCloudFront前提のヘッダー検証、WAF、認証、ネットワーク制御などを検討します。オリジンをパブリックにしすぎず、CloudFrontを入口にする設計が基本です。',
+            },
+        ],
+        explanation:
+            '構成選択では、低レイテンシだけでなく、運用負荷、セキュリティ境界、キャッシュ可能性、認可、障害時の切り分けを同時に見ます。CloudFrontは単なるCDNではなく、キャッシュ、ルーティング、TLS終端、WAF適用、認可補助、監視を組み合わせる設計対象です。キャッシュ、認可、ルーティング、セキュリティは分離して設計し、同一設定で全部を最適化しようとしないことが重要です。',
+    },
+    {
+        question:
+            'CloudFront前段にAPI GatewayやALBを置く構成で、低レイテンシを狙ってAPIレスポンスも一部キャッシュしたいです。最も安全な判断はどれですか?',
+        options: [
+            {
+                text: '公開情報やユーザーに依存しないGETレスポンスだけを対象にし、Authorization、Cookie、クエリ文字列などでレスポンスが変わる場合はキャッシュキーやTTLを慎重に設計する',
+                isCorrect: true,
+                explanation:
+                    'APIキャッシュは、ユーザーに依存しない公開GETレスポンスや参照系データでは有効です。一方、Authorization、Cookie、クエリ文字列、Accept-Languageなどで内容が変わる場合、キャッシュキーに含めないと誤配信、含めすぎるとキャッシュヒット率低下が起きます。ユーザー依存GETはキャッシュキーで厳密に分離するか非キャッシュ、POST/更新系はキャッシュ対象外、という判断軸で整理します。',
+            },
+            {
+                text: 'APIレスポンスはすべて同じキャッシュキーで共有すれば、最も安全で高速になる',
+                isCorrect: false,
+                explanation:
+                    'ユーザーや認可状態で変わるAPIレスポンスを同じキャッシュキーで共有すると、別ユーザーのデータを返す重大な誤配信につながります。',
+            },
+            {
+                text: 'Authorizationヘッダーをオリジンへ転送すれば、キャッシュキーに関係なく誤配信は絶対に起きない',
+                isCorrect: false,
+                explanation:
+                    'オリジンへ転送する値とキャッシュキーに含める値は別の設計要素です。Authorizationをオリジンへ送っても、キャッシュキーで分離しないまま共有キャッシュすると誤配信のリスクがあります。',
+            },
+            {
+                text: 'POST APIはCloudFrontで長期キャッシュできるため、GET APIよりキャッシュに向いている',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontの通常のキャッシュ対象はGET/HEAD、またはGET/HEAD/OPTIONSです。POSTはキャッシュ対象ではないため、レイテンシ改善はバックエンド設計、接続、地域配置、API Gateway/ALB側の最適化で考えます。',
+            },
+        ],
+        explanation:
+            'API Gateway/ALB前段のCloudFrontでは、キャッシュしたい気持ちよりも、レスポンスが何で変わるかを先に整理します。公開GETはキャッシュ可能、ユーザー依存GETはキャッシュキー分離または非キャッシュ、POST/更新系はキャッシュ対象外です。キャッシュ効率とセキュリティはトレードオフになるため、静的コンテンツ、動的API、認可、ルーティングを用途ごとに分離するのが正解です。',
+    },
 ]

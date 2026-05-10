@@ -450,30 +450,42 @@ function confirmReset() {
                             <li
                                 v-for="(opt, i) in currentQuestion.options"
                                 :key="`${currentIndex}-${i}`"
-                                class="TestQuestions__option"
-                                :class="`TestQuestions__option--${optionState(i)}`"
-                                @click="selectOption(i)"
+                                class="TestQuestions__optionItem"
                             >
-                                <div class="TestQuestions__optionMain">
-                                    <span class="TestQuestions__optionMark">{{
-                                        optionLabels[i]
-                                    }}</span>
-                                    <span class="TestQuestions__optionText">{{
-                                        opt.text
-                                    }}</span>
+                                <button
+                                    type="button"
+                                    class="TestQuestions__option"
+                                    :class="`TestQuestions__option--${optionState(i)}`"
+                                    :disabled="isAnswered"
+                                    @click="selectOption(i)"
+                                >
+                                    <span class="TestQuestions__optionMain">
+                                        <span
+                                            class="TestQuestions__optionMark"
+                                            >{{ optionLabels[i] }}</span
+                                        >
+                                        <span
+                                            class="TestQuestions__optionText"
+                                            >{{ opt.text }}</span
+                                        >
+                                        <span
+                                            v-if="isAnswered"
+                                            class="TestQuestions__optionBadge"
+                                        >
+                                            {{
+                                                opt.isCorrect
+                                                    ? '正解'
+                                                    : '不正解'
+                                            }}
+                                        </span>
+                                    </span>
                                     <span
                                         v-if="isAnswered"
-                                        class="TestQuestions__optionBadge"
+                                        class="TestQuestions__optionExplanation"
                                     >
-                                        {{ opt.isCorrect ? '正解' : '不正解' }}
+                                        {{ opt.explanation }}
                                     </span>
-                                </div>
-                                <p
-                                    v-if="isAnswered"
-                                    class="TestQuestions__optionExplanation"
-                                >
-                                    {{ opt.explanation }}
-                                </p>
+                                </button>
                             </li>
                         </ul>
 
@@ -816,12 +828,24 @@ function confirmReset() {
         list-style: none;
     }
 
+    &__optionItem {
+        min-width: 0;
+    }
+
     &__option {
+        display: block;
+        width: 100%;
         padding: 16px 20px;
+        font: inherit;
+        text-align: left;
         background-color: #fff;
         border: 2px solid #e5e5e5;
         border-radius: 10px;
         transition: all 0.15s ease;
+
+        &:disabled {
+            color: inherit;
+        }
 
         &--neutral {
             cursor: pointer;

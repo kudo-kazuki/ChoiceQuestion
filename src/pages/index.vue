@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { questionSetCounts } from '@/assets/test_questions/manifest'
 import { useWindowSizeAndDevice } from '@/composables/useWindowSizeAndDevice'
 const { width, height, deviceType } = useWindowSizeAndDevice()
 
@@ -100,6 +101,9 @@ const questionSets = [
                                 <span class="Page__cardDescription">
                                     {{ questionSet.description }}
                                 </span>
+                                <span class="Page__cardMeta">
+                                    {{ questionSetCounts[questionSet.to] }} 問
+                                </span>
                             </span>
                             <span class="Page__arrow">→</span>
                         </router-link>
@@ -115,9 +119,7 @@ const questionSets = [
     width: 100%;
     overflow: hidden;
     height: 100%;
-    background:
-        linear-gradient(180deg, #f7f9fc 0%, #fff 44%),
-        #fff;
+    background: linear-gradient(180deg, #f7f9fc 0%, #fff 44%), #fff;
 
     &__inner {
         width: min(100%, 1120px);
@@ -306,6 +308,22 @@ const questionSets = [
         font-size: 13px;
         line-height: 1.5;
         color: #6d7786;
+    }
+
+    &__cardMeta {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 22px;
+        padding: 3px 8px;
+        margin-top: 12px;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1;
+        color: #3d4654;
+        background-color: #f3f6fa;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
     }
 
     &__arrow {
