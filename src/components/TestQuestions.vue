@@ -939,9 +939,9 @@ function confirmReset() {
     }
 
     &__optionExplanation {
-        padding: 0 20px 0 48px;
-        margin: 0;
-        margin-top: 4px;
+        display: block;
+        padding: 0 0 0 48px;
+        margin: 8px 0 0;
         font-size: 13px;
         line-height: 1.7;
         color: #555;
