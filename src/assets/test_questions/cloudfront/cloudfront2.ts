@@ -545,4 +545,516 @@ export const testQuestions: Question[] = [
         explanation:
             '試験では「オリジングループを使えば何でも自動冗長化できる」と考えないことが重要です。読み取り系のGET/HEAD/OPTIONSと、書き込みを伴うPOST/PUTでは、CloudFrontで吸収できる範囲とアプリケーション側で設計すべき範囲が違います。',
     },
+    {
+        question:
+            '既存のCloudFrontディストリビューションAで `www.example.com` を使っています。新しいディストリビューションBへ切り替えるため、Bにも同じ代替ドメイン名を追加しようとしたところ失敗しました。最も適切な理由と対応はどれですか?',
+        options: [
+            {
+                text: '同じ代替ドメイン名は複数ディストリビューションへ重複登録できないため、証明書を用意したうえで移行手順に従ってCNAMEを移動する',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontでは同じ代替ドメイン名 / CNAME（独自ドメインを使うための設定）を複数のディストリビューションへ重複登録できません。移行先には対象ドメインをカバーする証明書を用意し、CloudFrontのCNAME移行手順やDNS切り替えを計画して進めます。',
+            },
+            {
+                text: 'DNSのTTLを0にすれば、同じCNAMEを複数ディストリビューションに登録できる',
+                isCorrect: false,
+                explanation:
+                    'DNSのTTL（DNS応答をキャッシュしてよい時間）を短くしても、CloudFront側の代替ドメイン名重複制約は変わりません。',
+            },
+            {
+                text: 'Bのディストリビューションをus-east-1に作成すれば、同じCNAMEを重複登録できる',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontはグローバルサービスであり、ディストリビューションを `us-east-1` に作るという考え方ではありません。CNAME重複制約もリージョン変更では解決しません。',
+            },
+            {
+                text: '代替ドメイン名を大文字で登録すれば、CloudFrontは別名として扱う',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontの代替ドメイン名は小文字で登録する必要があります。大文字小文字の違いで重複を回避する設計はできません。',
+            },
+        ],
+        explanation:
+            'CNAME移行は、DNS切り替えだけで完了するものではなく、CloudFront側の代替ドメイン名移動手順も含めて計画する必要があります。証明書・DNS・CloudFront設定は独立した要素ですが、必ずセットで整合させます。試験では「同じCNAMEを2つのCloudFrontに同時登録してDNSで切り替える」という選択肢は誤りになりやすいです。',
+    },
+    {
+        question:
+            'CloudFrontで `*.example.com` の代替ドメイン名と証明書を使っています。この構成で最も正しい説明はどれですか?',
+        options: [
+            {
+                text: '`www.example.com` や `api.example.com` には使えるが、`example.com` 自体は別途代替ドメイン名と証明書でカバーする必要がある',
+                isCorrect: true,
+                explanation:
+                    '`*.example.com` は `www.example.com` や `api.example.com` のような1階層サブドメインをカバーできますが、apexドメイン（`example.com` のようなルートドメイン）自体や、多段サブドメインの `a.b.example.com` はカバーしません。使いたい名前は、証明書のSAN（証明書が有効なドメイン名の一覧）とCloudFrontの代替ドメイン名の両方で一致している必要があります。',
+            },
+            {
+                text: '`*.example.com` があれば、`example.com` も `a.b.example.com` もすべて自動的にカバーされる',
+                isCorrect: false,
+                explanation:
+                    'ワイルドカード証明書やワイルドカード代替ドメイン名の範囲には制約があります。`*.example.com` は通常 `example.com` 自体をカバーせず、複数階層の `a.b.example.com` も別途考慮が必要です。',
+            },
+            {
+                text: 'ワイルドカード代替ドメイン名では証明書のSAN確認は不要になる',
+                isCorrect: false,
+                explanation:
+                    'ワイルドカードを使う場合でも、代替ドメイン名は証明書のSANでカバーされている必要があります。',
+            },
+            {
+                text: 'ワイルドカードは `api.*.example.com` のように任意の位置に置ける',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontのワイルドカード代替ドメイン名は、先頭に `*.` を置く形式で使います。ドメイン名の途中にワイルドカードを置くことはできません。',
+            },
+        ],
+        explanation:
+            'ワイルドカードは便利ですが、apexドメインや複数階層サブドメインまで自動で含むわけではありません。証明書とCloudFront代替ドメイン名は別々の設定なので、どちらか片方だけ合っていてもHTTPS独自ドメインとしては成立しません。',
+    },
+    {
+        question:
+            'Route 53で `example.com` のapexドメインをCloudFrontへ向けたいです。最も適切なDNS設計はどれですか?',
+        options: [
+            {
+                text: 'Route 53のA/AAAAエイリアスレコードをCloudFrontディストリビューションへ向ける',
+                isCorrect: true,
+                explanation:
+                    'Route 53のエイリアスレコード（AWSリソースへ向けられるRoute 53独自の拡張DNSレコード）は、通常のCNAMEと異なりapexドメインにも設定できます。IPv6も有効にする場合は、Aエイリアスに加えてAAAAエイリアスも作成します。',
+            },
+            {
+                text: '`example.com` に通常のCNAMEレコードを作成してCloudFrontへ向ける',
+                isCorrect: false,
+                explanation:
+                    'DNSの一般的な制約として、apexドメインに通常のCNAMEを置くことはできません。Route 53ではA/AAAAエイリアスレコードを使うのが一般的です。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名だけ追加すれば、DNS設定なしで `example.com` が使える',
+                isCorrect: false,
+                explanation:
+                    'CloudFront側の代替ドメイン名だけでは、利用者のDNS問い合わせはCloudFrontへ向きません。DNSレコード設定も必要です。',
+            },
+            {
+                text: 'ACM証明書を発行すれば、Route 53のレコードは自動的に本番切り替えされる',
+                isCorrect: false,
+                explanation:
+                    'ACM証明書（HTTPS通信で使う証明書）の発行と、DNSの本番向き先設定は別です。証明書、代替ドメイン名、DNSレコードをそろえます。',
+            },
+        ],
+        explanation:
+            'CloudFrontの独自ドメインでは、apexドメインなら通常のCNAMEは使えないためRoute 53 alias、サブドメインならCNAMEまたはalias、という判断が出ます。Route 53 aliasはAWSリソース向けの拡張で、CloudFront向けのSAA頻出ポイントです。',
+    },
+    {
+        question:
+            'CloudFrontで「利用者にはHTTPSを強制したいが、オリジンのALBへはHTTPで接続する」設計を検討しています。最も正しい理解はどれですか?',
+        options: [
+            {
+                text: 'Viewer → CloudFrontはビューワープロトコルポリシーでHTTPS強制し、CloudFront → OriginはオリジンプロトコルポリシーでHTTP Onlyにできる',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontでは、Viewer → CloudFront はビューワープロトコルポリシーで制御し、CloudFront → Origin はオリジンプロトコルポリシーで制御します。この2つは独立した設定です。利用者側はHTTPSへリダイレクトまたはHTTPS Onlyにしつつ、オリジン側は要件に応じてHTTP Only、HTTPS Only、Match Viewerを選べます。',
+            },
+            {
+                text: 'Viewer → CloudFrontをHTTPSにすると、CloudFront → Originも必ずHTTPSになる',
+                isCorrect: false,
+                explanation:
+                    'ビューワー側とオリジン側は別設定です。ビューワープロトコルポリシーだけでは、CloudFrontからオリジンへの通信方式は決まりません。',
+            },
+            {
+                text: 'CloudFront → OriginをHTTPにすると、Viewer → CloudFrontでもHTTPSは使えない',
+                isCorrect: false,
+                explanation:
+                    'オリジン側がHTTPでも、ビューワー側でHTTPSを使うことはできます。ただし、要件によってはエンドツーエンドでHTTPSにすべきです。',
+            },
+            {
+                text: 'OACを有効にすれば、Viewer側とOrigin側のプロトコルポリシーは不要になる',
+                isCorrect: false,
+                explanation:
+                    'OAC（Origin Access Control）は対応オリジンへのアクセス制御や署名に関係します。HTTP/HTTPSの通信方式を決めるプロトコルポリシーとは別です。',
+            },
+        ],
+        explanation:
+            'HTTPS設計では、証明書をどこで使うかも分けて考えます。オリジンをHTTPにする設計は可能ですが、セキュリティ要件によってはViewer → CloudFrontだけでなくCloudFront → OriginもHTTPSにするエンドツーエンドHTTPSが推奨されます。CloudFrontのビューワー向け証明書は `us-east-1` のACMが必要で、ALB側でHTTPSにするならALBのリージョンでオリジン用証明書を管理します。',
+    },
+    {
+        question:
+            '会員向け動画配信で、HLSの複数セグメントファイルをCloudFront経由で制限付き配信したいです。既存URLは変えたくありません。最も適切な選択はどれですか?',
+        options: [
+            {
+                text: '署名付きCookieを使い、キーグループの公開鍵でCloudFrontが署名を検証できるようにする',
+                isCorrect: true,
+                explanation:
+                    '署名付きCookie（Cookieで複数ファイルへのアクセスを許可する仕組み）は、HLS動画のようにマニフェストと複数セグメントファイルをまとめて扱う配信に向きます。URLを書き換えずに認可制御でき、CloudFrontはキーグループの公開鍵で署名を検証し、アプリケーション側は対応する秘密鍵でCookieを発行します。',
+            },
+            {
+                text: '各セグメントURLに個別の署名付きURLを必ず付ける必要があり、Cookieは使えない',
+                isCorrect: false,
+                explanation:
+                    '署名付きURLも使えますが、複数ファイルや既存URLを変えたくない場合は署名付きCookieが向いています。',
+            },
+            {
+                text: '地理的制限を有効にすれば、会員認証の代わりとして十分である',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。会員ごとの認可や期限付きアクセス制御の代わりにはなりません。',
+            },
+            {
+                text: 'WAFのSQLインジェクション対策ルールだけで動画ファイルの会員制限を実現する',
+                isCorrect: false,
+                explanation:
+                    'WAFはWebリクエストの検査・防御に使いますが、会員ごとのコンテンツアクセス許可を管理する仕組みではありません。',
+            },
+        ],
+        explanation:
+            '制限付き配信では、署名付きURL、署名付きCookie、WAF、地理的制限の役割を分けます。署名付きCookieは「複数ファイル」「既存URLを変えたくない」「Cookieでまとめて認可したい」場合の選択肢として重要です。',
+    },
+    {
+        question:
+            '特定の1つのインストーラー `setup.exe` を、購入者だけが24時間ダウンロードできるようにしたいです。CloudFrontの制限付き配信として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '有効期限付きの署名付きURLを発行し、必要ならカスタムポリシーでIPアドレス条件も追加する',
+                isCorrect: true,
+                explanation:
+                    '署名付きURLは、個別ファイルへの一時的なアクセス許可に向いています。URL自体に署名情報を持たせるため、単一ファイルなら管理しやすく、キャッシュ対象URLも明確です。基本的な有効期限に加え、カスタムポリシーを使うとIPアドレス制限なども指定できます。',
+            },
+            {
+                text: '署名付きCookieを必ず使う。個別ファイルには署名付きURLは使えない',
+                isCorrect: false,
+                explanation:
+                    '個別ファイルへの制限付きアクセスには署名付きURLが向いています。署名付きCookieは複数ファイルや既存URLを変えたくない場合に向きます。',
+            },
+            {
+                text: 'CloudFrontの標準ログを有効にすれば、未購入者のダウンロードは自動的に拒否される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはアクセス記録であり、認可制御ではありません。未購入者を拒否するには署名付きURL/Cookieやアプリケーション側の認可が必要です。',
+            },
+            {
+                text: 'Route 53 aliasを使えば、購入者だけに自動でアクセス制限できる',
+                isCorrect: false,
+                explanation:
+                    'Route 53 aliasはDNSでCloudFrontへ向けるための設定です。購入者かどうかの認可は行いません。',
+            },
+        ],
+        explanation:
+            'SAA風の問題では「個別ファイルなら署名付きURL」「複数ファイルやURLを変えたくないなら署名付きCookie」という判断軸がよく効きます。多数のファイルに個別URL署名を付けるとURL管理が複雑になるため、用途に応じてCookieと使い分けます。',
+    },
+    {
+        question:
+            'CloudFrontで日本以外からのアクセスを拒否しつつ、SQLインジェクションや大量リクエストも防ぎたいです。設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontの地理的制限またはAWS WAFの地理一致条件で国制限を行い、WAFのマネージドルールやレートベースルールも組み合わせる',
+                isCorrect: true,
+                explanation:
+                    '地理的制限（国単位のアクセス制御）は国での許可/拒否に使えます。SQLインジェクションのようなリクエスト内容の検査や、大量リクエストへのレート制御にはWAF（Web Application Firewall）のマネージドルールやレートベースルールを組み合わせます。',
+            },
+            {
+                text: 'CloudFrontの地理的制限だけで、SQLインジェクションや大量リクエストも自動的に防げる',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。リクエスト内容の攻撃検査やレート制限にはWAFを使います。',
+            },
+            {
+                text: 'WAFを使うとCloudFrontのキャッシュが完全に無効になるため、使うべきではない',
+                isCorrect: false,
+                explanation:
+                    'WAFをCloudFrontに関連付けても、CloudFrontのキャッシュ機能そのものが完全に無効になるわけではありません。セキュリティ要件に応じて組み合わせます。',
+            },
+            {
+                text: '署名付きURLを使えば、国制限とSQLインジェクション対策とレート制限がすべて自動で有効になる',
+                isCorrect: false,
+                explanation:
+                    '署名付きURLは制限付きコンテンツへのアクセス許可に使います。国制限、攻撃検査、レート制限は別の機能で設計します。',
+            },
+        ],
+        explanation:
+            'セキュリティ設計では、国単位の制限、認可、攻撃検査、レート制限を別々の目的として整理します。地理的制限とWAFは役割が異なり、要件によって組み合わせて使います。署名付きURL/Cookieはさらに別の、制限付きコンテンツへの認可制御です。',
+    },
+    {
+        question:
+            'CloudFrontで署名付きURLと署名付きCookieを同じファイルに対して両方使った場合の挙動として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'リクエストに署名付きURLのパラメータが含まれる場合、CloudFrontは署名付きURLを優先して判定する',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontでは署名付きURLと署名付きCookieを同じファイルに使った場合、署名付きURLが優先されます。URLに `Expires`、`Policy`、`Signature`、`Key-Pair-Id` など署名用のクエリパラメータが含まれる場合、CloudFrontは署名付きCookieではなく署名付きURLに基づいてアクセス可否を判断します。',
+            },
+            {
+                text: '署名付きCookieが常に署名付きURLより優先される',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontでは、同じファイルへのアクセス制御で署名付きURLがある場合、署名付きURLが優先されます。',
+            },
+            {
+                text: '両方を使うとCloudFrontは必ず403を返す',
+                isCorrect: false,
+                explanation:
+                    '両方が存在するだけで必ず403になるわけではありません。優先される署名付きURLの条件に基づいて判定されます。',
+            },
+            {
+                text: '両方を使うとCloudFrontはWAFを自動的に無効化する',
+                isCorrect: false,
+                explanation:
+                    '署名付きURL/Cookieの利用とWAFの有効無効は別です。WAFはWeb ACLとしてCloudFrontディストリビューションに関連付けます。',
+            },
+        ],
+        explanation:
+            '署名付きURLで使う `Expires`、`Policy`、`Signature`、`Key-Pair-Id` などのクエリ文字列はCloudFrontで特別扱いされます。既存URLにこれらの名前を使っている場合は、アプリケーション側のクエリ文字列と衝突するリスクがあります。',
+    },
+    {
+        question:
+            '既存のS3オリジンでOAIを使って非公開配信しています。SSE-KMS暗号化や新しいリージョンへの対応を考え、OACへ移行したいです。移行手順として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '一時的にバケットポリシーでOAIとOACの両方を許可し、ディストリビューションをOACへ切り替えてデプロイ完了後にOAIの許可を削除する',
+                isCorrect: true,
+                explanation:
+                    'OAI（Origin Access Identity）からOAC（Origin Access Control）へ移行する場合、CloudFront設定変更はすべてのエッジロケーションへ即時反映されません。伝播中のアクセス断を避けるゼロダウンタイム移行のため、まずS3バケットポリシーで既存OAIと新しいOAC付きディストリビューションの両方を許可し、デプロイ完了後にOAI向け許可を削除します。',
+            },
+            {
+                text: '最初にOAI向けのバケットポリシーを削除し、その後ゆっくりOACを設定する',
+                isCorrect: false,
+                explanation:
+                    '先にOAIの許可を削除すると、CloudFrontがS3へアクセスできなくなり配信停止につながる可能性があります。移行中は両方を許可しておくのが安全です。',
+            },
+            {
+                text: 'S3バケットをパブリック公開すればOAC移行は不要で、セキュリティ上も同等である',
+                isCorrect: false,
+                explanation:
+                    'S3をパブリック公開すると、CloudFrontを経由しない直接アクセスを許すことになります。OACはS3を直接公開せずCloudFront経由に制限するための仕組みです。',
+            },
+            {
+                text: 'OAIとOACは同時にバケットポリシーへ書けないため、必ずメンテナンス停止が必要である',
+                isCorrect: false,
+                explanation:
+                    '移行時には、OAI向けとOAC向けの両方の許可をバケットポリシーに含められます。停止を避けるための段階的な移行が可能です。',
+            },
+        ],
+        explanation:
+            'OACはOAIより新しい推奨方式で、SSE-KMS（AWS KMSによるS3サーバー側暗号化）、新しいリージョン、S3への動的リクエストなどに対応します。既存OAI構成では、CloudFrontの伝播時間を考慮し、いきなり置き換えず段階的に移行する判断が重要です。',
+    },
+    {
+        question:
+            'S3バケットでパブリックアクセスブロックを有効にしたまま、CloudFront OAC経由で静的ファイルを配信したいです。最も適切な理解はどれですか?',
+        options: [
+            {
+                text: 'パブリックアクセスブロックは公開許可を抑止する設定であり、OACとバケットポリシーで明示的に許可したCloudFrontからの非公開アクセスとは両立できる',
+                isCorrect: true,
+                explanation:
+                    'S3 Public Access Block（S3のパブリック公開を防ぐ保護設定）は、すべてのアクセスを拒否する設定ではなく、パブリックな許可を抑止する設定です。OACを使い、バケットポリシーでPrincipalに `cloudfront.amazonaws.com`、条件の `AWS:SourceArn` に対象ディストリビューションARN（AWSリソースを一意に表す名前）を指定して `s3:GetObject` を許可すれば、S3を公開せずCloudFront経由だけで配信できます。',
+            },
+            {
+                text: 'パブリックアクセスブロックを有効にすると、CloudFrontからのアクセスも必ず拒否される',
+                isCorrect: false,
+                explanation:
+                    'パブリックアクセスブロックは公開アクセスを防ぐための設定です。明示的に許可されたCloudFront OAC経由のアクセスとは別に考えます。',
+            },
+            {
+                text: 'OACを使うには、パブリックアクセスブロックを無効化し、全オブジェクトを公開する必要がある',
+                isCorrect: false,
+                explanation:
+                    'OACはS3を直接公開せずCloudFront経由に制限するための機能です。全オブジェクト公開はOACの目的と逆です。',
+            },
+            {
+                text: 'バケットポリシーでは `s3:*` を許可するのが最小権限である',
+                isCorrect: false,
+                explanation:
+                    '`s3:*` は広すぎます。読み取り配信だけなら通常 `s3:GetObject` を対象オブジェクトに限定して許可します。',
+            },
+        ],
+        explanation:
+            '設計原則は「S3は非公開のまま、CloudFrontだけを明示的に許可」です。パブリックアクセスブロック、OAC、バケットポリシーをセットで考えると、公開アクセスは防ぎつつ、明示的に許可されたCloudFrontサービスアクセスは通せます。',
+    },
+    {
+        question:
+            'S3オリジンでSSE-KMS暗号化されたオブジェクトをCloudFrontから配信したいです。OACを使う場合の設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3バケットポリシーでCloudFrontからのGetObjectを許可し、KMSキーポリシーでも対象ディストリビューションからの利用を許可する',
+                isCorrect: true,
+                explanation:
+                    'SSE-KMS（AWS KMSによるS3サーバー側暗号化）のオブジェクトをOAC経由で配信する場合、S3バケットポリシーだけでは不十分です。S3アクセス権限に加えて、KMSキーポリシーでもCloudFrontサービスプリンシパルに `kms:Decrypt` を許可し、`AWS:SourceArn` などで対象ディストリビューションに絞る設計が基本です。',
+            },
+            {
+                text: 'OACを使えばKMSキーポリシーは一切不要になり、自動的に復号できる',
+                isCorrect: false,
+                explanation:
+                    'OACを使っても、SSE-KMSの復号にはKMSキー側の権限が必要です。S3とKMSの両方の権限を確認します。',
+            },
+            {
+                text: 'SSE-KMSを使う場合はOAIを使うのが推奨で、OACは対応していない',
+                isCorrect: false,
+                explanation:
+                    '逆です。OACはSSE-KMSに対応しており、OAIより推奨されます。OAIではSSE-KMSなどで制約や回避策が必要になります。',
+            },
+            {
+                text: 'KMSキーをパブリックにすれば、CloudFrontから安全に配信できる',
+                isCorrect: false,
+                explanation:
+                    'KMSキーを広く許可するのは危険です。対象CloudFrontディストリビューションなどに絞って最小権限で許可します。',
+            },
+        ],
+        explanation:
+            'OAC/OAIの移行判断では、SSE-KMS、新しいリージョン、S3へのPUT/DELETEなど、OAIが苦手な領域を確認します。SSE-KMSを使う構成では、S3アクセス権限とKMS復号権限という2つの権限レイヤーを分けて設計します。',
+    },
+    {
+        question:
+            'CloudFrontの制限付き配信で「会員エリア全体にアクセスさせたいが、既存URLは変更したくない」場合の判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '署名付きCookieを使い、複数ファイルに対するアクセス権をCookieでまとめて渡す',
+                isCorrect: true,
+                explanation:
+                    '署名付きCookieは、HLSのセグメントファイルのように多数の制限付きファイルへアクセスさせたい場合や、既存URLを変更したくない場合に向きます。Cookieでセッション的に認可情報を持たせられるため、CloudFrontはCookie内の署名やポリシーを検証し、条件に合う場合だけコンテンツを返します。',
+            },
+            {
+                text: 'すべてのURLに個別の署名付きURLを付けるしかない',
+                isCorrect: false,
+                explanation:
+                    '個別ファイルなら署名付きURLが向きますが、会員エリア全体やHLS動画の複数ファイルでは署名付きCookieの方が扱いやすい場合があります。',
+            },
+            {
+                text: 'WAFを有効化すれば、会員ごとのアクセス許可が自動的に管理される',
+                isCorrect: false,
+                explanation:
+                    'WAFはリクエスト内容の検査やレート制限に使うサービスです。会員ごとのコンテンツ認可を自動管理する機能ではありません。',
+            },
+            {
+                text: '地理的制限を有効にすれば、会員エリアの認可制御として十分である',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。会員ごとの認可とは目的が違います。',
+            },
+        ],
+        explanation:
+            '署名付きURL/Cookieは「誰にどのコンテンツを許可するか」を扱います。単一ファイルなら署名付きURL、複数ファイルやURL変更不可なら署名付きCookieが基本判断です。キャッシュとの相性も考え、署名付きURLではURLごとの管理、Cookieでは既存URLを維持した制御がしやすくなります。',
+    },
+    {
+        question:
+            'CloudFrontで特定国からのアクセス拒否と、SQLインジェクション対策、レート制限を同時に行いたいです。設計判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '国単位の単純な制限はCloudFront地理的制限またはWAFの地理一致条件で行い、攻撃検査やレート制限はWAFルールで行う',
+                isCorrect: true,
+                explanation:
+                    'CloudFront geo restriction（CloudFrontの地理的制限）は国単位の許可/拒否に使えます。一方、SQLインジェクション対策やレート制限はAWS WAFのWeb ACL、マネージドルール、レートベースルールで行います。目的ごとに機能を分けるのが適切です。',
+            },
+            {
+                text: 'CloudFront地理的制限だけで、SQLインジェクションやレート制限も自動的に処理される',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。リクエスト内容の攻撃検査やリクエスト数の制御はWAFで行います。',
+            },
+            {
+                text: 'WAFを使うと地理的な条件は設定できないため、必ずCloudFront地理的制限だけを使う',
+                isCorrect: false,
+                explanation:
+                    'WAFにも地理一致条件があります。単純な国制限ならCloudFront地理的制限、複雑な条件と組み合わせるならWAF、という判断ができます。',
+            },
+            {
+                text: '署名付きURLを使えば、国制限、攻撃検査、レート制限をすべて置き換えられる',
+                isCorrect: false,
+                explanation:
+                    '署名付きURLは制限付きコンテンツへのアクセス許可に使います。国制限や攻撃検査、レート制限とは役割が異なります。',
+            },
+        ],
+        explanation:
+            'セキュリティ・制限付き配信では、認可、国制限、攻撃検査、レート制限を分けて考えます。地理的制限は国単位のアクセス制御、WAFは攻撃検査・レート制御、署名付きURL/Cookieは認可制御です。これらは置き換えではなく、要件に応じて組み合わせる機能です。',
+    },
+    {
+        question:
+            'CloudFrontで全リクエストに対して軽量なURL正規化と単純なリダイレクトを行いたいです。低レイテンシで実行したい場合の選択として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFront Functionsをビューワーリクエストイベントに関連付ける',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functionsは、ビューワーリクエスト/ビューワーレスポンスで動く超低レイテンシの軽量JavaScript処理に向いています。エッジで即実行されますが、外部ネットワークアクセスや重い処理には向きません。URL正規化、単純なリダイレクト、ヘッダー操作などが典型です。',
+            },
+            {
+                text: 'Lambda@Edgeのオリジンレスポンスイベントを必ず使う',
+                isCorrect: false,
+                explanation:
+                    '単純なビューワー側のURL正規化やリダイレクトなら、CloudFront Functionsが軽量で適しています。オリジンレスポンスはCloudFrontがオリジンからレスポンスを受け取った後のイベントで、今回の用途とは合いません。',
+            },
+            {
+                text: 'WAFのSQLインジェクション対策ルールでURL正規化を実装する',
+                isCorrect: false,
+                explanation:
+                    'WAFは攻撃検査やレート制限に使うサービスであり、一般的なURL正規化ロジックを実装する場所ではありません。',
+            },
+            {
+                text: 'CloudFront標準ログを有効にすれば、リダイレクトが自動実行される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはリクエスト記録であり、リダイレクト処理を実行する機能ではありません。',
+            },
+        ],
+        explanation:
+            'エッジ処理では、まずCloudFront Functionsで足りるかを確認します。軽量・低レイテンシなviewer request/viewer response処理ならCloudFront Functions、外部連携や重い処理、origin request/origin responseが必要な場合はLambda@Edgeを検討します。',
+    },
+    {
+        question:
+            'CloudFrontでオリジンへリクエストを送る直前に、パスを書き換えたりオリジン向けヘッダーを追加したりしたいです。最も適切な選択はどれですか?',
+        options: [
+            {
+                text: 'Lambda@Edgeをオリジンリクエストイベントに関連付ける',
+                isCorrect: true,
+                explanation:
+                    'Lambda@Edgeは、ビューワーリクエスト/レスポンスだけでなく、オリジンリクエスト/レスポンスでも実行できます。CloudFront Functionsはオリジン向きイベントでは使えないため、オリジンへ送る直前の処理にはLambda@Edgeを検討します。',
+            },
+            {
+                text: 'CloudFront Functionsをオリジンリクエストイベントに関連付ける',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsはビューワーリクエスト/ビューワーレスポンスのイベントで使う機能です。オリジンリクエストやオリジンレスポンスでは使えません。',
+            },
+            {
+                text: 'CloudFrontの地理的制限を有効にすれば、オリジン向けヘッダーを追加できる',
+                isCorrect: false,
+                explanation:
+                    '地理的制限は国単位のアクセス制御です。オリジン向けヘッダー追加やパス書き換えにはエッジ関数を検討します。',
+            },
+            {
+                text: 'OAIを有効にすれば、任意のヘッダー変換ができる',
+                isCorrect: false,
+                explanation:
+                    'OAIはS3オリジンへのアクセス制限のレガシーな仕組みです。ヘッダー変換やパス書き換えを行う機能ではありません。',
+            },
+        ],
+        explanation:
+            'Lambda@Edgeを使う場合は、関数を `us-east-1` に作成し、`$LATEST` ではなく発行済みバージョンをキャッシュビヘイビアのイベントに関連付けます。通常のLambdaと異なり制約があり、デプロイ反映にも時間がかかるため、どのイベントで処理するかを事前に決めることが重要です。',
+    },
+    {
+        question:
+            'CloudFront FunctionsとLambda@Edgeの選択で、最も適切な設計判断はどれですか?',
+        options: [
+            {
+                text: '軽量なビューワー側処理はCloudFront Functionsを優先し、オリジン側イベントやより複雑な処理が必要な場合にLambda@Edgeを検討する',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functionsは高速・軽量なviewer request/viewer response処理向けです。Lambda@Edgeはorigin request/origin responseにも対応でき、より柔軟な処理に使えますが、`us-east-1`、発行済みバージョン、デプロイ反映、通常のLambdaとの制約差などを考慮する必要があります。',
+            },
+            {
+                text: 'Lambda@Edgeの方が高機能なので、すべての処理でCloudFront Functionsを使うべきではない',
+                isCorrect: false,
+                explanation:
+                    '高機能な方を常に選ぶのが正解ではありません。軽量なビューワー側処理ならCloudFront Functionsの方が低レイテンシで適している場合があります。',
+            },
+            {
+                text: 'CloudFront Functionsはオリジンリクエストでも使えるため、Lambda@Edgeは不要である',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsはオリジンリクエスト/レスポンスでは使えません。オリジン側イベントが必要ならLambda@Edgeを検討します。',
+            },
+            {
+                text: 'どちらもキャッシュビヘイビアに関連付ける必要はなく、作成すれば全ディストリビューションで自動実行される',
+                isCorrect: false,
+                explanation:
+                    'CloudFront FunctionsもLambda@Edgeも、対象のディストリビューション、キャッシュビヘイビア、イベントに関連付けて使います。作成しただけでは全配信に自動適用されません。',
+            },
+        ],
+        explanation:
+            'エッジ処理の設計では「どのイベントで処理するか」が最重要です。viewer request、viewer response、origin request、origin responseのどこで処理したいか、処理の重さ、レイテンシ要求、外部連携の有無を整理します。SAAでは、CloudFront FunctionsとLambda@Edgeのイベント範囲と制約の違いが判断軸になります。',
+    },
 ]
