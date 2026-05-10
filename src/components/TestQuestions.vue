@@ -16,6 +16,7 @@ interface SavedQuizState {
     questions: Question[]
     currentIndex: number
     selections: Record<number, number>
+    surrenderedQuestions?: Record<number, true>
     showResults: boolean
 }
 
@@ -100,6 +101,25 @@ function isSelectionRecord(value: unknown): value is Record<number, number> {
     )
 }
 
+function isSurrenderRecord(value: unknown): value is Record<number, true> {
+    if (value === undefined) return true
+
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.entries(value).every(([i, surrendered]) => {
+            const questionIndex = Number(i)
+            return (
+                Number.isInteger(questionIndex) &&
+                questionIndex >= 0 &&
+                questionIndex < props.questions.length &&
+                surrendered === true
+            )
+        })
+    )
+}
+
 function isSavedQuizState(value: unknown): value is SavedQuizState {
     if (typeof value !== 'object' || value === null) return false
 
@@ -115,10 +135,14 @@ function isSavedQuizState(value: unknown): value is SavedQuizState {
         currentIndex >= 0 &&
         currentIndex < state.questions.length &&
         isSelectionRecord(state.selections) &&
+        isSurrenderRecord(state.surrenderedQuestions) &&
         typeof state.showResults === 'boolean' &&
         Object.entries(state.selections).every(([i, sel]) => {
             const question = state.questions?.[Number(i)]
             return question ? sel < question.options.length : false
+        }) &&
+        Object.keys(state.surrenderedQuestions ?? {}).every((i) => {
+            return !(i in (state.selections ?? {}))
         })
     )
 }
@@ -146,6 +170,7 @@ function saveState() {
         questions: questions.value,
         currentIndex: currentIndex.value,
         selections: selections.value,
+        surrenderedQuestions: surrenderedQuestions.value,
         showResults: showResults.value,
     }
 
@@ -172,22 +197,35 @@ const savedState = loadSavedState()
 const questions = ref<Question[]>(savedState?.questions ?? buildShuffled())
 const currentIndex = ref(savedState?.currentIndex ?? 0)
 const selections = ref<Record<number, number>>(savedState?.selections ?? {})
+const surrenderedQuestions = ref<Record<number, true>>(
+    savedState?.surrenderedQuestions ?? {},
+)
 const pendingSelection = ref<number | null>(null)
 const showResults = ref(savedState?.showResults ?? false)
 const bodyScrollbarRef = ref<ScrollbarInstance>()
 const resultsScrollbarRef = ref<ScrollbarInstance>()
 
-watch([questions, currentIndex, selections, showResults], saveState, {
-    deep: true,
-})
+watch(
+    [questions, currentIndex, selections, surrenderedQuestions, showResults],
+    saveState,
+    {
+        deep: true,
+    },
+)
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 const total = computed(() => questions.value.length)
 
-const isAnswered = computed(() => currentIndex.value in selections.value)
+const isCurrentSurrendered = computed(
+    () => currentIndex.value in surrenderedQuestions.value,
+)
+const isAnswered = computed(
+    () => currentIndex.value in selections.value || isCurrentSurrendered.value,
+)
 const isLastQuestion = computed(() => currentIndex.value === total.value - 1)
 
 const isCurrentCorrect = computed(() => {
+    if (isCurrentSurrendered.value) return false
     if (!isAnswered.value) return false
     const sel = selections.value[currentIndex.value]
     return currentQuestion.value.options[sel].isCorrect
@@ -199,13 +237,29 @@ const correctCount = computed(() =>
     }, 0),
 )
 
-const incorrectCount = computed(() =>
-    Object.entries(selections.value).reduce((n, [i, sel]) => {
-        return questions.value[Number(i)].options[sel].isCorrect ? n : n + 1
-    }, 0),
+const surrenderCount = computed(
+    () => Object.keys(surrenderedQuestions.value).length,
 )
 
-const answeredCount = computed(() => Object.keys(selections.value).length)
+const incorrectCount = computed(() => {
+    const selectedWrongCount = Object.entries(selections.value).reduce(
+        (n, [i, sel]) => {
+            return questions.value[Number(i)].options[sel].isCorrect ? n : n + 1
+        },
+        0,
+    )
+
+    return selectedWrongCount + surrenderCount.value
+})
+
+const answeredCount = computed(() => {
+    const answeredQuestionIndexes = new Set([
+        ...Object.keys(selections.value),
+        ...Object.keys(surrenderedQuestions.value),
+    ])
+
+    return answeredQuestionIndexes.size
+})
 const progressPercent = computed(
     () => (answeredCount.value / total.value) * 100,
 )
@@ -234,13 +288,24 @@ function optionState(i: number): OptionState {
     }
     const opt = currentQuestion.value.options[i]
     if (opt.isCorrect) return 'correct'
+    if (isCurrentSurrendered.value) return 'wrong'
     if (selections.value[currentIndex.value] === i) return 'wrongSelected'
     return 'wrong'
 }
 
+function isSurrenderedQuestion(i: number): boolean {
+    return i in surrenderedQuestions.value
+}
+
 function questionResult(i: number): boolean {
+    if (isSurrenderedQuestion(i)) return false
+
     const sel = selections.value[i]
     return questions.value[i].options[sel].isCorrect
+}
+
+function correctOptionText(question: Question): string {
+    return question.options.find((opt) => opt.isCorrect)?.text ?? ''
 }
 
 function selectOption(i: number) {
@@ -257,6 +322,13 @@ async function scrollContentToTop() {
 function submit() {
     if (!canSubmit.value) return
     selections.value[currentIndex.value] = pendingSelection.value as number
+    pendingSelection.value = null
+    scrollContentToTop()
+}
+
+function surrender() {
+    if (isAnswered.value) return
+    surrenderedQuestions.value[currentIndex.value] = true
     pendingSelection.value = null
     scrollContentToTop()
 }
@@ -287,6 +359,7 @@ function resetQuiz() {
     clearSavedState()
     questions.value = buildShuffled()
     selections.value = {}
+    surrenderedQuestions.value = {}
     pendingSelection.value = null
     currentIndex.value = 0
     showResults.value = false
@@ -328,6 +401,9 @@ function confirmReset() {
                         >
                             <span class="TestQuestions__scoreDot"></span>
                             不正解 {{ incorrectCount }}
+                            <span class="TestQuestions__scoreSub">
+                                (降参 {{ surrenderCount }})
+                            </span>
                         </span>
                     </div>
                 </div>
@@ -362,14 +438,18 @@ function confirmReset() {
                                 isCurrentCorrect ? '○' : '×'
                             }}</span>
                             <span class="TestQuestions__resultText">{{
-                                isCurrentCorrect ? '正解' : '不正解'
+                                isCurrentSurrendered
+                                    ? '降参'
+                                    : isCurrentCorrect
+                                      ? '正解'
+                                      : '不正解'
                             }}</span>
                         </div>
 
                         <ul class="TestQuestions__options">
                             <li
                                 v-for="(opt, i) in currentQuestion.options"
-                                :key="i"
+                                :key="`${currentIndex}-${i}`"
                                 class="TestQuestions__option"
                                 :class="`TestQuestions__option--${optionState(i)}`"
                                 @click="selectOption(i)"
@@ -409,15 +489,23 @@ function confirmReset() {
                             </p>
                         </div>
 
-                        <button
-                            v-if="!isAnswered"
-                            type="button"
-                            class="TestQuestions__submit"
-                            :disabled="!canSubmit"
-                            @click="submit"
-                        >
-                            回答する
-                        </button>
+                        <div v-if="!isAnswered" class="TestQuestions__actions">
+                            <button
+                                type="button"
+                                class="TestQuestions__surrender"
+                                @click="surrender"
+                            >
+                                降参する
+                            </button>
+                            <button
+                                type="button"
+                                class="TestQuestions__submit"
+                                :disabled="!canSubmit"
+                                @click="submit"
+                            >
+                                回答する
+                            </button>
+                        </div>
                     </div>
                 </el-scrollbar>
             </section>
@@ -462,6 +550,9 @@ function confirmReset() {
                             }}</span>
                         </p>
                     </div>
+                    <p class="TestQuestions__surrenderSummary">
+                        降参 {{ surrenderCount }}
+                    </p>
 
                     <ul class="TestQuestions__resultsList">
                         <li
@@ -480,9 +571,23 @@ function confirmReset() {
                             <div class="TestQuestions__resultsItemBody">
                                 <p class="TestQuestions__resultsItemNum">
                                     Question {{ i + 1 }}
+                                    <span
+                                        v-if="isSurrenderedQuestion(i)"
+                                        class="TestQuestions__resultsItemBadge"
+                                    >
+                                        降参
+                                    </span>
                                 </p>
                                 <p class="TestQuestions__resultsItemQuestion">
                                     {{ q.question }}
+                                </p>
+                                <p class="TestQuestions__resultsItemAnswer">
+                                    <span
+                                        class="TestQuestions__resultsItemAnswerLabel"
+                                    >
+                                        正解
+                                    </span>
+                                    <span>{{ correctOptionText(q) }}</span>
                                 </p>
                             </div>
                         </li>
@@ -619,6 +724,12 @@ function confirmReset() {
                 background-color: #d64545;
             }
         }
+    }
+
+    &__scoreSub {
+        font-size: 11px;
+        font-weight: bold;
+        opacity: 0.85;
     }
 
     &__progress {
@@ -835,11 +946,19 @@ function confirmReset() {
         color: #4a4a4a;
     }
 
+    &__actions {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        width: 100%;
+    }
+
     &__submit {
         display: block;
+        grid-column: 2;
         width: 140px;
         padding: 14px;
-        margin: 0 auto;
+        margin: 0;
         font-size: 15px;
         font-weight: bold;
         color: #fff;
@@ -857,6 +976,26 @@ function confirmReset() {
 
         &:hover:not(:disabled) {
             background-color: #3b5ce0;
+        }
+    }
+
+    &__surrender {
+        justify-self: start;
+        width: auto;
+        padding: 8px 10px;
+        font-size: 11px;
+        font-weight: bold;
+        color: #8a4a16;
+        cursor: pointer;
+        background-color: #fff7ed;
+        border: 1px solid #f2c28f;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+
+        &:hover {
+            color: #9a3412;
+            background-color: #ffedd5;
+            border-color: #f59e0b;
         }
     }
 
@@ -931,7 +1070,7 @@ function confirmReset() {
     &__scoreCard {
         display: inline-block;
         padding: 18px 44px;
-        margin-bottom: 32px;
+        margin-bottom: 8px;
         background-color: #f9faff;
         border: 2px solid #4a6cf7;
         border-radius: 16px;
@@ -941,6 +1080,14 @@ function confirmReset() {
             border-color: #e8a320;
             box-shadow: 0 6px 20px rgb(232 163 32 / 25%);
         }
+    }
+
+    &__surrenderSummary {
+        margin: 0 0 24px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #8a4a16;
+        opacity: 0.75;
     }
 
     &__scoreCardLabel {
@@ -1043,11 +1190,51 @@ function confirmReset() {
         letter-spacing: 0.05em;
     }
 
+    &__resultsItemBadge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 7px;
+        margin-left: 8px;
+        font-size: 10px;
+        color: #9a3412;
+        letter-spacing: 0;
+        background-color: #ffedd5;
+        border-radius: 999px;
+    }
+
     &__resultsItemQuestion {
         margin: 0;
         font-size: 14px;
         line-height: 1.5;
         color: #2a2a2a;
+    }
+
+    &__resultsItemAnswer {
+        position: relative;
+        display: block;
+        width: 100%;
+        padding: 10px 10px 6px;
+        margin: 14px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #36563f;
+        background-color: #f3faf5;
+        border: 1px solid #d7eadc;
+        border-radius: 6px;
+    }
+
+    &__resultsItemAnswerLabel {
+        position: absolute;
+        top: -7px;
+        left: -7px;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: bold;
+        line-height: 1;
+        color: #fff;
+        background-color: #2e8b57;
+        border-radius: 999px;
+        box-shadow: 0 1px 2px rgba(46, 139, 87, 0.2);
     }
 
     &__retry {
@@ -1173,6 +1360,11 @@ function confirmReset() {
         &__submit {
             padding: 12px;
             font-size: 14px;
+        }
+
+        &__surrender {
+            padding: 6px 8px;
+            font-size: 11px;
         }
 
         &__result {
