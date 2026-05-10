@@ -1313,4 +1313,260 @@ export const testQuestions: Question[] = [
         explanation:
             'エッジ関数のトラブルシュートでは、関数単体のログだけに依存しないことが重要です。Viewer request、CloudFront Functions/Lambda@Edge、WAF、CloudFront cache/routing、Origin、Logs/Metricsのどの層で何が起きたかを分けて確認します。',
     },
+    {
+        question:
+            'CloudFrontで4xxErrorRateが急上昇しました。WAF、署名付きURL、S3オリジンのどれが原因か切り分けたい場合、最も適切な進め方はどれですか?',
+        options: [
+            {
+                text: 'CloudWatchメトリクスで傾向を確認し、CloudFrontログの結果タイプ、WAFログ、S3アクセス/権限設定を突き合わせる',
+                isCorrect: true,
+                explanation:
+                    '4xxErrorRate（4xxエラー率）は全体傾向の把握に向きますが、それだけでは原因特定はできません。Viewer request（ビューワーからCloudFrontへのリクエスト）の署名付きURL/Cookie、Authorization、URL形式、WAFログ、CloudFrontの地理的制限やキャッシュビヘイビア、S3バケットポリシーやOAC設定を層ごとに確認します。CloudFront標準ログ/リアルタイムログの `x-edge-result-type` や `x-edge-detailed-result-type` も見て、CloudFrontが返した4xxか、オリジンが返した4xxかを切り分けます。',
+            },
+            {
+                text: '4xxは必ずビューワーの入力ミスなので、CloudFrontやオリジン設定は確認しない',
+                isCorrect: false,
+                explanation:
+                    '4xxはクライアント側要因に見えることがありますが、WAF、署名付きURL、地理的制限、S3権限、OAC設定などの構成ミスでも発生します。',
+            },
+            {
+                text: 'CloudWatchメトリクスの4xxErrorRateだけで、WAFブロックかS3権限エラーかを確定できる',
+                isCorrect: false,
+                explanation:
+                    'メトリクスは傾向監視に向きますが、個別原因の確定にはログや設定確認が必要です。',
+            },
+            {
+                text: 'Invalidationを実行すれば、4xxの原因がWAFかS3か自動判定される',
+                isCorrect: false,
+                explanation:
+                    'Invalidation（CloudFrontキャッシュの無効化）は原因判定機能ではありません。4xxの切り分けにはログと設定確認を使います。',
+            },
+        ],
+        explanation:
+            '4xx切り分けでは、Viewer request、WAF、CloudFront制御、Originのどの層で拒否されたかを分けます。署名付きURL/CookieやAuthorizationの不備、WAFのルール一致やレート制限、CloudFrontの地理的制限、S3権限や存在しないオブジェクトなど、確認場所を構造化します。CloudFrontが返した4xxとオリジンが返した4xxは、`sc-status` だけでなく `x-edge-result-type`、`x-edge-detailed-result-type`、オリジンログを合わせて判断します。',
+    },
+    {
+        question:
+            'CloudFrontで5xxErrorRateが上昇し、特に502と504が増えています。最も適切な調査方針はどれですか?',
+        options: [
+            {
+                text: 'CloudFrontログとCloudWatchメトリクスで発生状況を確認し、ALB/API Gatewayなどのオリジンログ、TLS設定、タイムアウト、ターゲット健全性を確認する',
+                isCorrect: true,
+                explanation:
+                    '5xxはCloudFront側の接続問題、オリジンが返した5xx、TLS証明書/プロトコル問題、オリジンタイムアウト、過負荷などで発生します。典型的には、502はTLSミスマッチ、証明書エラー、オリジン応答不正、503はオリジン過負荷やスロットリング（処理制限）、504はオリジンタイムアウトを疑います。CloudFrontの5xxErrorRateやOriginLatency、標準ログ/リアルタイムログ、ALBログ/API Gatewayログなどを突き合わせ、CloudFront起因かオリジン起因かを確認します。',
+            },
+            {
+                text: '5xxは必ずCloudFrontの障害なので、オリジンログは確認しない',
+                isCorrect: false,
+                explanation:
+                    '5xxはCloudFrontが返すことも、オリジンが返すこともあります。オリジンの過負荷、証明書、接続、タイムアウトを確認する必要があります。',
+            },
+            {
+                text: '5xxErrorRateが高い場合は、まずすべてのキャッシュを無効化する',
+                isCorrect: false,
+                explanation:
+                    'Invalidationはキャッシュ更新の操作であり、5xx原因の切り分けやオリジン障害の解消にはなりません。むしろオリジン負荷を増やす場合があります。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名を削除すれば、502/504は必ず解消する',
+                isCorrect: false,
+                explanation:
+                    '代替ドメイン名は独自ドメインの設定です。502/504の原因がTLSやオリジン接続にある場合もありますが、削除すれば必ず解消するわけではありません。',
+            },
+        ],
+        explanation:
+            '5xx切り分けでは、CloudFrontがオリジンへ接続できないのか、オリジンが5xxを返しているのか、CloudFrontがオリジン応答を待ち切れないのかを分けます。502はTLS/証明書/プロトコル、503は容量不足やスロットリング、504は接続・応答タイムアウトの観点で見ます。CloudWatchメトリクスは入口、CloudFrontログはリクエスト単位の詳細、オリジンログは原因追跡に使います。',
+    },
+    {
+        question:
+            'CloudFrontの監視設計で、標準ログ、リアルタイムログ、CloudWatchメトリクスを使い分ける考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'メトリクスは全体傾向とアラーム、標準ログは履歴分析・監査、リアルタイムログは障害中のライブ分析に使う',
+                isCorrect: true,
+                explanation:
+                    'CloudWatchメトリクスはRequests、4xxErrorRate、5xxErrorRate、TotalErrorRateなどの数値監視とアラームに向き、低コストで即時性がありますが粒度は粗めです。標準ログはリクエスト単位の履歴分析、監査、長期保存に向きますが、配信遅延があります。リアルタイムログは数秒以内にKinesis Data Streamsへ配信され、フィールドやサンプリング率を選べる一方、コストも考慮します。',
+            },
+            {
+                text: 'リアルタイムログを有効にすれば、CloudWatchメトリクスとアラームは不要になる',
+                isCorrect: false,
+                explanation:
+                    'リアルタイムログは詳細分析に向きますが、全体傾向のしきい値監視や通知にはCloudWatchメトリクスとアラームが適しています。',
+            },
+            {
+                text: '標準ログだけで、数秒以内のライブ分析と全体傾向アラームをすべて自動設定できる',
+                isCorrect: false,
+                explanation:
+                    '標準ログは履歴分析・監査向けです。ライブ分析にはリアルタイムログ、アラームにはCloudWatchメトリクスを使い分けます。',
+            },
+            {
+                text: 'CloudWatchメトリクスだけで、個々のリクエストヘッダーや署名付きURL失敗理由をすべて確認できる',
+                isCorrect: false,
+                explanation:
+                    'メトリクスは数値指標です。個々のリクエスト詳細や署名付きURL/Cookieの失敗調査にはログや設定確認が必要です。',
+            },
+        ],
+        explanation:
+            '運用設計では、監視、分析、監査を同じ仕組みに押し込めないことが重要です。メトリクスは低コスト・低粒度・アラーム向け、標準ログは高遅延だが履歴分析と長期保存向け、リアルタイムログは低遅延だがコストとサンプリング設計が必要、というトレードオフで選びます。CloudFrontはグローバルサービスのため、CloudFrontメトリクスをCloudWatch APIやアラームで扱う場合は `us-east-1` を使う点も運用上の落とし穴です。',
+    },
+    {
+        question:
+            'CloudFrontで `/assets/app.js` を頻繁に更新しています。毎回Invalidationを実行しても、一部利用者は古いファイルを見続けることがあります。長期的により良い運用として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '`/assets/app.ハッシュ.js` のようにファイル名をバージョニングし、HTMLから新しいファイル名を参照する',
+                isCorrect: true,
+                explanation:
+                    'CloudFront公式でも、頻繁に更新するファイルにはInvalidationよりファイル名バージョニングが推奨されます。InvalidationはCloudFrontエッジキャッシュが対象で、ブラウザキャッシュや社内プロキシなどの中間キャッシュを直接削除するものではありません。`Cache-Control: immutable`、長いTTL、内容ハッシュ付きファイル名を組み合わせると、各キャッシュレイヤーで安全に長期キャッシュしつつ更新時は新URLへ切り替えられます。',
+            },
+            {
+                text: '毎回 `/*` をInvalidationすれば、ブラウザや社内プロキシのキャッシュも必ず即時削除される',
+                isCorrect: false,
+                explanation:
+                    'InvalidationはCloudFrontエッジキャッシュを無効化する操作です。利用者のブラウザや社内プロキシに残ったキャッシュを必ず削除するわけではありません。',
+            },
+            {
+                text: 'ファイル名を固定したままTTLを1年にすれば、更新反映の問題はなくなる',
+                isCorrect: false,
+                explanation:
+                    '固定ファイル名で長いTTLを使うと、古いファイルが長く使われるリスクが高まります。長いTTLを使うなら、内容変更時にURLも変える設計が適しています。',
+            },
+            {
+                text: 'CloudFront標準ログを有効にすれば、古いファイルは自動的に新しいファイルへ置換される',
+                isCorrect: false,
+                explanation:
+                    '標準ログはリクエスト記録であり、ファイル置換やキャッシュ更新を自動実行する機能ではありません。',
+            },
+        ],
+        explanation:
+            'Invalidationは緊急修正や少数ファイルの更新には有効ですが、対象はCloudFrontキャッシュです。ブラウザキャッシュやプロキシキャッシュまで即時制御できるわけではないため、頻繁なデプロイでは `immutable` + 長TTL + ハッシュ付きファイル名のバージョニングが有利です。URLが変わるので全レイヤーで新旧を分けやすく、ロールバックや変更分析もしやすくなります。',
+    },
+    {
+        question:
+            'CloudFrontのInvalidation対象を決めるとき、クエリ文字列やURI書き換えを使っている構成で最も注意すべきことはどれですか?',
+        options: [
+            {
+                text: 'キャッシュキーやリクエスト変換により複数バージョンが存在する可能性があるため、必要なパスやクエリ、書き換え前後のURIを考慮する',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontでクエリ文字列をキャッシュキーに含める場合、同じパスでもクエリごとに別キャッシュになります。CookieやHTTPヘッダーをキャッシュキーに含める場合は、さらにキャッシュが分岐します。また、Lambda@EdgeなどでURIを書き換える場合は、ビューワーが要求したURIと書き換え後URIの両方を考慮してInvalidationする必要があります。',
+            },
+            {
+                text: 'Invalidationではクエリ文字列やURI書き換えは常に無視されるため、`/*` 以外は指定できない',
+                isCorrect: false,
+                explanation:
+                    '個別パスやワイルドカードを指定できます。クエリ文字列を使う構成では、どのバージョンを無効化するかを意識する必要があります。',
+            },
+            {
+                text: '署名付きURLを使っている場合は、署名用クエリ文字列も必ずInvalidationパスに含める',
+                isCorrect: false,
+                explanation:
+                    '署名付きURLを使う場合、Invalidationでは通常、疑問符より前のURL部分を指定します。署名用の `Expires`、`Signature` などをそのまま含める判断は誤りになりやすいです。',
+            },
+            {
+                text: 'ワイルドカード `*` はInvalidationパスの任意の位置に置けばすべて同じ意味になる',
+                isCorrect: false,
+                explanation:
+                    'Invalidationでワイルドカードとして使う `*` はパスの末尾に置きます。途中の `*` は期待通りのワイルドカードとして扱われません。',
+            },
+        ],
+        explanation:
+            'Invalidationは単なる「ファイル削除」ではなく、CloudFrontが何をキーにキャッシュしているかを理解して指定する操作です。クエリ文字列を含めれば別キャッシュ、Cookieやヘッダーを含めればさらに分岐、URI書き換えがあればviewer URI（利用者が要求したURI）とorigin URI（オリジンへ送るURI）の差異に注意します。キャッシュポリシーとエッジ処理を確認してから対象を決めます。',
+    },
+    {
+        question:
+            'SAA風シナリオです。S3でSPAを配信し、CloudFrontを前段に置きます。S3は直接公開せず、独自ドメインHTTPSで配信し、`/app/*` のルーティングはSPA側で処理します。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'S3 REST APIエンドポイントをOACで保護し、CloudFrontにus-east-1のACM証明書と代替ドメイン名を設定し、必要に応じて403/404を/index.htmlへ返すカスタムエラーレスポンスを設定する',
+                isCorrect: true,
+                explanation:
+                    'S3を直接公開しないなら、S3 REST APIエンドポイントのS3オリジン + OACが適しています。独自ドメインHTTPSにはCloudFrontの代替ドメイン名、`us-east-1` のACM証明書、DNSレコードが必要です。SPAでは `/app/settings` のようなパスがS3上の実オブジェクトとして存在しないため、S3 REST APIが403/404を返すことがあります。これはSPAルーティングでは正常ケースになり得るため、CloudFrontのカスタムエラーレスポンスで `/index.html` にフォールバックします。',
+            },
+            {
+                text: 'S3静的ウェブサイトエンドポイントを使い、OACで保護し、ACM証明書は任意リージョンでよい',
+                isCorrect: false,
+                explanation:
+                    'S3静的ウェブサイトエンドポイントはカスタムオリジン扱いでOAC/OAIを使えず、HTTPS接続もサポートしません。CloudFrontのビューワー向けACM証明書は `us-east-1` が必要です。',
+            },
+            {
+                text: 'S3バケットをパブリック公開し、CloudFrontはキャッシュだけに使うのが最もセキュアである',
+                isCorrect: false,
+                explanation:
+                    'S3を直接公開するとCloudFrontを迂回されます。S3を非公開にし、OACとバケットポリシーでCloudFront経由だけ許可する設計が基本です。',
+            },
+            {
+                text: '代替ドメイン名だけ設定すれば、DNSと証明書設定なしでHTTPS独自ドメインが使える',
+                isCorrect: false,
+                explanation:
+                    '独自ドメインHTTPSには、代替ドメイン名、証明書、DNSレコードがすべて必要です。どれか1つだけでは成立しません。',
+            },
+        ],
+        explanation:
+            '複合シナリオでは、S3非公開配信、CloudFront独自ドメイン、ACM `us-east-1`、Route 53 alias、SPAルーティング、カスタムエラーレスポンスを組み合わせて考えます。S3 Website endpointはOAC/OAIを使えずHTTPS非対応のため、非公開HTTPS配信ではS3 REST APIエンドポイント + OACを選ぶのが基本です。',
+    },
+    {
+        question:
+            'SAA風シナリオです。静的画像はS3、APIはALBへ転送し、APIはPOSTも扱います。高キャッシュ効率とAPI高可用性を両立する設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '画像用とAPI用でキャッシュビヘイビアを分け、画像は長期キャッシュ、APIは必要なメソッドと短いTTL/キャッシュ無効を設定し、POST系の高可用性はALBやアプリ側で設計する',
+                isCorrect: true,
+                explanation:
+                    '静的画像とAPIはキャッシュ特性が異なるため、パスパターンとキャッシュビヘイビアを分けます。画像はS3 + 長いTTL、APIはALB + 必要なHTTPメソッド + 短いTTLまたはキャッシュ無効が基本です。APIでAuthorizationやCookieを無視してキャッシュすると誤配信のリスクがあり、含めるとキャッシュ効率が下がります。APIは基本キャッシュしない、またはユーザー/条件ごとに厳密に分離します。CloudFrontのキャッシュ対象はGET/HEAD/OPTIONSで、POSTはキャッシュ対象外かつオリジンフェイルオーバー対象外です。',
+            },
+            {
+                text: 'すべてを1つのデフォルトキャッシュビヘイビアにまとめ、TTLを1年にすればAPIも画像も最適化される',
+                isCorrect: false,
+                explanation:
+                    '静的画像とAPIではキャッシュ要件が違います。APIまで長期キャッシュすると正確性や認証、POST処理に問題が出る可能性があります。',
+            },
+            {
+                text: 'CloudFrontのオリジンフェイルオーバーを設定すれば、POST APIも必ずセカンダリへ自動切り替えされる',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontのオリジンフェイルオーバーはPOSTでは動作しません。POST系の高可用性は別のレイヤーで考える必要があります。',
+            },
+            {
+                text: 'APIレスポンスをユーザーごとに変える場合でも、CookieやAuthorizationはキャッシュキーに含めない方が常に安全である',
+                isCorrect: false,
+                explanation:
+                    'ユーザーごとにレスポンスが変わる値をキャッシュキーから外すと、別ユーザー向けレスポンスを返すリスクがあります。キャッシュしない、または適切に分離する設計が必要です。',
+            },
+        ],
+        explanation:
+            'SAAでは、CloudFrontを単なるキャッシュではなく、パスごとのルーティング、キャッシュ制御、HTTPメソッド、認可、オリジン可用性の組み合わせとして判断する問題が出やすいです。特にAPIではキャッシュと認可の衝突を避け、POST系の高可用性はCloudFrontではなくALB、Auto Scaling、アプリケーション側リトライ、マルチAZ/マルチリージョンなどで設計します。',
+    },
+    {
+        question:
+            'SAA風シナリオです。世界中の利用者向けに有料動画をCloudFrontで配信します。国ごとの配信制限、会員だけの視聴、DDoSやWeb攻撃への対策、ライブ監視が必要です。最も適切な組み合わせはどれですか?',
+        options: [
+            {
+                text: '地理的制限またはWAFの地理一致条件、署名付きCookie、AWS WAF、リアルタイムログ/CloudWatchメトリクスを組み合わせる',
+                isCorrect: true,
+                explanation:
+                    '国単位の配信制限にはCloudFront地理的制限またはWAFの地理一致条件、会員認可には複数ファイル向きの署名付きCookie、攻撃検査やレート制御にはAWS WAF、ライブ監視にはリアルタイムログ、全体傾向とアラームにはCloudWatchメトリクスを組み合わせます。要件ごとに機能の役割が違います。',
+            },
+            {
+                text: '署名付きCookieだけで、国制限、WAF相当の攻撃対策、ライブ監視まですべて実現する',
+                isCorrect: false,
+                explanation:
+                    '署名付きCookieは認可制御です。国制限、攻撃検査、レート制限、監視は別機能で設計します。',
+            },
+            {
+                text: '標準ログだけを有効にすれば、会員認可と国制限とDDoS対策が自動的に有効になる',
+                isCorrect: false,
+                explanation:
+                    '標準ログは履歴分析・監査向けのログです。アクセス制御や攻撃対策そのものは行いません。',
+            },
+            {
+                text: 'CloudFront Functionsだけで、外部認証、DDoS対策、リアルタイムログ配信をすべて実装する',
+                isCorrect: false,
+                explanation:
+                    'CloudFront Functionsは軽量なviewer event処理向けです。外部認証、DDoS/Web攻撃対策、リアルタイムログはそれぞれ適切なサービスと機能で設計します。',
+            },
+        ],
+        explanation:
+            '複合シナリオでは、1つの機能ですべて解決しようとしないことが重要です。地理的制限は国単位制御、WAFはリクエスト内容の検査とレート制御、署名付きCookieは認可、CloudWatch/リアルタイムログは監視という役割です。CloudFrontは単なるCDNではなく、キャッシュ、ルーティング、セキュリティ、監視を組み合わせる設計対象として考えます。',
+    },
 ]
