@@ -1857,4 +1857,100 @@ export const testQuestions: Question[] = [
         explanation:
             'CloudFrontはエラーレスポンスを既定で短時間キャッシュします。SPA（単一ページアプリケーション）配信では、S3オリジンの403/404を `/index.html` に差し替えて200を返す構成で使われることもあります。',
     },
+    {
+        question:
+            'CloudFront Functionsの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontのエッジで軽量なJavaScript処理を実行し、ビューワーリクエストやビューワーレスポンスを変更できる機能',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functions（CloudFrontのエッジで軽量なJavaScriptを実行する機能）は、ビューワーリクエスト（利用者からCloudFrontへ届いたリクエスト）やビューワーレスポンス（CloudFrontから利用者へ返すレスポンス）で動かせます。URL正規化、簡単なリダイレクト、ヘッダー操作などに向いています。',
+            },
+            {
+                text: 'CloudFrontからオリジンへ接続するたびにEC2インスタンスを自動作成する機能',
+                isCorrect: false,
+                explanation:
+                    'EC2インスタンス作成機能ではありません。CloudFront FunctionsはCloudFrontのエッジで軽量なリクエスト/レスポンス処理を実行する機能です。',
+            },
+            {
+                text: 'S3バケットのパブリックアクセスブロックを解除する専用機能',
+                isCorrect: false,
+                explanation:
+                    'S3の公開設定を変更する機能ではありません。パブリックアクセスブロックはS3側の公開抑止機能です。',
+            },
+            {
+                text: 'CloudFrontの標準ログをKinesis Data Streamsへ必ず送る機能',
+                isCorrect: false,
+                explanation:
+                    'ログ配送機能ではありません。リアルタイムログはKinesis Data Streamsへ配信できますが、CloudFront Functionsとは別の機能です。',
+            },
+        ],
+        explanation:
+            'CloudFront Functionsは非常に軽量な処理向けです。Node.jsの外部モジュール利用やネットワークアクセスを前提とした重い処理には向きません。オリジンリクエストやオリジンレスポンス（CloudFrontとオリジン間のイベント）では使えないため、その場合はLambda@Edgeを検討します。',
+    },
+    {
+        question:
+            'Lambda@Edgeの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda関数をCloudFrontイベントに関連付け、CloudFrontのエッジロケーションでリクエストやレスポンスを処理する機能',
+                isCorrect: true,
+                explanation:
+                    'Lambda@Edge（Lambda関数をCloudFrontのエッジで実行する機能）は、ビューワーリクエスト、ビューワーレスポンス、オリジンリクエスト、オリジンレスポンスなどのCloudFrontイベントで実行できます。CloudFront Functionsより柔軟な処理が必要な場合に使います。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLを自動的に長くするだけの設定',
+                isCorrect: false,
+                explanation:
+                    'TTL（キャッシュを保持してよい時間）を自動的に長くする設定ではありません。Lambda@Edgeはコードを実行してリクエストやレスポンスを処理する機能です。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名をRoute 53へ自動登録する機能',
+                isCorrect: false,
+                explanation:
+                    'DNS登録機能ではありません。独自ドメインを使う場合は、代替ドメイン名、証明書、DNSレコードを別途設定します。',
+            },
+            {
+                text: 'CloudFrontの地理的制限を国ではなく市区町村単位に必ず変換する機能',
+                isCorrect: false,
+                explanation:
+                    '地理的制限の単位を変換する機能ではありません。Lambda@EdgeはCloudFrontイベントでLambda関数を実行する仕組みです。',
+            },
+        ],
+        explanation:
+            'Lambda@Edge関数は米国東部（バージニア北部）リージョンである `us-east-1` に作成し、CloudFrontには `$LATEST` ではなく発行済みバージョンを関連付けます。通常のLambdaと比べて、環境変数、VPC接続、レイヤーなどに制限があります。',
+    },
+    {
+        question:
+            'CloudFront FunctionsとLambda@Edgeの使い分けとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '軽量なビューワー側処理はCloudFront Functions、オリジン側イベントやより柔軟な処理が必要な場合はLambda@Edgeを検討する',
+                isCorrect: true,
+                explanation:
+                    'CloudFront Functionsは、ビューワーリクエスト/レスポンスでの軽量処理に向いています。Lambda@Edgeは、オリジンリクエスト/レスポンスでも実行でき、より柔軟な処理が必要な場合に使います。',
+            },
+            {
+                text: 'CloudFront FunctionsはS3専用で、Lambda@EdgeはALB専用である',
+                isCorrect: false,
+                explanation:
+                    'オリジン種別による専用機能ではありません。どちらもCloudFrontのキャッシュビヘイビアに関連付けて、特定イベントでコードを実行する機能です。',
+            },
+            {
+                text: 'Lambda@EdgeはCloudFront Functionsより軽量なビューワー処理だけに限定される',
+                isCorrect: false,
+                explanation:
+                    '逆です。軽量なビューワー側処理にはCloudFront Functionsが向きます。Lambda@Edgeはオリジン側イベントも扱えるなど、より広い用途に使えます。',
+            },
+            {
+                text: 'どちらもCloudFrontのキャッシュビヘイビアとは無関係に、すべてのディストリビューションで自動実行される',
+                isCorrect: false,
+                explanation:
+                    '自動的にすべてで実行されるわけではありません。CloudFront FunctionsもLambda@Edgeも、対象のディストリビューションやキャッシュビヘイビア、イベントに関連付けて使います。',
+            },
+        ],
+        explanation:
+            'まずは高速・軽量なCloudFront Functionsで足りるかを検討し、オリジン側イベントやより複雑な処理が必要な場合にLambda@Edgeを検討すると整理しやすいです。例えば、簡単なURLリダイレクトやヘッダー正規化ならCloudFront Functionsが候補になります。',
+    },
 ]
