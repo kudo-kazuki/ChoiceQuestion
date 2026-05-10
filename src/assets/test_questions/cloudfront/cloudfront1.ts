@@ -1153,4 +1153,324 @@ export const testQuestions: Question[] = [
         explanation:
             'カスタムポリシーは便利ですが、不要なヘッダーやCookieを含めすぎるとキャッシュが細かく分かれてヒット率が下がることがあります。必要な値だけを選ぶのが基本です。',
     },
+    {
+        question:
+            'CloudFrontの「代替ドメイン名 / CNAME」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFront標準のドメイン名ではなく、www.example.comのような独自ドメインで配信するためにディストリビューションへ登録する名前',
+                isCorrect: true,
+                explanation:
+                    '代替ドメイン名 / CNAME（CloudFrontで独自ドメインを使うための設定）は、`d111111abcdef8.cloudfront.net` の代わりに `www.example.com` のような名前でアクセスさせるために使います。代替ドメイン名は小文字で登録し、同じ名前を複数のCloudFrontディストリビューションへ重複登録することはできません。',
+            },
+            {
+                text: 'CloudFrontが自動的に作成するS3バケット名',
+                isCorrect: false,
+                explanation:
+                    'S3バケット名ではありません。代替ドメイン名は、CloudFrontディストリビューションに紐づける独自ドメイン名です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュを削除するためのワイルドカード指定',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ削除に関係する操作はInvalidation（無効化）です。代替ドメイン名はアクセス時に使うドメイン名の設定です。',
+            },
+            {
+                text: 'CloudFrontからオリジンへ送るCookieを選ぶ設定',
+                isCorrect: false,
+                explanation:
+                    'Cookieの転送制御はキャッシュポリシーやオリジンリクエストポリシーで扱います。代替ドメイン名は独自ドメイン利用のための設定です。',
+            },
+        ],
+        explanation:
+            '独自ドメインを使うには、代替ドメイン名をCloudFrontに追加し、その名前をカバーするSSL/TLS証明書（HTTPS通信で使う証明書）を関連付け、DNSでCloudFrontへ向けます。Route 53では、CloudFrontディストリビューションへA/AAAAエイリアスレコードを向ける構成がよく使われます。',
+    },
+    {
+        question:
+            'CloudFrontで使う「SSL/TLS証明書」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'HTTPS通信でドメインの正当性を示し、通信を暗号化するために使う証明書',
+                isCorrect: true,
+                explanation:
+                    'SSL/TLS証明書（HTTPS通信で使う証明書）は、ブラウザなどのビューワー（CloudFrontへアクセスするクライアント）が接続先ドメインを確認し、暗号化通信を行うために使います。独自ドメインをCloudFrontで使う場合、そのドメインをカバーする証明書が必要です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLを長くするための証明書',
+                isCorrect: false,
+                explanation:
+                    'TTL（キャッシュを保持してよい時間）を制御するものではありません。SSL/TLS証明書はHTTPS通信に関係します。',
+            },
+            {
+                text: 'S3バケットのオブジェクト名を自動変換するための証明書',
+                isCorrect: false,
+                explanation:
+                    'S3オブジェクト名の変換機能ではありません。証明書はドメイン確認と暗号化通信に使います。',
+            },
+            {
+                text: 'CloudFrontのアクセスログを圧縮するための証明書',
+                isCorrect: false,
+                explanation:
+                    'ログ圧縮用ではありません。SSL/TLS証明書は、HTTPSで安全に通信するためのものです。',
+            },
+        ],
+        explanation:
+            'CloudFrontに代替ドメイン名を追加する場合、証明書のSAN（Subject Alternative Name。証明書が有効なドメイン名の一覧）にそのドメイン名が含まれている必要があります。`*.example.com` の証明書は `www.example.com` や `api.example.com` には使えますが、`example.com` 自体や `a.b.example.com` には使えません。',
+    },
+    {
+        question:
+            'CloudFrontで使う「ACM（AWS Certificate Manager）」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'AWSでSSL/TLS証明書を発行・管理できるサービスで、CloudFrontのビューワー向け証明書はus-east-1で用意する必要がある',
+                isCorrect: true,
+                explanation:
+                    'ACM（AWS Certificate Manager。AWSで証明書を発行・管理するサービス）を使うと、CloudFrontのHTTPS用証明書を管理できます。ビューワーとCloudFront間のHTTPSで使うACM証明書は、米国東部（バージニア北部）リージョンである `us-east-1` に作成またはインポートする必要があります。',
+            },
+            {
+                text: 'CloudFrontのキャッシュキーだけを作成するサービス',
+                isCorrect: false,
+                explanation:
+                    'キャッシュキー（キャッシュを区別する識別子）を作るサービスではありません。ACMは証明書の発行・管理に使います。',
+            },
+            {
+                text: 'S3バケットポリシーを必ず自動削除するサービス',
+                isCorrect: false,
+                explanation:
+                    'バケットポリシー削除サービスではありません。ACMはSSL/TLS証明書を扱います。',
+            },
+            {
+                text: 'CloudFrontのオリジンフェイルオーバー条件を設定するサービス',
+                isCorrect: false,
+                explanation:
+                    'オリジンフェイルオーバー（配信元障害時に別の配信元へ切り替える仕組み）の条件設定ではありません。ACMは証明書管理のサービスです。',
+            },
+        ],
+        explanation:
+            'CloudFrontはグローバルサービスですが、ビューワー向けのACM証明書は `us-east-1` が必要です。一方、オリジン側がALBなどの場合、そのオリジンで使う証明書はオリジン側のリージョンで管理することがあります。',
+    },
+    {
+        question:
+            'CloudFrontの「ビューワープロトコルポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ビューワーからCloudFrontへのアクセスをHTTP/HTTPSのどちらで許可するかを決める設定',
+                isCorrect: true,
+                explanation:
+                    'ビューワープロトコルポリシー（利用者からCloudFrontへの通信方式を決める設定）では、HTTPとHTTPSの両方を許可する、HTTPをHTTPSへリダイレクトする、HTTPSのみ許可する、といった選択ができます。',
+            },
+            {
+                text: 'CloudFrontからオリジンへ接続するときのHTTP/HTTPSを決める設定',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontからオリジンへの通信方式はオリジンプロトコルポリシーで扱います。ビューワープロトコルポリシーは、ビューワーからCloudFrontへの通信を扱います。',
+            },
+            {
+                text: 'CloudFrontがキャッシュするCookieの一覧を決める設定',
+                isCorrect: false,
+                explanation:
+                    'Cookieの扱いはキャッシュポリシーやオリジンリクエストポリシーで設定します。ビューワープロトコルポリシーはHTTP/HTTPSの扱いです。',
+            },
+            {
+                text: 'CloudFrontのエッジロケーションをリージョン単位で固定する設定',
+                isCorrect: false,
+                explanation:
+                    'エッジロケーション固定の設定ではありません。ビューワープロトコルポリシーは通信プロトコルの制御です。',
+            },
+        ],
+        explanation:
+            '通信経路は「ビューワー → CloudFront」と「CloudFront → オリジン」に分けて考えます。ビューワープロトコルポリシーは前者のHTTP/HTTPSを制御します。',
+    },
+    {
+        question:
+            'CloudFrontの「オリジンプロトコルポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontからカスタムオリジンへ接続するときにHTTP/HTTPSのどちらを使うかを決める設定',
+                isCorrect: true,
+                explanation:
+                    'オリジンプロトコルポリシー（CloudFrontからオリジンへの通信方式を決める設定）は、カスタムオリジンへの接続でHTTPのみ、HTTPSのみ、またはビューワーに合わせる、を選ぶ設定です。',
+            },
+            {
+                text: 'ビューワーからCloudFrontへの通信をHTTPSだけにする設定',
+                isCorrect: false,
+                explanation:
+                    'ビューワーからCloudFrontへの通信はビューワープロトコルポリシーで扱います。オリジンプロトコルポリシーはCloudFrontからオリジンへの通信です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュをすべて即時削除する設定',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ削除はInvalidation（無効化）で行います。オリジンプロトコルポリシーはHTTP/HTTPS接続の設定です。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名を小文字へ変換する設定',
+                isCorrect: false,
+                explanation:
+                    '代替ドメイン名の変換設定ではありません。CloudFrontからオリジンへどのプロトコルで接続するかを決めます。',
+            },
+        ],
+        explanation:
+            'オリジンプロトコルポリシーはカスタムオリジン向けの設定です。S3静的ウェブサイトエンドポイントはカスタムオリジンとして扱われ、HTTPS接続をサポートしないため、CloudFrontからはHTTPで接続します。',
+    },
+    {
+        question:
+            'CloudFrontの「HTTP to HTTPSリダイレクト」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ビューワーがHTTPでアクセスしたとき、CloudFrontがHTTPSのURLへリダイレクトする設定',
+                isCorrect: true,
+                explanation:
+                    'HTTP to HTTPSリダイレクト（HTTPアクセスをHTTPSへ転送する設定）は、ビューワープロトコルポリシーで「Redirect HTTP to HTTPS」を選ぶことで利用できます。GETやHEADのHTTPリクエストはHTTPS URLへリダイレクトされますが、DELETE、OPTIONS、PATCH、POST、PUTは403になる点に注意します。',
+            },
+            {
+                text: 'CloudFrontからオリジンへのHTTPS通信をHTTPへ変換する設定',
+                isCorrect: false,
+                explanation:
+                    '逆方向の変換ではありません。HTTP to HTTPSリダイレクトは、ビューワーからCloudFrontへのHTTPアクセスをHTTPSへ誘導する設定です。',
+            },
+            {
+                text: 'S3バケット内のhttpという名前のフォルダをhttpsへリネームする機能',
+                isCorrect: false,
+                explanation:
+                    'S3オブジェクト名やフォルダ名を変更する機能ではありません。通信プロトコルをHTTPSへ誘導する設定です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュTTLをHTTPSアクセス時だけ0にする設定',
+                isCorrect: false,
+                explanation:
+                    'TTLを0にする設定ではありません。HTTP to HTTPSリダイレクトはビューワーアクセスのプロトコル制御です。',
+            },
+        ],
+        explanation:
+            '注意点として、CloudFrontはHTTPのDELETE、OPTIONS、PATCH、POST、PUTをHTTPSへリダイレクトせず、該当設定では403を返します。APIの前段で使う場合はHTTPメソッドも考慮します。',
+    },
+    {
+        question:
+            'CloudFrontの「OAC（Origin Access Control）」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFrontからS3オリジンへのリクエストを署名し、S3を直接公開せずCloudFront経由に制限するための推奨機能',
+                isCorrect: true,
+                explanation:
+                    'OAC（Origin Access Control。CloudFrontからオリジンへのアクセスを制御する仕組み）は、CloudFrontがS3オリジンへ認証済みリクエストを送るために使います。S3バケットを直接公開せず、CloudFront経由のアクセスに制限できます。',
+            },
+            {
+                text: 'CloudFrontの代替ドメイン名を自動で登録するDNSサービス',
+                isCorrect: false,
+                explanation:
+                    'DNSサービスではありません。OACはCloudFrontからS3オリジンへのアクセス制御に使います。',
+            },
+            {
+                text: 'CloudFrontのキャッシュをすべて圧縮して保存する設定',
+                isCorrect: false,
+                explanation:
+                    'キャッシュ圧縮の設定ではありません。OACはオリジンへのアクセス制限に関係します。',
+            },
+            {
+                text: 'ビューワーのブラウザにCookieを自動発行する機能',
+                isCorrect: false,
+                explanation:
+                    'Cookie発行機能ではありません。OACはCloudFrontとS3オリジン間のアクセス制御です。',
+            },
+        ],
+        explanation:
+            '新しいS3オリジンの非公開配信では、レガシーなOAIよりOACの利用が推奨されます。ただし、S3静的ウェブサイトエンドポイントはカスタムオリジン扱いのため、OACは使えません。',
+    },
+    {
+        question:
+            'CloudFrontの「OAI（Origin Access Identity）」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudFront経由でS3へアクセスさせるために使われてきた古い仕組みで、現在はOACの利用が推奨される',
+                isCorrect: true,
+                explanation:
+                    'OAI（Origin Access Identity。CloudFrontからS3へアクセスするためのレガシーな識別子）は、S3オリジンを直接公開せずにCloudFront経由へ制限するために使われてきた仕組みです。現在はより多くの機能に対応するOACが推奨されています。',
+            },
+            {
+                text: 'ACMで証明書を自動更新するためのDNSレコード',
+                isCorrect: false,
+                explanation:
+                    'ACM証明書のDNS検証レコードではありません。OAIはCloudFrontとS3のアクセス制限に関係します。',
+            },
+            {
+                text: 'CloudFrontのレスポンスヘッダーを追加するためのポリシー',
+                isCorrect: false,
+                explanation:
+                    'レスポンスヘッダーを追加するのはレスポンスヘッダーポリシーです。OAIはS3オリジンへのアクセス制御の仕組みです。',
+            },
+            {
+                text: 'CloudFrontがHTTPをHTTPSへリダイレクトする設定',
+                isCorrect: false,
+                explanation:
+                    'HTTP to HTTPSリダイレクトはビューワープロトコルポリシーで設定します。OAIはリダイレクト機能ではありません。',
+            },
+        ],
+        explanation:
+            'OAIは既存構成ではまだ見かけますが、新規構築では原則OACを検討します。移行時は、OAIの制約や既存バケットポリシーへの影響を確認します。',
+    },
+    {
+        question:
+            'S3オリジンをCloudFrontから非公開配信するときの「バケットポリシー」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3バケットに対するアクセス許可を定義し、CloudFrontからのアクセスだけを許可するために使えるポリシー',
+                isCorrect: true,
+                explanation:
+                    'バケットポリシー（S3バケットへのアクセス許可を定義するJSON形式の設定）では、CloudFrontサービスプリンシパル（AWSサービスとしてのCloudFront）や特定ディストリビューションからのアクセスを許可できます。OACを使う場合も、S3側でCloudFrontにアクセス権を与える設定が必要です。',
+            },
+            {
+                text: 'CloudFrontのキャッシュキーを自動で作るための設定',
+                isCorrect: false,
+                explanation:
+                    'キャッシュキーはキャッシュポリシーで管理します。バケットポリシーはS3へのアクセス許可を制御します。',
+            },
+            {
+                text: 'ACM証明書の有効期限を延長するための設定',
+                isCorrect: false,
+                explanation:
+                    '証明書の有効期限管理ではありません。バケットポリシーはS3バケットのアクセス制御です。',
+            },
+            {
+                text: 'CloudFrontのパスパターンを上から順に並べ替える設定',
+                isCorrect: false,
+                explanation:
+                    'パスパターンの順序はCloudFrontのキャッシュビヘイビアで管理します。バケットポリシーはS3側の権限設定です。',
+            },
+        ],
+        explanation:
+            'OAC構成では、バケットポリシーに `cloudfront.amazonaws.com` と対象ディストリビューションのARN（AWSリソースを一意に表す名前）を条件として設定し、想定したCloudFrontからだけ読めるようにするのが基本です。読み取り配信のみなら `s3:GetObject` を許可し、アップロードや削除が必要な場合だけ最小権限で追加します。',
+    },
+    {
+        question:
+            'S3の「パブリックアクセスブロック」とCloudFrontの関係として最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'S3バケットを不用意に公開しないための保護設定で、OACなどを使えばS3を公開せずCloudFront経由で配信できる',
+                isCorrect: true,
+                explanation:
+                    'パブリックアクセスブロック（S3を意図せず公開しないための保護設定）は、S3バケットやアカウント単位でパブリック公開を抑止する機能です。全アクセスを禁止する設定ではなく、CloudFront OACのように明示的に許可された非公開アクセスとは別に考えます。',
+            },
+            {
+                text: '有効にするとCloudFrontからもS3へ絶対にアクセスできなくなる設定',
+                isCorrect: false,
+                explanation:
+                    'パブリックアクセスブロックは公開アクセスを防ぐための設定です。適切なOACとバケットポリシーを使えば、CloudFrontからの許可されたアクセスは可能です。',
+            },
+            {
+                text: 'CloudFrontのエッジロケーションをすべて無効化する設定',
+                isCorrect: false,
+                explanation:
+                    'エッジロケーションを無効化する設定ではありません。S3の公開アクセスを防ぐための設定です。',
+            },
+            {
+                text: 'CloudFrontの独自ドメイン用証明書を自動作成する設定',
+                isCorrect: false,
+                explanation:
+                    '証明書作成はACMなどで行います。パブリックアクセスブロックはS3の公開アクセス制御です。',
+            },
+        ],
+        explanation:
+            'S3静的ファイル配信では、S3をパブリック公開するよりも、パブリックアクセスブロックを有効にしたままCloudFront OAC経由にする構成がよく使われます。',
+    },
 ]
