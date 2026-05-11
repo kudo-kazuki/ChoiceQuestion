@@ -45,6 +45,22 @@ const questionSets = [
         tone: 'indigo',
     },
     {
+        title: 'S3_1',
+        subtitle: 'S3の基本用語と初歩的な運用',
+        description: 'バケット、オブジェクト、基本的な保存先設計',
+        to: '/s3/s3_1',
+        level: 'Basic',
+        tone: 'teal',
+    },
+    {
+        title: 'S3_2',
+        subtitle: 'S3の高度な機能と設計判断',
+        description: '保持、保護、監査、他サービス連携の応用',
+        to: '/s3/s3_2',
+        level: 'Advanced',
+        tone: 'slate',
+    },
+    {
         title: 'DynamoDB1',
         subtitle: 'DynamoDBの基本用語と初歩',
         description: 'テーブル、キー、アイテム、キャパシティの基礎',
@@ -260,6 +276,28 @@ const questionSets = [
             .Page__badge {
                 color: #3730a3;
                 background-color: #eef2ff;
+            }
+        }
+
+        &--teal {
+            &::before {
+                background-color: #0f766e;
+            }
+
+            .Page__badge {
+                color: #0f766e;
+                background-color: #f0fdfa;
+            }
+        }
+
+        &--slate {
+            &::before {
+                background-color: #475569;
+            }
+
+            .Page__badge {
+                color: #334155;
+                background-color: #f1f5f9;
             }
         }
 
