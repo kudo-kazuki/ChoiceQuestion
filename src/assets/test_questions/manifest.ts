@@ -2,13 +2,13 @@
 // Do not edit it manually.
 
 export const questionSetCounts = {
-    '/ssa': 20,
-    '/dns/dns1': 86,
-    '/dns/dns2': 15,
     '/cloudfront/cloudfront1': 62,
     '/cloudfront/cloudfront2': 55,
+    '/dns/dns1': 86,
+    '/dns/dns2': 15,
     '/dynamodb/dynamodb1': 14,
     '/dynamodb/dynamodb2': 5,
+    '/ssa': 20,
 } as const
 
 export type QuestionSetPath = keyof typeof questionSetCounts

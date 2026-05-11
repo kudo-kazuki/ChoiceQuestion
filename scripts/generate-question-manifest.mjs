@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { readdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 
@@ -8,41 +8,12 @@ const require = createRequire(import.meta.url)
 const ts = require('typescript')
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const pagesDir = resolve(projectRoot, 'src/pages')
 const testQuestionsDir = resolve(projectRoot, 'src/assets/test_questions')
 const manifestPath = resolve(testQuestionsDir, 'manifest.ts')
 
-const questionSets = [
-    {
-        route: '/ssa',
-        source: 'ssa',
-    },
-    {
-        route: '/dns/dns1',
-        source: 'dns/dns1.ts',
-    },
-    {
-        route: '/dns/dns2',
-        source: 'dns/dns2.ts',
-    },
-    {
-        route: '/cloudfront/cloudfront1',
-        source: 'cloudfront/cloudfront1.ts',
-    },
-    {
-        route: '/cloudfront/cloudfront2',
-        source: 'cloudfront/cloudfront2.ts',
-    },
-    {
-        route: '/dynamodb/dynamodb1',
-        source: 'dynamodb/dynamodb1.ts',
-    },
-    {
-        route: '/dynamodb/dynamodb2',
-        source: 'dynamodb/dynamodb2.ts',
-    },
-]
-
 const main = async () => {
+    const questionSets = await discoverQuestionSets()
     const counts = {}
 
     for (const questionSet of questionSets) {
@@ -53,12 +24,85 @@ const main = async () => {
     console.log(`[question-manifest] Updated ${relativePath(manifestPath)}`)
 }
 
-const countQuestionSet = async (source) => {
-    const sourcePath = resolve(testQuestionsDir, source)
+const discoverQuestionSets = async () => {
+    const pagePaths = await collectVuePagePaths(pagesDir)
+    const questionSetsByRoute = new Map()
 
-    if (!existsSync(sourcePath)) {
-        throw new Error(`Question source was not found: ${sourcePath}`)
+    for (const pagePath of pagePaths) {
+        const content = await readFile(pagePath, 'utf8')
+        const route = pagePathToRoute(pagePath)
+        const sources = extractQuestionSources(content)
+
+        for (const source of sources) {
+            const existingSource = questionSetsByRoute.get(route)
+
+            if (existingSource && existingSource !== source) {
+                throw new Error(
+                    `Multiple question sources were found for route ${route}: ${existingSource}, ${source}`,
+                )
+            }
+
+            questionSetsByRoute.set(route, source)
+        }
     }
+
+    return [...questionSetsByRoute.entries()]
+        .map(([route, source]) => ({ route, source }))
+        .sort((a, b) => a.route.localeCompare(b.route))
+}
+
+const collectVuePagePaths = async (dir) => {
+    const entries = await readdir(dir, { withFileTypes: true })
+    const paths = await Promise.all(
+        entries.map(async (entry) => {
+            const entryPath = resolve(dir, entry.name)
+
+            if (entry.isDirectory()) {
+                return collectVuePagePaths(entryPath)
+            }
+
+            if (entry.isFile() && entry.name.endsWith('.vue')) {
+                return [entryPath]
+            }
+
+            return []
+        }),
+    )
+
+    return paths.flat().sort()
+}
+
+const pagePathToRoute = (pagePath) => {
+    const pageRelativePath = relative(pagesDir, pagePath).replaceAll('\\', '/')
+    const segments = pageRelativePath.replace(/\.vue$/, '').split('/')
+
+    if (segments.at(-1) === 'index') {
+        segments.pop()
+    }
+
+    return `/${segments.join('/')}` || '/'
+}
+
+const extractQuestionSources = (content) => {
+    const sources = new Set()
+    const questionImportPattern = /@\/assets\/test_questions\/([^'")]+)/g
+    let match = questionImportPattern.exec(content)
+
+    while (match) {
+        const source = match[1]
+
+        if (source !== 'manifest') {
+            sources.add(source)
+        }
+
+        match = questionImportPattern.exec(content)
+    }
+
+    return sources
+}
+
+const countQuestionSet = async (source) => {
+    const sourcePath = resolveQuestionSourcePath(source)
 
     if (sourcePath.endsWith('.ts')) {
         return countQuestionFile(sourcePath)
@@ -74,6 +118,22 @@ const countQuestionSet = async (source) => {
     )
 
     return counts.reduce((total, count) => total + count, 0)
+}
+
+const resolveQuestionSourcePath = (source) => {
+    const sourcePath = resolve(testQuestionsDir, source)
+
+    if (existsSync(sourcePath)) {
+        return sourcePath
+    }
+
+    const sourceTsPath = `${sourcePath}.ts`
+
+    if (existsSync(sourceTsPath)) {
+        return sourceTsPath
+    }
+
+    throw new Error(`Question source was not found: ${sourcePath}`)
 }
 
 const countQuestionFile = async (filePath) => {
