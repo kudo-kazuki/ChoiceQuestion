@@ -8,7 +8,7 @@ export const questionSetCounts = {
     '/dns/dns2': 15,
     '/dynamodb/dynamodb1': 14,
     '/dynamodb/dynamodb2': 5,
-    '/s3/s3_1': 11,
+    '/s3/s3_1': 20,
     '/s3/s3_2': 1,
     '/ssa': 20,
 } as const
