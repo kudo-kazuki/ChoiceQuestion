@@ -76,6 +76,22 @@ const questionSets = [
         level: 'Advanced',
         tone: 'purple',
     },
+    {
+        title: 'Lambda1',
+        subtitle: 'Lambdaの基本概念と初歩的な使いどころ',
+        description: 'サーバーレス、イベント駆動、EC2との違い、基本的な利用判断',
+        to: '/lambda/lambda1',
+        level: 'Basic',
+        tone: 'cyan',
+    },
+    {
+        title: 'Lambda2',
+        subtitle: 'Lambdaの設計・運用・高度な連携',
+        description: 'VPC、非同期処理、リトライ、バージョン管理、実運用シナリオ',
+        to: '/lambda/lambda2',
+        level: 'Basic',
+        tone: 'indigo',
+    },
 ] as const
 </script>
 
