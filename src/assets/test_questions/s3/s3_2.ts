@@ -1089,4 +1089,196 @@ export const testQuestions: Question[] = [
         explanation:
             'ReplicationとBackupは目的が違います。DR（Disaster Recovery：災害対策）は別リージョンで継続利用できること、Backupは過去時点へ戻せることが中心です。Replicationは現在状態を複製する寄りの機能で、Backupは復元点を保持する寄りの機能です。RTO（復旧までの許容時間）、RPO（どの時点まで戻せる必要があるか）、削除保護、別アカウント隔離、監査要件を分けて設計します。',
     },
+    {
+        question:
+            '数十GBの動画ファイルをクライアントからS3へアップロードしています。ネットワークが不安定なため、単一PUTでは途中失敗時に最初からやり直しになり、時間がかかります。最初に検討すべきS3の仕組みはどれですか?',
+        options: [
+            {
+                text: 'Multipart Uploadを使い、ファイルを複数パートに分けて並列アップロードし、失敗したパートだけ再送する',
+                isCorrect: true,
+                explanation:
+                    'Multipart Uploadは大容量オブジェクトを複数パートに分けてアップロードする仕組みです。パートを並列に送れるためスループットを上げやすく、失敗時もオブジェクト全体ではなく失敗したパートだけを再送できます。AWSは100MB以上のオブジェクトではMultipart Uploadの利用をベストプラクティスとしており、5GBを超えるオブジェクトではMultipart Uploadが必須です。',
+            },
+            {
+                text: 'S3 Standard-IAへ保存先を変えれば、アップロード失敗時に自動で途中から再開される',
+                isCorrect: false,
+                explanation:
+                    'ストレージクラスを変えても、単一PUTの途中失敗を自動で途中再開できるわけではありません。アップロード方法としてMultipart Uploadを使う必要があります。',
+            },
+            {
+                text: 'オブジェクトキーを短くすれば、単一PUTの再送が不要になる',
+                isCorrect: false,
+                explanation:
+                    'キー名の長さは、大容量ファイルの再送方式の本質ではありません。ネットワーク断による再送コストを抑えるには、パート単位で再送できるMultipart Uploadが適しています。',
+            },
+            {
+                text: 'バケットをpublic readにすれば、アップロード帯域が自動的に増える',
+                isCorrect: false,
+                explanation:
+                    '公開設定はアップロード性能を改善する機能ではありません。公開範囲を広げるとセキュリティリスクが増えます。',
+            },
+        ],
+        explanation:
+            '大容量アップロードでは、単にストレージクラスやバケット設定を見るのではなく、クライアント側のアップロード方式を設計します。S3の1オブジェクト最大サイズは5TBです。Multipart Uploadの各パートは原則5MB以上で、最後のパートだけは例外です。パートサイズ、並列数、リトライ、チェックサム、完了処理を適切に扱う必要があります。',
+    },
+    {
+        question:
+            'Multipart Uploadを使うアプリケーションで、途中失敗やクライアント切断が多発しています。S3の保存容量が想定より増えており、完成していないアップロードのパートが残っている可能性があります。最も適切な対応はどれですか?',
+        options: [
+            {
+                text: 'LifecycleルールのAbortIncompleteMultipartUploadを設定し、指定日数を超えた未完了Multipart Uploadを中止する',
+                isCorrect: true,
+                explanation:
+                    'Multipart UploadはCompleteMultipartUploadまたはAbortMultipartUploadが実行されるまで、アップロード済みパートがS3に保持され、課金対象になります。未完了パートは通常のオブジェクト一覧では目立ちにくい一方で課金対象になるため、LifecycleのAbortIncompleteMultipartUploadで指定日数を超えた未完了アップロードを中止し、関連パートを削除します。',
+            },
+            {
+                text: '未完了Multipart Uploadのパートはオブジェクトとして完成していないため、保存料金は一切発生しない',
+                isCorrect: false,
+                explanation:
+                    '未完了であっても、アップロード済みパートはS3に保存され、CompleteまたはAbortされるまで課金対象になります。放置するとコスト増につながります。',
+            },
+            {
+                text: 'バケットのVersioningを停止すれば、未完了Multipart Uploadのパートはすべて即時削除される',
+                isCorrect: false,
+                explanation:
+                    'Versioningの有効・停止は未完了Multipart Uploadのパート整理とは別です。未完了パートを消すにはAbortMultipartUploadやLifecycleのAbortIncompleteMultipartUploadを使います。',
+            },
+            {
+                text: 'NoncurrentVersionExpirationを設定すれば、未完了Multipart Uploadのパートが削除される',
+                isCorrect: false,
+                explanation:
+                    'NoncurrentVersionExpirationは非現行バージョンを削除するLifecycleアクションです。未完了Multipart Uploadのパート整理にはAbortIncompleteMultipartUploadを使います。',
+            },
+        ],
+        explanation:
+            'Multipart Uploadは性能と耐障害性を高めますが、完了・中止の後始末も設計に含める必要があります。未完了アップロードはコンソールやAPIで確認でき、Lifecycleで自動中止するのが実務上の基本です。さらにアプリケーション側でも、処理失敗時にAbortMultipartUploadを呼ぶ設計が望ましいです。AbortIncompleteMultipartUploadではタグベースのFilterを使えない点にも注意します。',
+    },
+    {
+        question:
+            '世界中の拠点から、中央のS3バケットへ数GBから数十GBのファイルを頻繁にアップロードします。特に遠距離拠点からのアップロードが遅く、通常のインターネット経路では帯域を使い切れていません。最も適切に検討すべき機能はどれですか?',
+        options: [
+            {
+                text: 'S3 Transfer Accelerationを有効化し、s3-accelerateエンドポイントを使ってアップロードする',
+                isCorrect: true,
+                explanation:
+                    'S3 Transfer Accelerationは、CloudFrontのエッジロケーションとAWSの最適化されたネットワーク経路を使い、遠距離からS3汎用バケットへの転送を高速化する機能です。ただし利用者がCloudFront distributionを自分で作るわけではなく、Transfer Acceleration用のs3-accelerateエンドポイントを使います。世界中のクライアントから中央バケットへ大容量ファイルをアップロードするようなケースで候補になります。',
+            },
+            {
+                text: 'S3 Transfer Accelerationを有効化すれば、追加料金なしで必ずすべての通信が高速化される',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationには追加のデータ転送料金が発生する場合があります。また、すべての環境で必ず高速化されるとは限らないため、Speed Comparison Toolなどで効果を比較します。',
+            },
+            {
+                text: 'S3 Transfer Accelerationは同一リージョンのEC2からS3へアクセスする場合だけに使う機能である',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationは長距離転送の最適化が主な用途です。VPC内や同一リージョン内のEC2とS3の通信を高速化する目的では、通常は優先度が低く、まず同一リージョン配置、VPC Endpoint、アプリ側並列化、EC2のネットワーク帯域などを確認します。',
+            },
+            {
+                text: 'S3 Transfer Accelerationを使うには、バケット名にドットを含める必要がある',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationを使うバケット名はDNS準拠である必要があり、ドット（.）を含めることはできません。ドットを含める必要があるのではなく、含めてはいけない制約です。また、accelerateエンドポイントを使う必要があります。',
+            },
+        ],
+        explanation:
+            'Transfer Accelerationは「S3が遅いから常に有効化」する機能ではありません。長距離転送、インターネット経路の制約、追加料金、バケット名制約、利用するエンドポイントを確認して判断します。大容量ファイルではMultipart Uploadと組み合わせて検討することもあります。',
+    },
+    {
+        question:
+            'S3に保存された100GBの分析用ファイルを、EC2上の処理プログラムが何度もダウンロードします。単一のGETで全体を取得すると時間がかかり、失敗時の再試行も重いです。スループットと再試行効率を改善する方法として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Range GETを使って複数のbyte rangeを並列取得し、必要に応じてMultipart Upload時のパート境界に合わせる',
+                isCorrect: true,
+                explanation:
+                    'S3ではRangeヘッダーを使ってオブジェクトの一部だけを取得できます。複数接続で異なるbyte rangeを並列取得すると、単一GETより高い集約スループットを狙えます。失敗した範囲だけ再取得しやすくなるため、再試行効率も上がります。Multipart Uploadで作成したオブジェクトなら、パート境界に合わせてGETすると扱いやすい場合があります。',
+            },
+            {
+                text: 'S3のGETは常に単一接続で全体を取得する必要があり、部分取得はできない',
+                isCorrect: false,
+                explanation:
+                    'S3はRange GETに対応しています。大きなオブジェクトでは、必要な範囲だけ取得したり、複数範囲を並列に取得したりする設計が有効です。',
+            },
+            {
+                text: 'オブジェクトをS3 Glacier Deep Archiveへ移行すれば、GETのスループットが必ず最大化される',
+                isCorrect: false,
+                explanation:
+                    'Deep Archiveは長期アーカイブ向けで、通常のGETで即時取得する用途には向きません。分析処理で繰り返し読む大容量ファイルのスループット改善策ではありません。',
+            },
+            {
+                text: 'オブジェクトキーにランダムな文字を追加すれば、1つの巨大オブジェクトの単一GETが自動的に分割される',
+                isCorrect: false,
+                explanation:
+                    'キー名を変えても、1つの巨大オブジェクトのGETが自動分割されるわけではありません。クライアント側でRange GETや並列取得を実装します。',
+            },
+        ],
+        explanation:
+            '大容量ダウンロードでは、S3側だけでなくクライアント側の取得方式も重要です。Range GETは、失敗した範囲だけ再取得しやすく、ネットワーク帯域を並列に使いやすい設計です。一方、分析用途では巨大な単一ファイルを読むより、Parquetのような列指向形式、圧縮、パーティション、処理単位に合わせたファイル分割を検討した方がよい場合もあります。EC2とS3を同じリージョンに置くこともレイテンシと転送効率に効きます。',
+    },
+    {
+        question:
+            'S3へ毎秒数万件のPUTとGETを行うワークロードを設計しています。昔の知識をもとに「S3は先頭prefixをランダム化しないと性能が出ない」と言われました。現在のS3性能設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3は高いリクエストレートへ自動的にスケールし、必要なら用途に応じた複数prefixへ並列化する。性能目的だけのランダムprefix化は基本方針ではない',
+                isCorrect: true,
+                explanation:
+                    '現在のS3は高いリクエストレートへ自動的にスケールします。目安として、partitioned prefixごとに少なくとも毎秒3,500 PUT/COPY/POST/DELETE、5,500 GET/HEADリクエストを達成できます。これは設計時の目安であり、実際の性能はワークロードやスケールの進み方に影響されます。prefix数に上限はなく、複数prefixへ並列化すればさらにスループットを伸ばせます。古い「ランダムな先頭文字で必ず分散する」という設計をそのまま使う必要はありません。',
+            },
+            {
+                text: '現在でもS3では必ずキーの先頭6文字をランダム化しないと、GETが一切成功しない',
+                isCorrect: false,
+                explanation:
+                    '現在のS3では、そのような必須ルールはありません。性能目的だけのランダム化より、日付、テナント、用途など運用しやすいprefix設計と、必要に応じた並列化を検討します。',
+            },
+            {
+                text: 'prefixはS3の性能に一切関係しないため、毎秒数百万リクエストでも単一prefixで必ず即時に処理できる',
+                isCorrect: false,
+                explanation:
+                    'S3は自動的にスケールしますが、prefixごとのリクエストレート目安があります。非常に高い負荷では複数prefixへの並列化、指数バックオフ付きリトライ、503 Slow Downへの対応、KMS利用時のKMSクォータ確認などが必要です。',
+            },
+            {
+                text: 'S3 request rateを上げるには、バケットをpublic readにする必要がある',
+                isCorrect: false,
+                explanation:
+                    '公開設定はrequest rateのスケール手段ではありません。性能設計とアクセス制御は分けて考えます。',
+            },
+        ],
+        explanation:
+            '昔のS3性能設計では、prefixランダム化が強く意識されていました。現在はS3が高いリクエストレートへ自動スケールするため、運用性の低いランダムprefixを最初から入れるより、用途に応じたprefix設計、水平並列化、指数バックオフ付きリトライ、メトリクス監視を考える方が実務的です。prefixは性能だけでなく、運用性、Lifecycle、分析、権限制御にも影響します。スケールは徐々に進むため、急激な負荷増では一時的に503 Slow Downが見えることもあります。',
+    },
+    {
+        question:
+            'SSE-KMSで暗号化したオブジェクトをS3へ高頻度にPUT/GETする設計です。S3のprefixごとのrequest rate目安には余裕があるはずなのに、KMS関連のエラーやスロットリングが疑われています。最も適切な確認ポイントはどれですか?',
+        options: [
+            {
+                text: 'S3のrequest rateだけでなく、AWS KMSのリクエストクォータやキー利用状況も確認する',
+                isCorrect: true,
+                explanation:
+                    'SSE-KMSを使うと、S3リクエストに伴ってKMSキーの利用が発生します。S3側のprefixごとのrequest rateに余裕があっても、KMSのリクエストクォータやキー利用状況がボトルネックになることがあります。KMSクォータはリージョン単位・アカウント単位で考え、CloudWatch、CloudTrail、KMS関連メトリクスで確認します。',
+            },
+            {
+                text: 'S3のprefixを増やせば、KMSのリクエストクォータも必ず同じ比率で自動的に増える',
+                isCorrect: false,
+                explanation:
+                    'prefixを増やすとS3側の並列性は上げやすくなりますが、KMSのクォータが同じ比率で自動的に増えるわけではありません。SSE-KMSではKMS側の制限も別に確認します。',
+            },
+            {
+                text: 'SSE-KMSを使っている場合、S3はMultipart Uploadをサポートしない',
+                isCorrect: false,
+                explanation:
+                    'SSE-KMSとMultipart Uploadは組み合わせて利用できます。ただし、アップロードやダウンロード、レプリケーションなどで必要なKMS権限やKMSリクエスト量を考慮します。',
+            },
+            {
+                text: 'KMS関連の制約は、S3 Transfer Accelerationを有効化すれば必ず解消される',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationは長距離転送の最適化機能であり、KMSクォータを増やす機能ではありません。KMSがボトルネックなら、KMSクォータ、キー設計、S3 Bucket Keyの利用可否などを検討します。S3 Bucket KeyはSSE-KMS利用時のKMSリクエスト削減に役立つ場合があります。',
+            },
+        ],
+        explanation:
+            'S3性能問題では、S3単体だけを見ると原因を見誤ることがあります。SSE-KMS、CloudFrontキャッシュ、VPC Endpoint、NAT Gateway、クライアントの接続数、リトライ設定、EC2のネットワーク帯域など、周辺要素もボトルネックになります。特にKMSは高頻度S3ワークロードで見落とされやすい確認ポイントです。SSE-S3とSSE-KMSでは、暗号化の管理責任だけでなく性能・クォータ面の考慮も変わります。',
+    },
 ]
