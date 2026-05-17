@@ -2049,4 +2049,260 @@ export const testQuestions: Question[] = [
         explanation:
             'アップロード設計では、Presigned URLによる直接アップロード、S3イベント、非同期処理を組み合わせるとスケールしやすくなります。アップロード直後のオブジェクトを未検査prefixに置き、検査済みprefixや公開prefixへ移動する、メタデータDBで状態管理する、失敗時に隔離するなどの運用も重要です。同期APIで全部処理するより、アップロード、検査、公開を段階に分ける方が障害時の復旧もしやすくなります。',
     },
+    {
+        question:
+            'S3オブジェクトへGetObjectしたところ、あるユーザーでは403 AccessDenied、別のユーザーでは404 Not Foundのように見えます。実際にオブジェクトが存在するかも含めて切り分けたい場合、最も適切な考え方はどれですか?',
+        options: [
+            {
+                text: 'GetObject権限、ListBucket権限、バケットポリシーの明示的Deny、Block Public Access、KMS権限、VPC Endpoint条件を順に確認する',
+                isCorrect: true,
+                explanation:
+                    'S3の403/404は、単に「存在しない」「存在する」だけでは判断できません。対象キーへのGetObject/HeadObject権限、バケットに対するListBucket権限、バケットポリシーやIAMポリシーの明示的Deny、Block Public Access、SSE-KMSならKMS権限、aws:SourceVpceなどの条件を切り分けます。ListBucket権限がないと、存在確認を隠すため、存在しないキーでも403になることがあります。',
+            },
+            {
+                text: '404が返る場合は、必ずS3内部でデータが消失している',
+                isCorrect: false,
+                explanation:
+                    '404はキーが存在しない場合に返ることがありますが、バージョニング、削除マーカー、キー名の大文字小文字、prefixの誤り、アクセス権限の見え方なども確認が必要です。S3内部のデータ消失と決めつけるのは不適切です。',
+            },
+            {
+                text: '403が返る場合は、IAMユーザーにAdministratorAccessを付ければ原因調査は不要になる',
+                isCorrect: false,
+                explanation:
+                    'AdministratorAccessを付けても、バケットポリシー、SCP、VPC Endpointポリシー、KMSキーポリシー、明示的Denyなどで拒否されることがあります。過剰権限で隠すのではなく、どのレイヤーで拒否されているかを調査します。',
+            },
+            {
+                text: 'S3はStrong consistencyではないため、GetObjectの403/404は数日待つまで判断できない',
+                isCorrect: false,
+                explanation:
+                    'S3は現在、PUT、DELETE、LISTなどに対して強い整合性を提供します。数日待てば必ず解決するという考え方ではなく、権限、キー、バージョン、削除マーカー、KMS、ネットワーク条件を確認します。',
+            },
+        ],
+        explanation:
+            'S3アクセス障害の切り分けでは、IAMだけを見ても不十分です。実務では、リクエストしたprincipal、bucket/key、versionId、HTTPメソッド、リージョン、IAM、バケットポリシー、明示的Deny/SCP、Block Public Access、Object Ownership、KMS、VPC Endpoint、CloudFront、Browser/CORSを順に確認します。CloudTrail Data Eventsを有効化していれば、実際の拒否理由や呼び出し元の確認にも役立ちます。403/404は「表示上の結果」であり、原因は複数レイヤーにまたがることがあります。',
+    },
+    {
+        question:
+            '静的画像を一時的に公開するため、オブジェクトにpublic-read ACLを付けたのにインターネットからアクセスできません。現在のS3運用として最も疑うべき原因の組み合わせはどれですか?',
+        options: [
+            {
+                text: 'Block Public Access、Object OwnershipのBucket owner enforced、バケットポリシーの許可不足、アカウントレベル設定を確認する',
+                isCorrect: true,
+                explanation:
+                    '現在のS3では、public-read ACLを付ければ必ず公開されるとは限りません。Block Public Accessが有効なら公開ACLや公開バケットポリシーがブロックされます。Object OwnershipがBucket owner enforcedの場合、ACLは無効化されます。さらにアカウントレベルのBlock Public Accessはバケットレベルより広く、優先度が高い制御として効くため、両方を確認します。',
+            },
+            {
+                text: 'S3 Standard以外のストレージクラスでは、public-read ACLを付けてもHTTPアクセスできない',
+                isCorrect: false,
+                explanation:
+                    '公開可否はストレージクラスではなく、アクセス制御、Block Public Access、オブジェクト状態、復元状態などに依存します。Glacier系で未復元なら取得できない場合はありますが、public-read ACLの可否とは別の問題です。',
+            },
+            {
+                text: 'バケット名にハイフンが含まれていると、S3はすべての公開アクセスを拒否する',
+                isCorrect: false,
+                explanation:
+                    'バケット名にハイフンが含まれていても、それだけで公開アクセスが拒否されるわけではありません。バケット名の命名規則とアクセス制御は別の論点です。',
+            },
+            {
+                text: 'SSE-S3で暗号化されたオブジェクトは、どのような権限を設定しても公開できない',
+                isCorrect: false,
+                explanation:
+                    'SSE-S3はS3管理キーによるサーバー側暗号化であり、適切なS3アクセス権限があれば取得できます。公開すべきかは別として、SSE-S3そのものが公開アクセスを常に不可能にするわけではありません。',
+            },
+        ],
+        explanation:
+            '「公開したはずなのに見えない」問題では、ACLだけを見ると誤ります。ACLはレガシー寄りの制御であり、現在はBucket owner enforcedでACLを無効化し、ポリシーベースで制御する設計が推奨されます。公開が必要な場合でも、S3バケットを直接publicにするより、CloudFront + OACで配信経路を限定し、必要に応じて署名付きURLや最小権限のバケットポリシーを使う構成が一般的です。',
+    },
+    {
+        question:
+            'Webアプリの画像はCloudFront経由では正常に表示されますが、S3のREST APIエンドポイントへ直接アクセスすると403になります。この構成の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '非公開S3バケットにOACを設定し、CloudFrontサービスプリンシパルからのアクセスだけをバケットポリシーで許可している可能性が高い',
+                isCorrect: true,
+                explanation:
+                    '非公開S3バケットをCloudFront経由だけで配信する構成では、OAC（Origin Access Control）を使い、バケットポリシーでCloudFrontサービスプリンシパルと特定distributionのAWS:SourceArn条件を許可します。この場合、S3 REST APIエンドポイントへの直アクセスが403になるのは意図した挙動です。',
+            },
+            {
+                text: 'CloudFront経由で見えるなら、S3バケットは必ずpublic readである',
+                isCorrect: false,
+                explanation:
+                    'CloudFront経由で表示できても、S3バケットがpublicであるとは限りません。むしろ実務では、S3直アクセスを拒否し、CloudFrontからのアクセスだけを許可する構成がよく使われます。',
+            },
+            {
+                text: 'CloudFrontはS3の権限を完全に無視してオブジェクトを取得する',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontもオリジンであるS3へアクセスするための許可が必要です。OACやOAI、バケットポリシー、KMS暗号化ならKMS権限などを正しく設定します。',
+            },
+            {
+                text: 'S3直アクセスで403になる場合、CloudFrontのキャッシュは必ず空である',
+                isCorrect: false,
+                explanation:
+                    'S3直アクセスの403とCloudFrontキャッシュの有無は別です。CloudFrontが過去に取得したオブジェクトをキャッシュしている場合もありますし、OACで現在も取得できている場合もあります。切り分けにはキャッシュ状態、オリジンアクセス、Invalidation、レスポンスヘッダーを確認します。',
+            },
+        ],
+        explanation:
+            'CloudFront配信では「CloudFrontで見えるか」と「S3直アクセスできるか」は分けて考えます。非公開配信では、S3直アクセスを拒否し、CloudFrontだけを許可するのが安全な設計です。障害時は、OAC/OAI、バケットポリシー、AWS:SourceArn、KMS権限、CloudFrontキャッシュ、オリジンエンドポイント種別を確認します。S3 REST APIエンドポイントはOACで非公開オリジンにしやすい一方、S3 Website endpointはHTTPのみでOACの対象ではないため、要件に応じて選びます。CloudFrontキャッシュにより、一時的にオリジン障害や権限変更が見えづらいこともあります。',
+    },
+    {
+        question:
+            'S3へ画像をアップロードしてもLambdaが起動しません。S3 Event Notificationsを使った構成のトラブルシューティングとして、最も適切な確認項目はどれですか?',
+        options: [
+            {
+                text: 'イベント種別、prefix/suffixフィルター、Lambdaのリソースベースポリシー、同一リージョン、送信先設定、CloudWatch Logsを確認する',
+                isCorrect: true,
+                explanation:
+                    'S3からLambdaを起動するには、ObjectCreatedなどのイベント種別、prefix/suffixフィルター、Lambda関数を呼び出すためのリソースベースポリシー、同一リージョン、通知設定が正しい必要があります。Lambda側にはlambda:AddPermission相当でS3からのInvokeFunctionを許可します。ファイル名がsuffix条件に合わない、出力prefixと入力prefixが重なって再帰を避けるために除外されている、権限がない、といった原因がよくあります。',
+            },
+            {
+                text: 'S3 Event NotificationsはLambdaを直接起動できないため、必ずSNSを挟む必要がある',
+                isCorrect: false,
+                explanation:
+                    'S3 Event NotificationsはLambdaを直接宛先にできます。SNS、SQS、EventBridgeは、ファンアウト、バッファリング、柔軟なルーティングなどが必要な場合に検討します。',
+            },
+            {
+                text: 'S3イベントは必ず1秒以内に1回だけ届くため、少し待って起動しなければS3障害である',
+                isCorrect: false,
+                explanation:
+                    'S3イベントは少なくとも1回配信の前提で、重複や遅延が起き得ます。起動しない場合はS3障害と決めつけず、通知設定、フィルター、権限、宛先側のエラー、CloudWatch Logsを確認します。',
+            },
+            {
+                text: 'Lambdaが起動しない場合、S3バケットをpublicにすればイベント通知が有効になる',
+                isCorrect: false,
+                explanation:
+                    'S3イベント通知はバケットのpublic設定とは別です。公開設定を広げてもLambda起動の権限やイベント設定は解決しません。',
+            },
+        ],
+        explanation:
+            'S3イベント処理の障害では、イベントが発生していないのか、フィルターで除外されているのか、S3が宛先を呼べないのか、宛先側で失敗しているのかを分けて見ます。Lambda直呼びならLambdaのリソースベースポリシーと同一リージョン制約、SQSならキューポリシー、S3からEventBridge経由ならEventBridgeルールとターゲット、いずれもログとメトリクスで確認します。再帰ループ防止のため、入力prefixと出力prefixを分ける設計も重要です。',
+    },
+    {
+        question:
+            'SSE-KMSで暗号化されたS3オブジェクトだけGetObjectがAccessDeniedになります。同じIAMロールはSSE-S3のオブジェクトなら読めます。最も疑うべき原因はどれですか?',
+        options: [
+            {
+                text: 'S3のGetObject権限はあるが、対象KMSキーのkms:Decrypt権限またはキーポリシー許可が不足している',
+                isCorrect: true,
+                explanation:
+                    'SSE-KMSのオブジェクトを読むには、S3のGetObject権限に加えて、対象KMSキーでの復号権限が必要です。IAMポリシーだけでなく、KMSキーポリシー、クロスアカウント許可、キーのリージョン、kms:ViaService条件、キーの無効化や削除待ち状態、明示的Denyも確認します。PUTやMultipart Uploadではkms:GenerateDataKeyが関係する場合もあります。',
+            },
+            {
+                text: 'SSE-KMSで暗号化されたオブジェクトは、所有者であっても永遠に読み取れない',
+                isCorrect: false,
+                explanation:
+                    'SSE-KMSでも、適切なS3権限とKMS権限があれば読み取れます。AccessDeniedは権限設計やキー状態の問題として切り分けます。',
+            },
+            {
+                text: 'SSE-S3のオブジェクトが読めるなら、KMS権限も必ず十分である',
+                isCorrect: false,
+                explanation:
+                    'SSE-S3はS3管理キーを使うため、利用者がKMSキー権限を直接持つ必要はありません。SSE-S3が読めることと、SSE-KMSのKMSキーを使えることは別です。',
+            },
+            {
+                text: 'GetObjectのAccessDeniedは常にCORS設定が原因である',
+                isCorrect: false,
+                explanation:
+                    'ブラウザではCORSが関係することがありますが、SSE-KMSオブジェクトだけ失敗するならKMS権限が有力です。CORS、S3権限、KMS権限、VPC Endpoint条件などを分けて確認します。',
+            },
+        ],
+        explanation:
+            'KMS絡みのS3 AccessDeniedは実務で頻出です。S3の許可があっても、KMSキー側でDecryptやGenerateDataKeyが許可されていなければ失敗します。特にクロスアカウントでは、IAMポリシーだけでなくキーポリシー側の許可も必須です。CloudFront OAC、Replication、Athena、Lambdaなどサービス連携時は、サービスロール、キーポリシー、IAMポリシー、kms:ViaService条件、キー状態、リージョン一致をまとめて確認します。',
+    },
+    {
+        question:
+            'バージョニング有効なS3バケットでLifecycleのExpirationを設定しましたが、想定ほどストレージ使用量が減りません。最も適切な原因分析はどれですか?',
+        options: [
+            {
+                text: 'Expirationは現行バージョンに削除マーカーを追加する場合があり、非現行バージョン削除、削除マーカー整理、Object Lock、フィルター条件、処理の非同期性を確認する',
+                isCorrect: true,
+                explanation:
+                    'バージョニング有効バケットでは、Expirationにより現行バージョンが削除マーカーで隠れるだけで、過去の非現行バージョンが残ることがあります。容量削減にはNoncurrentVersionExpirationや、削除マーカーだけが残った場合に整理するExpiredObjectDeleteMarkerの設計が必要です。Object Lock、Legal Hold、Lifecycle Filter、Glacier系ストレージクラスの最低保存期間課金、処理の非同期性も確認します。',
+            },
+            {
+                text: 'Lifecycleルールは設定した時刻に必ず秒単位で実行されるため、即時に容量が減らなければ設定ミスである',
+                isCorrect: false,
+                explanation:
+                    'Lifecycle処理は非同期で、条件到達直後に即時反映されるとは限りません。しばらく遅れて処理されることがあります。即時性だけで判断せず、条件、対象、バージョニング、Object Lockを確認します。',
+            },
+            {
+                text: 'Expirationを設定すれば、非現行バージョンも削除マーカーもObject Lock中のバージョンもすべて即時削除される',
+                isCorrect: false,
+                explanation:
+                    'Expiration、NoncurrentVersionExpiration、ExpiredObjectDeleteMarkerは役割が異なります。またObject Lockの保持期間中やLegal Hold中のオブジェクトバージョンは削除できません。',
+            },
+            {
+                text: 'S3 Intelligent-Tieringを有効化すれば、Lifecycleの削除失敗は自動的に修復される',
+                isCorrect: false,
+                explanation:
+                    'Intelligent-Tieringはアクセス頻度に応じた階層化の仕組みであり、Lifecycle削除ルールやObject Lockの制約を自動修復する機能ではありません。',
+            },
+        ],
+        explanation:
+            'Lifecycleトラブルでは、「削除扱い」と「物理的に課金対象が減る」ことを分けて考えます。バージョニング、削除マーカー、非現行バージョン、Object Lock、Legal Hold、Filter、prefix/tag条件、最低保存期間、Glacier復元状態、Lifecycleの非同期性を確認します。大量オブジェクトではS3 Inventoryを出力し、Athenaで非現行バージョン、ストレージクラス、Object Lock状態、Replication statusを棚卸しするのが実務的です。',
+    },
+    {
+        question:
+            'S3からEventBridge経由で起動する処理が、同じオブジェクトに対して複数回実行され、まれに処理順序も前後します。最も適切な設計上の対策はどれですか?',
+        options: [
+            {
+                text: 'S3イベントはat-least-onceで順序保証なしと考え、versionIdやsequencerなどを使った冪等性、処理済み管理、条件付き書き込みを実装する',
+                isCorrect: true,
+                explanation:
+                    'S3イベント連携では、重複イベントや順序の前後を前提に設計します。バージョニング有効ならversionId、同一オブジェクト内の順序判断を補助するsequencer、bucket/key、ETag、メタデータなどを組み合わせ、DynamoDBの条件付き書き込みなどで処理済みを管理します。ETagはMultipart Uploadや暗号化条件で単純なMD5とは限らない点にも注意します。',
+            },
+            {
+                text: 'EventBridgeを使えば、S3イベントは必ず1回だけ順序通りに配信される',
+                isCorrect: false,
+                explanation:
+                    'EventBridgeを使っても、すべてのS3イベント処理が厳密に1回だけ順序通りになるわけではありません。重複や再試行を考慮し、アプリケーション側で冪等性を持たせます。',
+            },
+            {
+                text: '重複を避けるには、Lambdaのタイムアウトを0秒にする',
+                isCorrect: false,
+                explanation:
+                    'タイムアウトを極端に短くしても重複防止にはなりません。むしろ失敗や再試行を増やす可能性があります。処理済み管理、リトライ設計、DLQ、可観測性を整えます。',
+            },
+            {
+                text: 'S3イベントの重複はバケットをpublicにすれば解消する',
+                isCorrect: false,
+                explanation:
+                    'イベント重複とバケット公開設定は関係ありません。公開範囲を広げるとセキュリティリスクが増えます。',
+            },
+        ],
+        explanation:
+            'イベント駆動のトラブルでは、配信基盤に「一度だけ」「順序通り」を期待しすぎないことが重要です。SQS FIFOを組み合わせても、MessageGroupIdや重複排除ID、再試行、下流処理の冪等性設計が必要で、全体が自動的にexactly-onceになるわけではありません。S3 Event Notifications、EventBridge、SQS標準キュー、Lambda再試行を含め、重複、遅延、再実行を前提に、冪等な出力、処理済みテーブル、DLQ、リプレイ手順を設計します。',
+    },
+    {
+        question:
+            'ブラウザからS3へPresigned URLでPUTすると、開発者ツールではCORSエラーに見えます。一方、同じURLをcurlで実行すると403 SignatureDoesNotMatchになります。最も適切な切り分け方はどれですか?',
+        options: [
+            {
+                text: 'CORSだけでなく、HTTPメソッド、リージョン、期限、署名対象ヘッダー、Content-Typeの一致、クライアント時刻ずれを確認する',
+                isCorrect: true,
+                explanation:
+                    'ブラウザではCORSエラーとして見えていても、実際にはPreflight、署名不一致、期限切れ、リージョン違い、HTTPメソッド違い、Content-Typeやx-amz-*ヘッダーの不一致、クライアント時刻ずれが絡むことがあります。Presigned URLは署名時の条件と実リクエストが一致している必要があります。',
+            },
+            {
+                text: 'curlで403になるなら、ブラウザのCORS設定は必ず正しい',
+                isCorrect: false,
+                explanation:
+                    'curlはブラウザのCORS制約を受けません。curlで403になる署名問題と、ブラウザのCORS設定不足が同時に存在することもあります。別々に切り分けます。',
+            },
+            {
+                text: 'CORSエラーは必ずS3の障害なので、アプリケーション側で確認できる項目はない',
+                isCorrect: false,
+                explanation:
+                    'CORSエラーの多くは、AllowedOrigins、AllowedMethods、AllowedHeaders、署名対象ヘッダー、Content-Type、HTTPメソッドの不一致など設定や実装で切り分けられます。',
+            },
+            {
+                text: 'SignatureDoesNotMatchは、S3バケットをpublicにすれば無視される',
+                isCorrect: false,
+                explanation:
+                    '署名付きリクエストの署名不一致は、バケットを公開して解決するものではありません。公開設定を広げるのではなく、署名生成と実リクエストの差分を確認します。',
+            },
+        ],
+        explanation:
+            'ブラウザアップロードの障害では、ブラウザに表示されるCORSエラーだけを鵜呑みにしないことが重要です。Preflightの成否、実リクエストのステータス、S3のエラーコード、署名生成時のメソッド・ヘッダー・リージョン・期限・時刻、CORSのAllowedHeadersを分けて確認します。Content-Typeが署名時と実送信で違う、ブラウザやライブラリがヘッダーを自動追加する、x-amz-content-sha256やhostヘッダーが想定と違う、といった差分もSignatureDoesNotMatchの原因になります。',
+    },
 ]
