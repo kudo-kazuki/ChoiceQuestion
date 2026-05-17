@@ -9,7 +9,7 @@ export const questionSetCounts = {
     '/dynamodb/dynamodb1': 14,
     '/dynamodb/dynamodb2': 5,
     '/lambda/lambda1': 116,
-    '/lambda/lambda2': 13,
+    '/lambda/lambda2': 22,
     '/s3/s3_1': 54,
     '/s3/s3_2': 77,
     '/ssa': 20,
