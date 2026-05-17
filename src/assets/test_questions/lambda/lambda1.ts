@@ -2145,4 +2145,420 @@ export const testQuestions: Question[] = [
         explanation:
             'サービス連携では、イベントの発生元、Lambda の処理、出力先、権限、ループ防止をセットで考えます。',
     },
+    {
+        question:
+            'Lambda の実行ロールの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda 関数が AWS サービスやリソースへアクセスするために使う IAM ロール',
+                isCorrect: true,
+                explanation:
+                    '実行ロールは、Lambda 関数が S3、DynamoDB、CloudWatch Logs などへアクセスするために使う IAM ロール（AWS サービスなどへ一時的に権限を渡す仕組み）です。IAM は AWS の認証・認可を管理する仕組みです。',
+            },
+            {
+                text: 'Lambda 関数の表示名を自動生成する設定',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは表示名を自動生成する設定ではありません。Lambda 関数に AWS リソースへのアクセス権限を与えるための仕組みです。',
+            },
+            {
+                text: 'Lambda 関数を必ず 24 時間起動し続けるための設定',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは常時起動の設定ではありません。権限管理に関する設定です。',
+            },
+            {
+                text: 'S3 バケット内の一時フォルダ名',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは S3 のフォルダ名ではありません。IAM ロールの一種です。',
+            },
+        ],
+        explanation:
+            'Lambda 関数が他の AWS サービスを操作するときは、コードだけでなく実行ロールの権限も必要です。',
+    },
+    {
+        question:
+            'Lambda 関数に実行ロールが必要な理由として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda 関数がどの AWS 操作を行ってよいかを AWS に判断させるため',
+                isCorrect: true,
+                explanation:
+                    '実行ロールには、Lambda 関数が実行してよい AWS の操作をポリシーとして定義します。例えば S3 から読み取る、DynamoDB に書き込む、CloudWatch Logs にログを出す、といった権限です。',
+            },
+            {
+                text: 'Lambda 関数のコードを自動で高速化するため',
+                isCorrect: false,
+                explanation:
+                    '実行ロールはコード高速化の機能ではありません。権限管理の仕組みです。',
+            },
+            {
+                text: 'Lambda 関数の戻り値を必ず S3 に保存するため',
+                isCorrect: false,
+                explanation:
+                    '実行ロールだけで戻り値が自動的に S3 へ保存されるわけではありません。S3 に保存するにはコードで書き込み処理を実装し、必要な権限を付与します。',
+            },
+            {
+                text: '関数名を AWS アカウント内で必ず重複させるため',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは関数名の重複を目的とした設定ではありません。',
+            },
+        ],
+        explanation:
+            '実行ロールは「この Lambda 関数は何をしてよいか」を AWS に伝えるための重要な設定です。',
+    },
+    {
+        question:
+            'Lambda のログを CloudWatch Logs に出力するために必要なものとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実行ロールに CloudWatch Logs へ書き込む権限を付与する',
+                isCorrect: true,
+                explanation:
+                    'Lambda のログを CloudWatch Logs（AWS のログ監視・保存サービス）へ送るには、実行ロールに CloudWatch Logs へログを書き込むための権限が必要です。',
+            },
+            {
+                text: '関数名を必ず logs にする',
+                isCorrect: false,
+                explanation:
+                    '関数名を logs にする必要はありません。必要なのは CloudWatch Logs への書き込み権限です。',
+            },
+            {
+                text: 'Lambda 関数のメモリを最大値にする',
+                isCorrect: false,
+                explanation:
+                    'ログ出力に必ず最大メモリが必要なわけではありません。権限とログ出力処理を確認します。',
+            },
+            {
+                text: 'S3 バケットを作成しておけば、CloudWatch Logs 権限は不要になる',
+                isCorrect: false,
+                explanation:
+                    'S3 バケットの有無と CloudWatch Logs への書き込み権限は別です。CloudWatch Logs に出すには対応する権限が必要です。',
+            },
+        ],
+        explanation:
+            'Lambda の基本的なログ出力には、`AWSLambdaBasicExecutionRole`（Lambda の基本的なログ出力権限を含む AWS 管理ポリシー）のような CloudWatch Logs への書き込み権限を含むポリシーが使われることがあります。',
+    },
+    {
+        question:
+            'Lambda のログが CloudWatch Logs に出てこない場合、初級者がまず確認することとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実行ロールに CloudWatch Logs への書き込み権限があるか確認する',
+                isCorrect: true,
+                explanation:
+                    'ログが出ない場合は、まず実行ロールに CloudWatch Logs への書き込み権限があるか確認します。あわせて、関数が実際に呼び出されているか、コードでログ出力しているかも確認します。',
+            },
+            {
+                text: 'S3 バケットのプレフィックスを必ず logs に変更する',
+                isCorrect: false,
+                explanation:
+                    'S3 のプレフィックス変更は CloudWatch Logs への出力権限とは関係ありません。',
+            },
+            {
+                text: 'DynamoDB テーブルを削除する',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB テーブル削除はログが出ない問題の基本対応ではありません。不要な削除は避けるべきです。',
+            },
+            {
+                text: 'Lambda のタイムアウトを 0 秒にする',
+                isCorrect: false,
+                explanation:
+                    'タイムアウトを 0 秒にすることはできず、ログ出力問題の解決にもなりません。',
+            },
+        ],
+        explanation:
+            '権限不足、関数未実行、ログ出力コードの不足などを順番に切り分けます。',
+    },
+    {
+        question:
+            'Lambda 関数から S3 のオブジェクトを読み取りたい場合、必要になる権限として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実行ロールに対象 S3 オブジェクトを読み取る権限を付与する',
+                isCorrect: true,
+                explanation:
+                    'Lambda 関数から S3 を読むには、実行ロールに対象バケットやオブジェクトへの読み取り権限が必要です。例えば `GetObject`（S3 オブジェクトを読み取る API）のような読み取り API への権限を検討します。',
+            },
+            {
+                text: 'S3 バケット名を Lambda 関数名と同じにする',
+                isCorrect: false,
+                explanation:
+                    'バケット名と関数名を同じにしても、S3 読み取り権限が自動で付与されるわけではありません。',
+            },
+            {
+                text: 'Lambda の説明欄に S3 と書く',
+                isCorrect: false,
+                explanation:
+                    '説明欄に S3 と書いても、S3 への読み取り権限は付与されません。IAM ポリシーで権限を設定します。',
+            },
+            {
+                text: 'CloudWatch Logs を無効にする',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs を無効にしても S3 読み取り権限は得られません。',
+            },
+        ],
+        explanation:
+            'Lambda から他サービスへアクセスする場合は、対象サービスでどの操作をするのかに応じて実行ロールへ権限を付けます。',
+    },
+    {
+        question:
+            'Lambda 関数から DynamoDB に項目を書き込みたい場合の権限設定として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実行ロールに対象テーブルへの書き込み権限を付与する',
+                isCorrect: true,
+                explanation:
+                    'Lambda から DynamoDB に項目を書き込むには、実行ロールに対象テーブルへの書き込み権限が必要です。例えば `PutItem`（DynamoDB にデータを書き込む API）などの権限を付与します。',
+            },
+            {
+                text: 'DynamoDB テーブル名を必ず lambda に変更する',
+                isCorrect: false,
+                explanation:
+                    'テーブル名を lambda にしても書き込み権限は付与されません。実行ロールの IAM ポリシーで権限を設定します。',
+            },
+            {
+                text: 'Lambda 関数の戻り値に true を返せば自動で書き込める',
+                isCorrect: false,
+                explanation:
+                    '戻り値に true を返すだけで DynamoDB に書き込まれるわけではありません。コードで書き込み処理を実装し、権限も付与します。',
+            },
+            {
+                text: 'API Gateway を作成すれば DynamoDB 権限は不要になる',
+                isCorrect: false,
+                explanation:
+                    'API Gateway は HTTP API の入口です。Lambda から DynamoDB へ書き込むには実行ロールの権限が必要です。',
+            },
+        ],
+        explanation:
+            'DynamoDB 連携では、コード、対象テーブル名、実行ロールの権限をセットで確認します。',
+    },
+    {
+        question:
+            'S3 が Lambda 関数を起動するための権限について、最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'S3 がその Lambda 関数を呼び出せるように、Lambda 側のリソースベースポリシーなどで許可する',
+                isCorrect: true,
+                explanation:
+                    'S3 のような AWS サービスが Lambda を呼び出すには、Lambda 関数側でそのサービスからの呼び出しを許可する必要があります。これは Lambda 関数そのものに設定されるアクセス許可ポリシーである、リソースベースポリシーで管理されます。',
+            },
+            {
+                text: 'Lambda の実行ロールに S3 書き込み権限を付ければ、S3 は必ず Lambda を起動できる',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは Lambda が他サービスへアクセスするための権限です。S3 が Lambda を呼び出す権限とは別に考えます。',
+            },
+            {
+                text: 'S3 バケットの中に Lambda 関数コードを置くだけで、自動的に呼び出し権限が付く',
+                isCorrect: false,
+                explanation:
+                    'コードを S3 に置くだけで、S3 から Lambda を呼び出す権限が自動設定されるわけではありません。',
+            },
+            {
+                text: 'CloudWatch Logs の保持期間を長くすれば、S3 が Lambda を起動できる',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs の保持期間は、S3 が Lambda を呼び出す権限とは関係ありません。',
+            },
+        ],
+        explanation:
+            'Lambda が外へアクセスする権限と、外部サービスが Lambda を呼び出す権限は分けて考えます。',
+    },
+    {
+        question:
+            'Lambda のリソースベースポリシーの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '他の AWS サービスやアカウントが、その Lambda 関数を呼び出せるかを制御するポリシー',
+                isCorrect: true,
+                explanation:
+                    'リソースベースポリシーは、Lambda 関数そのものに設定されるアクセス許可ポリシーです。「誰がこの関数を呼び出せるか」を制御し、S3 や API Gateway などからの呼び出し許可に関係します。',
+            },
+            {
+                text: 'Lambda 関数のメモリ使用量を自動で増減する設定',
+                isCorrect: false,
+                explanation:
+                    'リソースベースポリシーはメモリ設定ではありません。アクセス許可に関するポリシーです。',
+            },
+            {
+                text: 'Lambda 関数のソースコードを自動圧縮する機能',
+                isCorrect: false,
+                explanation:
+                    'リソースベースポリシーはソースコード圧縮機能ではありません。',
+            },
+            {
+                text: 'DynamoDB テーブルの項目を自動削除する設定',
+                isCorrect: false,
+                explanation:
+                    'リソースベースポリシーは DynamoDB の項目削除設定ではありません。',
+            },
+        ],
+        explanation:
+            '実行ロールは Lambda が何をできるか、リソースベースポリシーは誰が Lambda を呼べるか、と分けると理解しやすいです。',
+    },
+    {
+        question:
+            '「Lambda から S3 に書き込めない」という AccessDenied エラーが出た場合、まず確認すべきものはどれですか?',
+        options: [
+            {
+                text: 'Lambda の実行ロールに、対象 S3 バケットへの書き込み権限があるか',
+                isCorrect: true,
+                explanation:
+                    'Lambda から S3 に書き込む処理で AccessDenied が出る場合、まず実行ロールに対象バケットへの書き込み権限があるか確認します。対象リソースや操作がポリシーで許可されているかが重要です。',
+            },
+            {
+                text: 'Lambda 関数名が 3 文字以下か',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さは、S3 書き込みの AccessDenied の主な原因ではありません。',
+            },
+            {
+                text: 'CloudWatch Logs にログが 100 行以上あるか',
+                isCorrect: false,
+                explanation:
+                    'ログ行数は S3 書き込み権限の有無を決めません。エラー内容を見ることは大切ですが、権限設定を確認します。',
+            },
+            {
+                text: 'SQS キュー名が DynamoDB テーブル名と一致しているか',
+                isCorrect: false,
+                explanation:
+                    'SQS キュー名と DynamoDB テーブル名の一致は、Lambda から S3 に書き込む権限とは関係ありません。',
+            },
+        ],
+        explanation:
+            'AccessDenied は権限不足の代表的なエラーです。「誰が」「どのリソースに」「どの操作をしようとしているか」を確認します。',
+    },
+    {
+        question:
+            '最小権限の考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '必要な操作と対象リソースだけを許可する',
+                isCorrect: true,
+                explanation:
+                    '最小権限は、作業に必要な操作と対象リソースだけを許可する考え方です。例えば特定の S3 バケットに読み取りだけ必要なら、すべての S3 操作を許可するのではなく、必要な読み取り操作に絞ります。',
+            },
+            {
+                text: '開発を楽にするため、常にすべての AWS サービスへの管理者権限を付ける',
+                isCorrect: false,
+                explanation:
+                    '常に管理者権限を付けると、誤操作や情報漏えい時の影響が大きくなります。必要な権限に絞ることが重要です。',
+            },
+            {
+                text: '権限エラーが出たら、理由を確認せず全権限を付与する',
+                isCorrect: false,
+                explanation:
+                    '権限エラーが出た場合は、必要な操作と対象リソースを確認して、必要な権限だけを追加します。',
+            },
+            {
+                text: 'ログ出力だけの関数にも、DynamoDB の全テーブル削除権限を付ける',
+                isCorrect: false,
+                explanation:
+                    'ログ出力だけの関数に DynamoDB の全テーブル削除権限は不要です。不要な権限は付けないようにします。',
+            },
+        ],
+        explanation:
+            '最小権限はセキュリティの基本です。Lambda の実行ロールでも、関数の役割に必要な権限だけを付与します。',
+    },
+    {
+        question:
+            '最小権限に近い Lambda 実行ロールの例として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '特定の DynamoDB テーブルに `PutItem` だけ必要な関数へ、そのテーブルへの書き込み権限だけを付ける',
+                isCorrect: true,
+                explanation:
+                    '特定のテーブルへ書き込むだけの関数なら、対象テーブルと必要な操作に絞った権限が最小権限に近い考え方です。',
+            },
+            {
+                text: 'すべての AWS サービスに対して管理者権限を付ける',
+                isCorrect: false,
+                explanation:
+                    '管理者権限は範囲が広すぎます。最小権限の考え方からは外れます。',
+            },
+            {
+                text: 'S3 を読まない関数に、すべての S3 バケット削除権限を付ける',
+                isCorrect: false,
+                explanation:
+                    '使わないサービスや不要な削除権限を付けるべきではありません。',
+            },
+            {
+                text: 'ログを書くだけの関数に、全リージョンの DynamoDB 全削除権限を付ける',
+                isCorrect: false,
+                explanation:
+                    'ログを書くだけなら CloudWatch Logs への必要権限を中心に考えます。DynamoDB の全削除権限は不要で危険です。',
+            },
+        ],
+        explanation:
+            '最小権限では、操作の種類と対象リソースの両方を絞ります。',
+    },
+    {
+        question:
+            'Lambda の権限トラブルを調べるときの考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '呼び出し方向を整理し、Lambda が外へアクセスする権限か、外部から Lambda を呼ぶ権限かを分けて確認する',
+                isCorrect: true,
+                explanation:
+                    '権限トラブルでは、まず「誰が誰にアクセスしているのか」を整理します。Lambda が S3 や DynamoDB へアクセスするなら実行ロール、S3 や API Gateway が Lambda を呼ぶなら Lambda 側の呼び出し許可を確認します。',
+            },
+            {
+                text: '権限エラーは必ずメモリ不足が原因なので、メモリだけ最大にする',
+                isCorrect: false,
+                explanation:
+                    '権限エラーは IAM ポリシーやリソースベースポリシーなどが原因であることが多いです。メモリ設定だけでは解決しません。',
+            },
+            {
+                text: 'AccessDenied が出たら、ログを見ずに関数を削除する',
+                isCorrect: false,
+                explanation:
+                    '関数削除は基本対応ではありません。ログやエラー内容を確認し、必要な権限を見直します。',
+            },
+            {
+                text: 'Lambda の権限設定は一切変更できないため、調査しても意味がない',
+                isCorrect: false,
+                explanation:
+                    'Lambda の実行ロールやリソースベースポリシーは確認・更新できます。権限トラブルでは重要な調査対象です。',
+            },
+        ],
+        explanation:
+            'Lambda の権限は、実行ロール、リソースベースポリシー、呼び出し元サービスの設定など複数の観点で確認します。',
+    },
+    {
+        question:
+            'S3 に置かれたファイルを読み取り、結果を DynamoDB に保存する Lambda 関数に必要な権限として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実行ロールに、対象 S3 オブジェクトの読み取り権限と対象 DynamoDB テーブルへの書き込み権限を付ける',
+                isCorrect: true,
+                explanation:
+                    'この Lambda 関数は S3 から読み取り、DynamoDB に書き込むため、実行ロールには対象 S3 への読み取り権限と対象 DynamoDB テーブルへの書き込み権限が必要です。',
+            },
+            {
+                text: 'S3 と DynamoDB の権限は不要で、CloudWatch Logs 権限だけあれば必ず動く',
+                isCorrect: false,
+                explanation:
+                    'ログ出力権限だけでは S3 読み取りや DynamoDB 書き込みはできません。アクセス先ごとの権限が必要です。',
+            },
+            {
+                text: 'DynamoDB に保存するには、Lambda 関数名を DynamoDB テーブル名と同じにする',
+                isCorrect: false,
+                explanation:
+                    '関数名とテーブル名を同じにしても権限は付与されません。実行ロールで許可します。',
+            },
+            {
+                text: 'S3 を読むには API Gateway のステージ名を変更する',
+                isCorrect: false,
+                explanation:
+                    'API Gateway のステージ名は S3 読み取り権限とは関係ありません。',
+            },
+        ],
+        explanation:
+            'シナリオごとに「Lambda がどのサービスへ、どの操作をするか」を書き出すと、必要な権限を整理しやすくなります。',
+    },
 ]
