@@ -705,4 +705,196 @@ export const testQuestions: Question[] = [
         explanation:
             'S3コスト最適化では「GB単価が安いクラスにする」だけでは不十分です。ログや分析用途では、PUT/LIST/GETの回数、ライフサイクル移行リクエスト、別リージョンやインターネットへのデータ転送、Athenaなど周辺サービスのスキャン量、取り出し料金、Intelligent-Tieringの監視・自動化料金まで含めて設計します。',
     },
+    {
+        question:
+            'バージョニングを有効化したS3バケットで、不要になった大きなオブジェクトに対して通常のDELETEを実行しました。しかしストレージ使用量が期待ほど減りません。最も可能性が高い理由はどれですか?',
+        options: [
+            {
+                text: '通常のDELETEでは削除マーカーが追加され、元のオブジェクトバージョンは非現行バージョンとして残るため',
+                isCorrect: true,
+                explanation:
+                    'バージョニング有効なバケットでversionIdを指定せずにDELETEすると、S3はオブジェクトを完全削除せず、削除マーカー（Delete Marker）を現在バージョンとして追加します。削除マーカー自体にもキー名など最小限のメタデータ分のストレージは発生しますが、ストレージ使用量が減らない主因は元のデータが非現行バージョンとして残ることです。',
+            },
+            {
+                text: 'S3では一度アップロードしたオブジェクトは、どのような方法でも永久に削除できないため',
+                isCorrect: false,
+                explanation:
+                    'S3オブジェクトは適切な権限と条件があれば削除できます。バージョニング有効時に完全削除したい場合は、対象のversionIdを指定してそのバージョンを削除するか、ライフサイクルで非現行バージョンを期限切れにします。',
+            },
+            {
+                text: '削除マーカーには元オブジェクトと同じサイズのデータ本体が保存されるため',
+                isCorrect: false,
+                explanation:
+                    '削除マーカー自体には元オブジェクトと同じデータ本体はありません。メタデータ分のストレージは発生しますが、ストレージ使用量が減らない主因は、元のオブジェクトバージョンが非現行バージョンとして残っていることです。',
+            },
+            {
+                text: 'S3 StandardからS3 Glacierへ自動移行されたため、使用量が必ず2倍になるため',
+                isCorrect: false,
+                explanation:
+                    'ストレージクラス移行と通常DELETE時の削除マーカー作成は別の話です。バージョニング有効時の削除挙動を確認する必要があります。',
+            },
+        ],
+        explanation:
+            '「削除したのに消えない」系の原因として、バージョニングと削除マーカーは最重要です。現在バージョンが削除マーカーになると、versionIdを指定しないGETは404のように見えますが、過去バージョンは残っています。S3の削除には、削除マーカー追加、特定versionIdの完全削除、非現行バージョンのLifecycle削除、Expired Object Delete Marker削除、Object Lockで削除不可、といった複数の意味があります。',
+    },
+    {
+        question:
+            'バージョニング有効なS3バケットに、LifecycleのExpirationを「30日後に期限切れ」として設定しました。30日後、オブジェクト数が減るどころか増えたように見えます。最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'Expirationは現在バージョンに作用し、バージョニング有効時は完全削除ではなく削除マーカーを追加するため',
+                isCorrect: true,
+                explanation:
+                    'バージョニング有効なバケットでは、LifecycleのExpirationは現在バージョンに作用します。このときS3は現在バージョンを完全削除せず、削除マーカーを追加し、元の現在バージョンは非現行バージョンになります。そのため、オブジェクト数が一時的に増えたように見えることがあります。容量削減には、非現行バージョンを削除するNoncurrentVersionExpirationも必要です。',
+            },
+            {
+                text: 'Expirationは非現行バージョンだけを完全削除するアクションであり、削除マーカーは作らないため',
+                isCorrect: false,
+                explanation:
+                    '非現行バージョンを完全削除するのはNoncurrentVersionExpirationです。Expirationは現在バージョンに作用します。バージョニング有効時は削除マーカーが作成される点が重要です。',
+            },
+            {
+                text: 'Lifecycleはバージョニング有効なバケットでは一切動作しないため',
+                isCorrect: false,
+                explanation:
+                    'Lifecycleはバージョニング有効なバケットでも動作します。ただし、現在バージョン、非現行バージョン、削除マーカーに対するアクションが分かれているため、期待通りの削除には複数の設定が必要になることがあります。',
+            },
+            {
+                text: 'Expirationを設定すると、すべての非現行バージョンが即座にS3 Standardへ戻るため',
+                isCorrect: false,
+                explanation:
+                    'Expirationはストレージクラスを戻す機能ではありません。期限切れや削除マーカー作成に関係するアクションです。',
+            },
+        ],
+        explanation:
+            'バージョニング有効バケットをLifecycleで整理する場合は、現在バージョンのExpiration、非現行バージョンのNoncurrentVersionExpiration、不要になった削除マーカーのExpiredObjectDeleteMarkerを分けて考えます。現在バージョンだけを期限切れにしても、非現行バージョンが残れば容量は減りません。またLifecycle処理は非同期で実行されるため、条件に到達した瞬間に必ず即時反映されるわけではありません。',
+    },
+    {
+        question:
+            'アプリケーションログをS3に保存し、バージョニングを有効化しています。最新版は30日後に削除扱いにし、過去バージョンは90日後に完全削除してコストを抑えたいです。最も適切なLifecycle設計はどれですか?',
+        options: [
+            {
+                text: 'Expirationで現在バージョンを30日後に期限切れにし、NoncurrentVersionExpirationで非現行バージョンを90日後に削除する',
+                isCorrect: true,
+                explanation:
+                    '現在バージョンにはExpirationを使い、非現行バージョンにはNoncurrentVersionExpirationを使います。バージョニング有効時にExpirationだけを設定すると削除マーカーが追加されるだけで、元データは非現行バージョンとして残ります。「30日後に削除扱い」と「データ本体を完全削除」は違うため、非現行バージョンの完全削除には別途NoncurrentVersionExpirationが必要です。',
+            },
+            {
+                text: 'Expirationだけを設定すれば、現在バージョンも非現行バージョンもすべて完全削除される',
+                isCorrect: false,
+                explanation:
+                    'Expirationは現在バージョンに作用します。非現行バージョンを削除したい場合はNoncurrentVersionExpirationを設定します。',
+            },
+            {
+                text: 'NoncurrentVersionTransitionだけを設定すれば、非現行バージョンは自動的に完全削除される',
+                isCorrect: false,
+                explanation:
+                    'NoncurrentVersionTransitionは非現行バージョンを別のストレージクラスへ移行するアクションです。完全削除ではありません。削除にはNoncurrentVersionExpirationを使います。',
+            },
+            {
+                text: 'ExpiredObjectDeleteMarkerだけを設定すれば、全バージョンのデータ本体が90日後に完全削除される',
+                isCorrect: false,
+                explanation:
+                    'ExpiredObjectDeleteMarkerは、全てのオブジェクトバージョンが削除され、削除マーカーだけが残った状態を整理するための設定です。非現行バージョンのデータ本体を削除するアクションではありません。',
+            },
+        ],
+        explanation:
+            'Lifecycle設計では、TransitionとExpirationを混同しないことが重要です。移行はストレージクラスを変えるだけで、削除ではありません。さらにバージョニング有効時は現在バージョンと非現行バージョンでアクションが分かれます。非現行バージョンを削除した後に削除マーカーだけが残る場合は、ExpiredObjectDeleteMarkerの整理も検討します。',
+    },
+    {
+        question:
+            'S3バケットでNoncurrentVersionExpirationを設定し、「非現行になって30日後、かつ新しい非現行バージョンを10個保持する」としました。古い非現行バージョンが30日を過ぎても削除されません。最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'NoncurrentDaysとNewerNoncurrentVersionsの両方の条件を満たす必要があるため',
+                isCorrect: true,
+                explanation:
+                    'NoncurrentVersionExpirationでNoncurrentDaysとNewerNoncurrentVersionsを指定した場合、削除には両方の条件を満たす必要があります。OR条件ではなくAND条件です。NewerNoncurrentVersionsは「新しい非現行バージョンを指定数だけ残す」ための条件で、非現行になって指定日数を超え、かつ保持数を超えた古いバージョンが対象になります。',
+            },
+            {
+                text: 'NewerNoncurrentVersionsを指定すると、NoncurrentDaysは無視され、すべて即時削除されるため',
+                isCorrect: false,
+                explanation:
+                    'NewerNoncurrentVersionsを指定してもNoncurrentDaysが無視されるわけではありません。両方の条件を満たす必要があります。',
+            },
+            {
+                text: 'NoncurrentVersionExpirationは現在バージョンだけを削除するため',
+                isCorrect: false,
+                explanation:
+                    'NoncurrentVersionExpirationは非現行バージョンを完全削除するアクションです。現在バージョンに対する期限切れはExpirationで扱います。',
+            },
+            {
+                text: 'S3 Lifecycleは最低1年経たないと、どの設定でも削除処理を開始しないため',
+                isCorrect: false,
+                explanation:
+                    'Lifecycleの削除開始が常に1年後になるわけではありません。設定した日数や条件に基づいて処理されます。ただしLifecycle処理は即時実行ではなく、反映まで時間がかかる場合があります。',
+            },
+        ],
+        explanation:
+            '「日数を過ぎたのに削除されない」場合、保持する非現行バージョン数の条件を見落としていることがあります。NewerNoncurrentVersionsを指定する場合はFilterも必要です。これはライフサイクルルールの対象範囲を明確にするためで、prefixやタグなどで対象を定義します。Lifecycleは日次処理であり、条件を満たした瞬間に即座に消えるとは限らない点も運用上の注意です。',
+    },
+    {
+        question:
+            'バージョニング有効なS3バケットで、非現行バージョンをLifecycleで全て削除しました。その後、データ本体は残っていないのに削除マーカーだけが残り続けています。この削除マーカーを自動で整理したい場合、最も適切な設定はどれですか?',
+        options: [
+            {
+                text: 'LifecycleのExpirationでExpiredObjectDeleteMarkerを有効にする',
+                isCorrect: true,
+                explanation:
+                    '削除マーカーだけが残り、非現行バージョンが存在しない状態の削除マーカーはExpired Object Delete Markerとして扱われます。LifecycleのExpiredObjectDeleteMarkerを使うと、この不要な削除マーカーを削除できます。これは削除マーカーの整理であり、データ本体を削除するアクションではありません。',
+            },
+            {
+                text: 'NoncurrentVersionTransitionで削除マーカーをGlacier Deep Archiveへ移行する',
+                isCorrect: false,
+                explanation:
+                    '削除マーカーにはデータ本体がなく、通常のオブジェクトのようにストレージクラス移行する対象ではありません。不要な削除マーカーの整理にはExpiredObjectDeleteMarkerを使います。',
+            },
+            {
+                text: 'S3 Object LockのCompliance modeを有効化して、削除マーカーを自動削除する',
+                isCorrect: false,
+                explanation:
+                    'Object Lockは削除や上書きを防ぐための機能であり、削除マーカーを自動削除する機能ではありません。むしろ保護対象のバージョンがある場合、Lifecycleによる完全削除が制限されることがあります。',
+            },
+            {
+                text: 'バケットポリシーでs3:GetObjectをDenyすれば、削除マーカーは自動的に消える',
+                isCorrect: false,
+                explanation:
+                    'アクセス拒否ポリシーは削除マーカーのライフサイクル管理ではありません。不要な削除マーカーはLifecycleの対象として整理します。',
+            },
+        ],
+        explanation:
+            '削除マーカーは、ユーザーから見るとオブジェクトが削除されたように見せるためのプレースホルダーです。ExpiredObjectDeleteMarkerは「削除マーカーだけが残った状態」を整理するもので、非現行バージョンが残っている場合は対象になりません。バージョニング有効バケットを長期運用すると、非現行バージョンと削除マーカーの両方を管理しないと、オブジェクト数や管理対象が期待通り減らないことがあります。',
+    },
+    {
+        question:
+            '規制対応のため、S3に保存した監査データを一定期間WORMとして保護します。一部の管理者には緊急時に保持設定を解除できる余地を残したい一方、別のデータセットではルートユーザーを含めて保持期間中の削除を絶対に許したくありません。最も適切な整理はどれですか?',
+        options: [
+            {
+                text: '緊急時の上書き余地が必要なものはGovernance mode、誰にも保持短縮や削除を許したくないものはCompliance modeを使う',
+                isCorrect: true,
+                explanation:
+                    'Object LockのGovernance modeでは、通常ユーザーによる削除や上書きを防ぎつつ、特別な権限を持つユーザーがバイパスできます。バイパスにはs3:BypassGovernanceRetention権限に加え、APIやCLIでは明示的なバイパス指定が必要です。Compliance modeでは保持期間中、ルートユーザーを含めて保持設定の短縮や削除ができません。要件の強さに応じて使い分けます。',
+            },
+            {
+                text: 'Governance modeはルートユーザーを含めて絶対に削除できず、Compliance modeは誰でも解除できる',
+                isCorrect: false,
+                explanation:
+                    '逆です。Compliance modeは最も強い保持モードで、保持期間中はルートユーザーでも削除や短縮ができません。Governance modeは特別な権限とバイパス指定により解除できる余地があります。',
+            },
+            {
+                text: 'Legal Holdは保持期間を必ず30日で自動終了するため、WORM要件には使えない',
+                isCorrect: false,
+                explanation:
+                    'Legal Holdは固定の終了日時を持たず、明示的に解除されるまで対象バージョンの削除や上書きを防ぎます。Retention periodは保持期限を持つ保護、Legal Holdは期限を持たない保護として整理できます。両者は独立して設定できます。',
+            },
+            {
+                text: 'Object Lockはバージョニングと無関係に、どのS3バケットでも後から自由に無効化できる',
+                isCorrect: false,
+                explanation:
+                    'Object Lockはバージョニング有効なバケットで動作します。Object Lockはバケット作成時に有効化するのが基本で、既存バケットで後から有効化する場合にも制約や手順があります。また、Object Lockを有効化したバケットでは、Object Lockを無効化できないなどの重要な制約があります。導入前に保持要件と運用手順を確認します。',
+            },
+        ],
+        explanation:
+            'Object Lockはバケット全体を単純に削除禁止にする機能ではなく、オブジェクトの「バージョン」を保護する機能です。保持期間やLegal Holdは対象バージョンの削除や上書きを防ぎますが、新しいバージョンの作成や削除マーカーの追加そのものを常に防ぐわけではありません。WORM要件では、モード、保持期間、Legal Hold、権限、Lifecycleとの関係をセットで設計します。',
+    },
 ]
