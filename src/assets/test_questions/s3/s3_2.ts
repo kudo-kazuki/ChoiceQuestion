@@ -1665,4 +1665,196 @@ export const testQuestions: Question[] = [
         explanation:
             'AthenaとRedshift SpectrumはどちらもS3上のデータをクエリできますが、使いどころが違います。Athenaはサーバーレスのアドホッククエリや探索、低頻度分析に向きます。Redshift SpectrumはRedshift環境と統合し、大規模BIや既存DWHデータとの結合に向くことがあります。RDSはオンラインアプリケーションやトランザクション向けです。データ形式、パーティション、Glue Data Catalog、Lake Formation、IAM権限設計も含めて設計します。',
     },
+    {
+        question:
+            '多数のWebアプリケーションから発生するJSONログを、継続的にS3へ集約したいです。ログは一定サイズまたは一定時間ごとにまとめ、必要ならLambdaで変換し、将来Athenaで分析しやすい形にしたい場合、最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'Amazon Data Firehoseにログを送信し、S3宛先、バッファリング、Lambda変換、必要に応じてParquet/ORC変換を設定する',
+                isCorrect: true,
+                explanation:
+                    'Amazon Data Firehoseは、ストリーミングデータをS3などの宛先へnear real-timeに配信するフルマネージドサービスです。S3宛先では、受信レコードをバッファリングして一定サイズまたは一定時間ごとにS3オブジェクトとして配信できます。小さいファイル問題を避けつつ、Lambda変換やJSONからParquet/ORCへの形式変換も設定できます。',
+            },
+            {
+                text: '各アプリケーションが1ログ行ごとにS3 PutObjectを直接実行し、1行1オブジェクトとして保存する',
+                isCorrect: false,
+                explanation:
+                    '直接S3へ書くこと自体は可能ですが、1行1オブジェクトにすると小さいファイルが大量に発生し、S3リクエスト料金、一覧処理、Athenaクエリ性能に悪影響が出やすくなります。ログ集約ではFirehoseのバッファリングで適切なサイズにまとめる設計がよく使われます。',
+            },
+            {
+                text: 'S3 Transfer Accelerationを使えば、ログの変換やParquet化まで自動で行われる',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationは長距離転送の最適化機能であり、ログのバッファリング、変換、Parquet化を行う機能ではありません。',
+            },
+            {
+                text: 'S3 Event Notificationsを使えば、アプリケーションから送られていないログも自動収集できる',
+                isCorrect: false,
+                explanation:
+                    'S3 Event NotificationsはS3上で発生したイベントを通知する仕組みです。アプリケーションログをS3へ継続的に取り込む配信パイプラインそのものではありません。',
+            },
+        ],
+        explanation:
+            'Firehoseは「アプリから直接S3へ細かく書く」代わりに、配信・バッファリング・変換・圧縮・形式変換をマネージドに任せたい場合に向きます。S3をログ蓄積先にする場合、後段のAthena分析を意識して、ファイルサイズ、日付パーティションを意識したprefix、Parquet/ORC、圧縮、Glue Data Catalogとの連携、エラー出力prefixも考えます。完全な即時処理ではなくnear real-time配信である点も要件と照らします。',
+    },
+    {
+        question:
+            'クリックストリームをリアルタイムに処理し、複数の独自アプリケーションが同じデータを読み取って、数秒以内に不正検知やパーソナライズ処理を行います。一方で、最終的にはS3にも保存したいです。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'Kinesis Data Streamsでストリームを受け、複数コンシューマーでリアルタイム処理し、必要に応じてData FirehoseなどでS3へ配信する',
+                isCorrect: true,
+                explanation:
+                    'Kinesis Data Streamsは、大量のレコードをリアルタイムに収集・処理し、複数のコンシューマーアプリケーションが読み取る用途に向きます。Enhanced Fan-Outなどでコンシューマーごとの読み取り性能を高める設計もあります。Firehoseは配信先へのロードをマネージドに行うサービスなので、独自の低レイテンシ処理が必要ならData Streamsを中心にし、S3への保存にはFirehoseなどを組み合わせます。',
+            },
+            {
+                text: 'Data Firehoseだけを使えば、複数の独自コンシューマーが同じストリームを任意のタイミングで低レイテンシに再読込できる',
+                isCorrect: false,
+                explanation:
+                    'Data Firehoseは宛先への配信をマネージドに行うサービスであり、複数の独自コンシューマーが低レイテンシで自由に読み取るストリーム処理基盤としてはKinesis Data Streamsの方が適しています。',
+            },
+            {
+                text: 'S3だけに直接書き込めば、複数コンシューマーが数秒以内に順序付きで処理できる',
+                isCorrect: false,
+                explanation:
+                    'S3は耐久性の高いオブジェクトストレージですが、複数コンシューマーが低レイテンシにストリーム処理するためのサービスではありません。リアルタイム処理にはData StreamsやManaged Service for Apache Flinkなどを検討します。',
+            },
+            {
+                text: 'Athenaを使えば、書き込まれる前のクリックイベントをリアルタイムに処理できる',
+                isCorrect: false,
+                explanation:
+                    'AthenaはS3などに保存されたデータをSQLで分析するサービスであり、到着前のイベントをリアルタイムに処理するストリーミングコンシューマーではありません。',
+            },
+        ],
+        explanation:
+            'Data StreamsとFirehoseは似ていますが、目的が違います。Data Streamsはストリームを保持し、複数アプリケーションが低レイテンシに処理する基盤です。FirehoseはS3、Redshift、OpenSearch、HTTPエンドポイントなどへの配信をマネージド化するサービスです。Data Streams → Firehose → S3のように、リアルタイム処理とS3蓄積を組み合わせる構成も代表的です。',
+    },
+    {
+        question:
+            'Data FirehoseでS3へログを配信しています。運用チームは「ログが1件届いた瞬間に必ずS3オブジェクトとして作られる」と想定していましたが、実際には数十秒から数分の遅延があります。最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'Firehoseはバッファサイズまたはバッファ間隔に到達してからS3へオブジェクトを配信するため、一定の遅延が発生する',
+                isCorrect: true,
+                explanation:
+                    'Data FirehoseはS3宛先に配信する際、複数レコードをバッファリングし、設定したバッファサイズまたはバッファ間隔のどちらか早い方の条件を満たすとS3オブジェクトとして配信します。そのため1件ごとに即時S3オブジェクトが作られるわけではありません。',
+            },
+            {
+                text: 'FirehoseはS3へ1件ずつ必ず即時PUTするため、遅延がある場合はS3が停止している',
+                isCorrect: false,
+                explanation:
+                    'Firehoseは通常、レコードをまとめてS3へ配信します。バッファリングによる遅延は設計上の動作です。S3停止と決めつけるのは誤りです。',
+            },
+            {
+                text: 'バッファリングを使うと、S3へデータが一切保存されなくなる',
+                isCorrect: false,
+                explanation:
+                    'バッファリングは配信の単位をまとめる仕組みであり、保存されなくなるわけではありません。バッファ条件に到達するとS3へオブジェクトとして配信されます。',
+            },
+            {
+                text: 'FirehoseのバッファリングはAthenaのクエリ結果にだけ適用され、S3配信には関係しない',
+                isCorrect: false,
+                explanation:
+                    'FirehoseのバッファリングはS3配信に直接関係します。Athenaのクエリ結果とは別の話です。',
+            },
+        ],
+        explanation:
+            'FirehoseはS3に小さいオブジェクトを大量生成しないよう、サイズや時間でバッファリングします。新鮮さを優先してバッファ間隔を短くすると小さいファイルが増え、Athena性能やS3リクエスト料金に影響します。分析効率を優先してバッファを大きくすると、遅延は増えますがS3上のファイルサイズは扱いやすくなりやすいです。これは設計上のトレードオフです。',
+    },
+    {
+        question:
+            'Data FirehoseでアプリログをS3へ保存する前に、個人情報をマスクし、不要なレコードを破棄したいです。処理は軽量で、配信パイプライン内で完結させたい場合、最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'Firehoseのデータ変換でLambdaを呼び出し、各レコードにOk、Dropped、ProcessingFailedなどの結果を返す',
+                isCorrect: true,
+                explanation:
+                    'Data Firehoseは配信前にLambdaを同期呼び出ししてデータ変換できます。Lambdaは変換済みデータと処理結果を返し、不要なレコードはDroppedとして扱えます。処理失敗はProcessingFailedとして扱われ、Firehose側の失敗処理やS3バックアップprefixの設計に関わります。',
+            },
+            {
+                text: 'S3に保存した後でしか変換できないため、Firehoseでは配信前の変換はできない',
+                isCorrect: false,
+                explanation:
+                    'FirehoseはLambdaによる配信前変換に対応しています。S3保存後に別処理する設計もありますが、軽量な変換やマスクならFirehose内の変換が候補になります。',
+            },
+            {
+                text: 'FirehoseのLambda変換は最大24時間実行できるため、重いバッチ処理をすべてここで行う',
+                isCorrect: false,
+                explanation:
+                    'FirehoseのLambda変換にはタイムアウトやペイロードサイズの制約があります。長時間の重いバッチ処理には向きません。重い処理はS3着地後に別のETLやバッチ基盤で行うことを検討します。',
+            },
+            {
+                text: 'Firehoseの変換を使うと、S3への配信先を設定できなくなる',
+                isCorrect: false,
+                explanation:
+                    'Firehoseの変換は、変換後のデータをS3などの宛先へ配信するための機能です。変換を有効にしてもS3宛先を設定できます。',
+            },
+        ],
+        explanation:
+            'FirehoseのLambda変換は、軽量な正規化、マスキング、フィールド追加、不要レコードの破棄に向きます。ただし同期呼び出し、タイムアウト、リクエスト/レスポンスサイズ制限があるため、複雑で重いETL処理をすべて詰め込む場所ではありません。変換失敗データをどのS3 prefixへ退避するか、元データをバックアップするかも運用設計に含めます。',
+    },
+    {
+        question:
+            'JSONログをData FirehoseでS3へ保存し、Athenaで分析します。クエリコストを下げるため、S3保存時点で列指向形式に変換したいです。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'Firehoseのレコード形式変換を有効化し、Glue Data Catalogのスキーマを使ってJSONをParquetまたはORCへ変換してS3へ保存する',
+                isCorrect: true,
+                explanation:
+                    'Data Firehoseは、入力JSONをApache ParquetまたはORCへ変換してS3へ保存できます。形式変換では、Glue Data Catalogのテーブルスキーマなどを使ってデータを解釈します。Parquet/ORCは列指向で、Athenaのスキャン量やクエリ時間を減らしやすい形式です。変換失敗データの退避先も合わせて設計します。',
+            },
+            {
+                text: 'FirehoseはJSONをParquetへ変換できないため、必ずアプリケーション側でParquetファイルを直接S3へPUTする',
+                isCorrect: false,
+                explanation:
+                    'FirehoseはJSONからParquet/ORCへの形式変換に対応しています。アプリケーション側で直接Parquetを書けるならそれも選択肢ですが、Firehoseでマネージドに変換する構成も可能です。',
+            },
+            {
+                text: 'CSVや任意のテキストは、Glue Data Catalogだけで何もせずParquetへ自動変換される',
+                isCorrect: false,
+                explanation:
+                    'Firehoseの形式変換はJSON入力を前提にParquet/ORCへ変換します。CSVや構造化テキストなどJSON以外を変換したい場合は、先にLambdaでJSONへ変換するなどの処理が必要です。',
+            },
+            {
+                text: 'Parquetへ変換すると、Athenaのパーティション設計やファイルサイズ設計は不要になる',
+                isCorrect: false,
+                explanation:
+                    'Parquetは有効ですが、それだけで最適化が完了するわけではありません。prefix、パーティション、ファイルサイズ、小さいファイル問題、Glue Data Catalogのスキーマ管理も引き続き重要です。',
+            },
+        ],
+        explanation:
+            'ログをS3に置くだけでなく、置き方を分析向けに整えることが重要です。Firehoseの形式変換を使えば、取り込み時にJSONをParquet/ORC化して後段のAthenaやRedshift Spectrumで扱いやすくできます。ただしParquet/ORC化しても、prefix、パーティション、ファイルサイズ、小さいファイル問題、Glue Data Catalogのスキーマ管理は引き続き重要です。変換できる入力形式、スキーマ、失敗時のバックアップ先も設計します。',
+    },
+    {
+        question:
+            'アプリケーションから直接S3へログを書き込む設計と、Data Firehoseを経由してS3へ配信する設計を比較しています。Firehoseを選ぶ理由として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'アプリ側のS3書き込み実装を単純化し、バッファリング、圧縮、変換、失敗時の再試行やバックアップをマネージドに任せやすい',
+                isCorrect: true,
+                explanation:
+                    'Firehoseを使うと、アプリケーションはFirehoseへレコードを送るだけに近づき、S3オブジェクトのサイズ調整、バッファリング、圧縮、変換、失敗時の処理をサービス側に寄せられます。直接S3へ細かく書くより、小さいファイル問題や再試行実装を抑えやすくなります。ただし必ずFirehoseが正解ではなく、遅延・制約・コストを要件と比べます。',
+            },
+            {
+                text: 'Firehoseを経由すれば、ログは必ず1ミリ秒以内にS3へ保存される',
+                isCorrect: false,
+                explanation:
+                    'FirehoseはバッファリングしてからS3へ配信するため、一定の遅延が発生します。ミリ秒単位の即時保存を保証するものではありません。',
+            },
+            {
+                text: 'Firehoseを使うと、S3のアクセス制御や暗号化設計は不要になる',
+                isCorrect: false,
+                explanation:
+                    'Firehoseを使っても、S3バケットポリシー、IAMロール、暗号化、KMSキー権限、失敗データの保存先などの設計は必要です。',
+            },
+            {
+                text: 'FirehoseはS3にしか配信できず、RedshiftやOpenSearchなど他の宛先には対応しない',
+                isCorrect: false,
+                explanation:
+                    'Data FirehoseはS3のほか、Redshift、OpenSearch Service、Splunk、HTTPエンドポイントなど複数の宛先へ配信できます。S3は代表的な配信先の1つです。',
+            },
+        ],
+        explanation:
+            '直接S3書き込みは、単純な少量データやアプリ側でファイルサイズ、分割、再試行、形式を細かく制御したい場合には有効です。その代わり、それらはアプリケーション側の責務になります。一方、大量ログを継続的に集約し、分析向けに整えてS3へ蓄積したい場合はFirehoseが有力です。Firehoseは運用をマネージド化できる代わりに、near real-timeの遅延、変換制約、追加コスト、失敗時の扱い、S3 prefix設計を比較して選びます。',
+    },
 ]
