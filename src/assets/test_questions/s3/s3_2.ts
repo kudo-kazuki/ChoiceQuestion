@@ -41,7 +41,7 @@ export const testQuestions: Question[] = [
                 text: '相手アカウントのIAMロールにs3:GetObjectを許可し、自社バケットポリシーでもそのロールにs3:GetObjectを許可する',
                 isCorrect: true,
                 explanation:
-                    'クロスアカウントアクセスでは、呼び出し元側のアイデンティティベースポリシーと、リソース所有側のバケットポリシーの両方で許可が必要になります。SSE-S3はS3管理の暗号化なので、SSE-KMSのようなKMSキーポリシー調整は不要です。実務では、Principalに相手アカウントのロールARNを正しく指定しているか、相手がそのロールをAssumeRoleしてからアクセスする前提なのかも確認します。',
+                    'クロスアカウントアクセスでは、呼び出し元側のアイデンティティベースポリシーと、リソース所有側のバケットポリシーの両方で許可が必要になります。SSE-S3（Server-Side Encryption with Amazon S3 managed keys：S3管理キーによるサーバー側暗号化）はS3管理の暗号化なので、SSE-KMS（Server-Side Encryption with AWS Key Management Service keys：KMSキーによるサーバー側暗号化）のようなKMS（Key Management Service：暗号鍵を管理するサービス）キーポリシー調整は不要です。実務では、Principalに相手アカウントのロールARN（Amazon Resource Name：AWSリソースの識別子）を正しく指定しているか、相手がそのロールをAssumeRole（ロールを一時的に引き受ける操作）してからアクセスする前提なのかも確認します。',
             },
             {
                 text: '相手アカウントのIAMロールにs3:GetObjectを許可すれば、バケットポリシーは不要で必ず読める',
@@ -59,7 +59,7 @@ export const testQuestions: Question[] = [
                 text: 'S3 ACLで相手アカウントにREADを付けることを最優先にする',
                 isCorrect: false,
                 explanation:
-                    '現在のS3設計ではACLよりもIAMポリシーとバケットポリシーで制御するのが基本です。新規バケットではObject OwnershipのBucket owner enforcedがデフォルトで、ACLは無効です。',
+                    '現在のS3設計ではACL（Access Control List：アクセス許可リスト）よりもIAM（Identity and Access Management：AWSの認証・認可サービス）ポリシーとバケットポリシーで制御するのが基本です。新規バケットではObject Ownership（オブジェクト所有権設定）のBucket owner enforced（バケット所有者強制）がデフォルトで、ACLは無効です。',
             },
         ],
         explanation:
@@ -95,7 +95,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3のAccessDenied調査では、まず「必要なAllowがあるか」だけでなく「どこかに明示的Denyがないか」を確認します。Organizations配下ではSCPでアカウント全体の上限が絞られていることもあります。IAMポリシー、バケットポリシー、SCP、VPCエンドポイントポリシー、KMSキーポリシーなど、複数のレイヤーで拒否される可能性があります。',
+            'S3のAccessDenied調査では、まず「必要なAllowがあるか」だけでなく「どこかに明示的Deny（明示的な拒否）がないか」を確認します。AWS Organizations配下ではSCP（Service Control Policy：組織単位で権限上限を制御するポリシー）でアカウント全体の上限が絞られていることもあります。IAM（Identity and Access Management）ポリシー、バケットポリシー、SCP、VPC（Virtual Private Cloud：AWS上の仮想ネットワーク）エンドポイントポリシー、KMS（Key Management Service）キーポリシーなど、複数のレイヤーで拒否される可能性があります。',
     },
     {
         question:
@@ -105,7 +105,7 @@ export const testQuestions: Question[] = [
                 text: 'アカウントまたはバケットのS3 Block Public Accessが、公開ポリシーによるアクセスをブロックしている',
                 isCorrect: true,
                 explanation:
-                    'S3 Block Public Accessは、バケットポリシーやACLで意図せずpublic accessが許可されても、それを上位でブロックできます。アカウントレベルとバケットレベルの設定があり、実効設定としてより制限的な設定が効きます。代表的な設定には、公開ACLを無視するIgnorePublicAclsや、公開ポリシーの設定を拒否するBlockPublicPolicyなどがあります。',
+                    'S3 Block Public Access（パブリック公開を上位でブロックする設定）は、バケットポリシーやACL（Access Control List）で意図せずpublic access（インターネットなどからの公開アクセス）が許可されても、それを上位でブロックできます。アカウントレベルとバケットレベルの設定があり、実効設定としてより制限的な設定が効きます。代表的な設定には、公開ACLを無視するIgnorePublicAclsや、公開ポリシーの設定を拒否するBlockPublicPolicyなどがあります。',
             },
             {
                 text: 'バケットポリシーで匿名読み取りを許可しているため、Block Public Accessの設定は結果に影響しない',
@@ -159,7 +159,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'VPC Endpoint経由制限は強力ですが、Deny条件を誤ると管理者や運用ツールもアクセスできなくなります。特に「指定経路以外をDenyする」設計では、例外条件、ブレークグラス手順、コンソール操作への影響を事前に確認します。エンドポイント単位で絞るならaws:SourceVpce、VPC単位で絞るならaws:SourceVpcという違いも押さえます。',
+            'VPC Endpoint（Virtual Private Cloud Endpoint：VPC内からAWSサービスへプライベートに接続する入口）経由制限は強力ですが、Deny条件を誤ると管理者や運用ツールもアクセスできなくなります。特に「指定経路以外をDenyする」設計では、例外条件、ブレークグラス手順（緊急時に管理者が復旧できる手順）、コンソール操作への影響を事前に確認します。エンドポイント単位で絞るならaws:SourceVpce、VPC単位で絞るならaws:SourceVpcという違いも押さえます。',
     },
     {
         question:
@@ -201,7 +201,7 @@ export const testQuestions: Question[] = [
                 text: 'そのロールが対象KMSキーを復号に使えるよう、KMSキーポリシーまたはIAMポリシーでkms:Decryptなどが許可されているか',
                 isCorrect: true,
                 explanation:
-                    'SSE-KMSで暗号化されたオブジェクトを読むには、S3のGetObject権限だけでなく、対象KMSキーを使った復号権限も必要です。PUTではkms:GenerateDataKey、Multipart Uploadではkms:GenerateDataKeyとkms:Decryptが必要になるなど、操作によって必要なKMS権限が変わります。クロスアカウントではKMSキーポリシー側の許可漏れが原因になりやすいです。',
+                    'SSE-KMS（Server-Side Encryption with AWS Key Management Service keys）で暗号化されたオブジェクトを読むには、S3のGetObject権限だけでなく、対象KMS（Key Management Service）キーを使った復号権限も必要です。PUTではkms:GenerateDataKey（データ暗号化キーを生成する権限）、Multipart Upload（複数パートに分けるアップロード）ではkms:GenerateDataKeyとkms:Decryptが必要になるなど、操作によって必要なKMS権限が変わります。クロスアカウントではKMSキーポリシー側の許可漏れが原因になりやすいです。',
             },
             {
                 text: 'SSE-KMSのオブジェクトは、所有者本人以外は絶対に読み取れない仕様かどうか',
@@ -223,7 +223,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'SSE-KMSは「S3にアクセスできるか」と「KMSキーを使えるか」の両方を満たす必要があります。SSE-S3ではこのKMSキー権限の問題は通常発生しないため、暗号化方式の違いはトラブルシュートで重要です。調査順序としては、IAMポリシー、バケットポリシー、明示的Deny、Block Public Access、KMSキー権限、VPC Endpoint制限を順に切り分けると原因を見つけやすくなります。',
+            'SSE-KMS（KMSキーによるサーバー側暗号化）は「S3にアクセスできるか」と「KMSキーを使えるか」の両方を満たす必要があります。SSE-S3（S3管理キーによるサーバー側暗号化）ではこのKMSキー権限の問題は通常発生しないため、暗号化方式の違いはトラブルシュートで重要です。調査順序としては、IAM（Identity and Access Management）ポリシー、バケットポリシー、明示的Deny、Block Public Access、KMSキー権限、VPC Endpoint制限を順に切り分けると原因を見つけやすくなります。',
     },
     {
         question:
@@ -329,7 +329,7 @@ export const testQuestions: Question[] = [
                 text: 'S3バケットを通常のS3オリジンとしてCloudFrontに設定し、OACを使ってCloudFrontからのアクセスだけをバケットポリシーで許可する',
                 isCorrect: true,
                 explanation:
-                    'OAC（Origin Access Control：CloudFrontからS3オリジンへのアクセスを制御する仕組み）を使うと、S3バケットを非公開にしたままCloudFrontからのリクエストだけを許可できます。バケットポリシーではCloudFrontサービスプリンシパルをPrincipalにし、aws:SourceArn条件で対象CloudFrontディストリビューションのARNに絞ります。CloudFrontはサービスとしてS3へアクセスするため、利用者本人ではなくCloudFrontサービスプリンシパルを許可する点が重要です。',
+                    'OAC（Origin Access Control：CloudFrontからS3オリジンへのアクセスを制御する仕組み）を使うと、S3バケットを非公開にしたままCloudFrontからのリクエストだけを許可できます。バケットポリシーではCloudFrontサービスプリンシパル（CloudFrontサービス自体を表すPrincipal）をPrincipalにし、aws:SourceArn条件で対象CloudFrontディストリビューションのARN（Amazon Resource Name：AWSリソースの識別子）に絞ります。CloudFrontはサービスとしてS3へアクセスするため、利用者本人ではなくCloudFrontサービスプリンシパルを許可する点が重要です。',
             },
             {
                 text: 'S3バケットをpublic readにして、CloudFrontのキャッシュ時間を長くする',
@@ -341,7 +341,7 @@ export const testQuestions: Question[] = [
                 text: 'S3の静的Webサイトホスティングを有効化し、OACを必ず設定する',
                 isCorrect: false,
                 explanation:
-                    'S3静的WebサイトエンドポイントはCloudFrontではカスタムオリジンとして扱います。この構成ではOACやOAIを使えません。非公開S3をCloudFront経由だけで配信したい場合は、Webサイトエンドポイントではなく通常のS3 REST APIエンドポイントをオリジンにします。',
+                    'S3静的WebサイトエンドポイントはCloudFrontではカスタムオリジン（S3専用オリジンではない通常のHTTPオリジン）として扱います。この構成ではOAC（Origin Access Control）やOAI（Origin Access Identity：CloudFrontからS3へアクセスするための従来方式）を使えません。非公開S3をCloudFront経由だけで配信したい場合は、Webサイトエンドポイントではなく通常のS3 REST API（Representational State Transfer Application Programming Interface）エンドポイントをオリジンにします。',
             },
             {
                 text: 'S3オブジェクトごとに推測しにくいキー名を付ければ、バケットポリシーは不要である',
@@ -351,7 +351,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3 + CloudFrontの非公開配信では、「S3を公開してCloudFrontも置く」のではなく、「S3は非公開、CloudFrontだけがS3を読める」形にします。CloudFrontを前段に置くだけではS3直アクセスは防げません。OAC設定、バケットポリシー、Block Public Accessを組み合わせて初めて意図した非公開配信になります。現在の新規設計ではOAI（Origin Access Identity）よりOACが推奨され、SSE-KMSや一部の動的リクエストなどにも対応しやすくなります。',
+            'S3 + CloudFrontの非公開配信では、「S3を公開してCloudFrontも置く」のではなく、「S3は非公開、CloudFrontだけがS3を読める」形にします。CloudFrontを前段に置くだけではS3直アクセスは防げません。OAC（Origin Access Control）設定、バケットポリシー、Block Public Accessを組み合わせて初めて意図した非公開配信になります。現在の新規設計ではOAI（Origin Access Identity）よりOACが推奨され、SSE-KMS（KMSキーによるサーバー側暗号化）や一部の動的リクエストなどにも対応しやすくなります。',
     },
     {
         question:
@@ -361,7 +361,7 @@ export const testQuestions: Question[] = [
                 text: '新規構成ではOACを採用し、S3バケットポリシーや必要なKMS権限をCloudFrontからのアクセスに合わせて設定する',
                 isCorrect: true,
                 explanation:
-                    'OACはOAIより新しい方式で、CloudFrontからS3へのオリジンリクエストをSigV4（Signature Version 4）で署名できます。すべてのS3リージョン、SSE-KMS、PUTやDELETEなどの動的リクエストに対応しやすい設計です。SSE-KMSを使う場合は、S3バケットポリシーだけでなくKMSキー側の許可も確認します。',
+                    'OAC（Origin Access Control）はOAI（Origin Access Identity）より新しい方式で、CloudFrontからS3へのオリジンリクエストをSigV4（Signature Version 4：AWS APIリクエストの署名方式）で署名できます。すべてのS3リージョン、SSE-KMS（KMSキーによるサーバー側暗号化）、PUTやDELETEなどの動的リクエストに対応しやすい設計です。SSE-KMSを使う場合は、S3バケットポリシーだけでなくKMSキー側の許可も確認します。',
             },
             {
                 text: 'OAIはOACより新しい方式なので、SSE-KMSやPUTを扱う新規構成では必ずOAIを選ぶ',
@@ -383,7 +383,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'OAIを知っていると「S3非公開配信 = OAI」と覚えがちですが、現在の新規設計ではOACを優先します。AWSドキュメント上もOACの利用が推奨されており、OAIは既存構成で残っていることが多い従来方式として扱うと整理しやすいです。ただし既存OAI構成をすぐ壊す必要があるわけではなく、要件追加や更改のタイミングでOACへの移行を検討します。',
+            'OAI（Origin Access Identity）を知っていると「S3非公開配信 = OAI」と覚えがちですが、現在の新規設計ではOAC（Origin Access Control）を優先します。AWSドキュメント上もOACの利用が推奨されており、OAIは既存構成で残っていることが多い従来方式として扱うと整理しやすいです。ただし既存OAI構成をすぐ壊す必要があるわけではなく、要件追加や更改のタイミングでOACへの移行を検討します。',
     },
     {
         question:
@@ -415,7 +415,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3の「REST APIエンドポイント」と「Webサイトエンドポイント」は試験でも実務でも混同しやすい点です。非公開配信とHTTPS対応を優先するならREST APIエンドポイント + OAC、S3のWebサイト機能を優先するならWebサイトエンドポイントをカスタムオリジンとして使う、というように要件で選びます。利便性と非公開配信の安全性はトレードオフになります。',
+            'S3の「REST API（Representational State Transfer Application Programming Interface）エンドポイント」と「Webサイトエンドポイント」は試験でも実務でも混同しやすい点です。非公開配信とHTTPS（HTTP over TLS：暗号化されたHTTP通信）対応を優先するならREST APIエンドポイント + OAC（Origin Access Control）、S3のWebサイト機能を優先するならWebサイトエンドポイントをカスタムオリジンとして使う、というように要件で選びます。利便性と非公開配信の安全性はトレードオフになります。',
     },
     {
         question:
@@ -469,7 +469,7 @@ export const testQuestions: Question[] = [
                 text: 'すべてのオブジェクトにTTL 0を設定すれば、常に最も低コストで高性能な配信になる',
                 isCorrect: false,
                 explanation:
-                    'TTL 0に近づけるとCloudFrontが毎回オリジンへ確認しやすくなり、S3へのリクエスト増加やレイテンシ増加につながります。Cache-ControlヘッダーやCloudFrontのキャッシュポリシーを使い、更新頻度とキャッシュ効率のバランスを取る必要があります。',
+                    'TTL（Time To Live：キャッシュを保持する時間）を0に近づけるとCloudFrontが毎回オリジンへ確認しやすくなり、S3へのリクエスト増加やレイテンシ（応答遅延）増加につながります。Cache-ControlヘッダーやCloudFrontのキャッシュポリシーを使い、更新頻度とキャッシュ効率のバランスを取る必要があります。',
             },
             {
                 text: 'Invalidationを毎秒実行すれば、コストや運用負荷を気にせず常に最適になる',
@@ -489,7 +489,7 @@ export const testQuestions: Question[] = [
                 text: 'S3をOAC付きCloudFrontのオリジンにし、CloudFront signed URLまたはsigned cookiesで視聴権限を制御する',
                 isCorrect: true,
                 explanation:
-                    'CloudFront signed URLやsigned cookiesを使うと、CloudFront経由のコンテンツ配信に有効期限や条件を付けられます。S3はOACで非公開にし、利用者はS3ではなくCloudFrontから取得します。単一ファイルならsigned URL、複数ファイルをまとめて許可したい場合はsigned cookiesが候補になります。HLSのように複数セグメントを読む動画配信ではsigned cookiesが扱いやすいことがあります。',
+                    'CloudFront signed URL（署名付きURL）やsigned cookies（署名付きCookie）を使うと、CloudFront経由のコンテンツ配信に有効期限や条件を付けられます。S3はOAC（Origin Access Control）で非公開にし、利用者はS3ではなくCloudFrontから取得します。単一ファイルならsigned URL、複数ファイルをまとめて許可したい場合はsigned cookiesが候補になります。HLS（HTTP Live Streaming：動画を小さなセグメントに分けて配信する方式）のように複数セグメントを読む動画配信ではsigned cookiesが扱いやすいことがあります。',
             },
             {
                 text: 'S3 presigned URLだけを利用者に配布し、CloudFrontは使わない',
@@ -543,7 +543,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'ストレージクラス選定では、保存単価だけでなく「取り出しまで待てるか」「最低保存期間を満たすか」「AZ障害を許容できるか」「取り出し料金が問題にならないか」を同時に見ます。Deep Archiveは安いですが、即時取得要件がある時点で外れます。「安いストレージクラス = 常に最適」ではなく、RTO（復旧・取得までに許容できる時間）や利用者対応の要件で候補が変わります。',
+            'ストレージクラス選定では、保存単価だけでなく「取り出しまで待てるか」「最低保存期間を満たすか」「AZ（Availability Zone：独立したデータセンター群）障害を許容できるか」「取り出し料金が問題にならないか」を同時に見ます。Deep Archiveは安いですが、即時取得要件がある時点で外れます。「安いストレージクラス = 常に最適」ではなく、RTO（Recovery Time Objective：復旧・取得までに許容できる時間）や利用者対応の要件で候補が変わります。',
     },
     {
         question:
@@ -607,7 +607,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Intelligent-TieringとLifecycleの使い分けでは、アクセスパターンを予測できるかが重要です。一定期間後に必ずアーカイブするログならLifecycleが向きます。一方、読まれ方が変動し、運用で細かく調整したくないデータならIntelligent-Tieringが候補になります。アーカイブアクセス階層やディープアーカイブアクセス階層を有効化する場合は、即時取得ではなく復元時間が発生する点も要件と照らして確認します。',
+            'Intelligent-Tiering（アクセス頻度に応じて自動で階層を移すストレージクラス）とLifecycle（一定日数後の移行・削除を自動化するルール）の使い分けでは、アクセスパターンを予測できるかが重要です。一定期間後に必ずアーカイブするログならLifecycleが向きます。一方、読まれ方が変動し、運用で細かく調整したくないデータならIntelligent-Tieringが候補になります。アーカイブアクセス階層やディープアーカイブアクセス階層を有効化する場合は、即時取得ではなく復元時間が発生する点も要件と照らして確認します。',
     },
     {
         question:
@@ -639,7 +639,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Glacier系は「安い」だけで選ぶのではなく、復元時間と最低保存期間を見る必要があります。Glacier Flexible Retrievalは90日、Deep Archiveは180日の最低保存期間があります。短期で消すデータをDeep Archiveへ移すと、早期削除コストで期待ほど安くならないことがあります。監査ログではコストだけでなく、Object Lock、Compliance mode、Governance mode、リーガルホールドなどを使った保持要件と削除防止も検討します。',
+            'Glacier系は「安い」だけで選ぶのではなく、復元時間と最低保存期間を見る必要があります。Glacier Flexible Retrievalは90日、Deep Archiveは180日の最低保存期間があります。短期で消すデータをDeep Archiveへ移すと、早期削除コストで期待ほど安くならないことがあります。監査ログではコストだけでなく、Object Lock（オブジェクトを一定期間削除・上書きできなくする機能）、Compliance mode（厳格な保持モード）、Governance mode（権限者が例外的に解除できる保持モード）、リーガルホールド（期限なしの保留）などを使った保持要件と削除防止も検討します。',
     },
     {
         question:
@@ -703,7 +703,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3コスト最適化では「GB単価が安いクラスにする」だけでは不十分です。ログや分析用途では、PUT/LIST/GETの回数、ライフサイクル移行リクエスト、別リージョンやインターネットへのデータ転送、Athenaなど周辺サービスのスキャン量、取り出し料金、Intelligent-Tieringの監視・自動化料金まで含めて設計します。',
+            'S3コスト最適化では「GB単価が安いクラスにする」だけでは不十分です。ログや分析用途では、PUT/LIST/GETの回数、ライフサイクル移行リクエスト、別リージョンやインターネットへのデータ転送、Athena（S3上のデータをSQLで分析するサーバーレスサービス）など周辺サービスのスキャン量、取り出し料金、Intelligent-Tiering（アクセス頻度に応じる自動階層化）の監視・自動化料金まで含めて設計します。',
     },
     {
         question:
@@ -927,7 +927,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'CRRはリージョン障害対策や地理的分散、SRRは同一リージョン内での集約、ログ分離、本番と分析環境の分離などに向きます。ただしReplicationは非同期であり、完全な即時フェイルオーバーではありません。アプリケーションのRTO/RPO、フェイルオーバー手順、送信先バケットの権限、KMS、アプリ側の参照先切替まで含めて設計します。既存オブジェクトは通常のライブReplicationだけでは自動的に対象にならず、必要ならBatch Replicationを使います。',
+            'CRR（Cross-Region Replication：別リージョンへの複製）はリージョン障害対策や地理的分散、SRR（Same-Region Replication：同一リージョン内の複製）は同一リージョン内での集約、ログ分離、本番と分析環境の分離などに向きます。ただしReplication（レプリケーション：別バケットへ複製する機能）は非同期であり、完全な即時フェイルオーバーではありません。アプリケーションのRTO（Recovery Time Objective：復旧までの許容時間）/RPO（Recovery Point Objective：どの時点まで戻せる必要があるか）、フェイルオーバー手順、送信先バケットの権限、KMS（Key Management Service）、アプリ側の参照先切替まで含めて設計します。既存オブジェクトは通常のライブReplicationだけでは自動的に対象にならず、必要ならBatch Replicationを使います。',
     },
     {
         question:
@@ -959,7 +959,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3 RTCは「複製する」だけでなく「複製時間を要件として管理したい」場合に検討します。通常のCRRより追加コストが発生しますが、CloudWatch metricsやEventBridge eventsを使って遅延やしきい値超過を監視しやすくなります。災害対策だけなら通常のCRRで足りることもありますが、監査や業務要件でレプリケーション時間の見える化やSLAが必要ならRTCが候補になります。',
+            'S3 RTC（Replication Time Control：レプリケーション時間を管理・監視しやすくする機能）は「複製する」だけでなく「複製時間を要件として管理したい」場合に検討します。通常のCRR（Cross-Region Replication）より追加コストが発生しますが、CloudWatch metrics（監視メトリクス）やEventBridge events（イベント連携）を使って遅延やしきい値超過を監視しやすくなります。災害対策だけなら通常のCRRで足りることもありますが、監査や業務要件でレプリケーション時間の見える化やSLA（Service Level Agreement：サービス水準合意）が必要ならRTCが候補になります。',
     },
     {
         question:
@@ -1087,7 +1087,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'ReplicationとBackupは目的が違います。DR（Disaster Recovery：災害対策）は別リージョンで継続利用できること、Backupは過去時点へ戻せることが中心です。Replicationは現在状態を複製する寄りの機能で、Backupは復元点を保持する寄りの機能です。RTO（復旧までの許容時間）、RPO（どの時点まで戻せる必要があるか）、削除保護、別アカウント隔離、監査要件を分けて設計します。',
+            'Replication（レプリケーション：別バケットへ複製する機能）とBackup（バックアップ）は目的が違います。DR（Disaster Recovery：災害対策）は別リージョンで継続利用できること、Backupは過去時点へ戻せることが中心です。Replicationは現在状態を複製する寄りの機能で、Backupは復元点を保持する寄りの機能です。RTO（Recovery Time Objective：復旧までの許容時間）、RPO（Recovery Point Objective：どの時点まで戻せる必要があるか）、削除保護、別アカウント隔離、監査要件を分けて設計します。',
     },
     {
         question:
@@ -1119,7 +1119,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '大容量アップロードでは、単にストレージクラスやバケット設定を見るのではなく、クライアント側のアップロード方式を設計します。S3の1オブジェクト最大サイズは5TBです。Multipart Uploadの各パートは原則5MB以上で、最後のパートだけは例外です。パートサイズ、並列数、リトライ、チェックサム、完了処理を適切に扱う必要があります。',
+            '大容量アップロードでは、単にストレージクラスやバケット設定を見るのではなく、クライアント側のアップロード方式を設計します。S3の1オブジェクト最大サイズは5TBです。Multipart Upload（ファイルを複数パートに分けてアップロードする方式）の各パートは原則5MB以上で、最後のパートだけは例外です。パートサイズ、並列数、リトライ、チェックサム（データ破損検出用の値）、完了処理を適切に扱う必要があります。',
     },
     {
         question:
@@ -1279,7 +1279,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3性能問題では、S3単体だけを見ると原因を見誤ることがあります。SSE-KMS、CloudFrontキャッシュ、VPC Endpoint、NAT Gateway、クライアントの接続数、リトライ設定、EC2のネットワーク帯域など、周辺要素もボトルネックになります。特にKMSは高頻度S3ワークロードで見落とされやすい確認ポイントです。SSE-S3とSSE-KMSでは、暗号化の管理責任だけでなく性能・クォータ面の考慮も変わります。',
+            'S3性能問題では、S3単体だけを見ると原因を見誤ることがあります。SSE-KMS（KMSキーによるサーバー側暗号化）、CloudFrontキャッシュ、VPC Endpoint（VPC内からAWSサービスへプライベートに接続する入口）、NAT Gateway（プライベートサブネットから外部へ出るためのゲートウェイ）、クライアントの接続数、リトライ設定、EC2（Elastic Compute Cloud：仮想サーバー）のネットワーク帯域など、周辺要素もボトルネックになります。特にKMS（Key Management Service）は高頻度S3ワークロードで見落とされやすい確認ポイントです。SSE-S3（S3管理キーによるサーバー側暗号化）とSSE-KMSでは、暗号化の管理責任だけでなく性能・クォータ面の考慮も変わります。',
     },
     {
         question:
@@ -1311,7 +1311,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3イベント処理では、要件が単純ならLambda直呼びが最も小さく済みます。ただし、Lambda直呼びはバースト吸収や下流処理量の制御が弱くなりがちです。処理時間が長い、失敗時に確実に再処理したい、処理量を平準化したい、複数処理へ配りたい場合は、SQS、SNS、EventBridgeを組み合わせる設計に変わります。Lambdaが起動しない場合は、Lambdaのリソースベースポリシー、prefix/suffixフィルター、イベント種別を確認します。',
+            'S3イベント処理では、要件が単純ならLambda直呼びが最も小さく済みます。ただし、Lambda直呼びはバースト吸収や下流処理量の制御が弱くなりがちです。処理時間が長い、失敗時に確実に再処理したい、処理量を平準化したい、複数処理へ配りたい場合は、SQS（Simple Queue Service：メッセージキュー）、SNS（Simple Notification Service：Pub/Sub通知サービス）、EventBridge（イベントバスとルールでイベントを振り分けるサービス）を組み合わせる設計に変わります。Lambdaが起動しない場合は、Lambdaのリソースベースポリシー、prefix/suffixフィルター、イベント種別を確認します。',
     },
     {
         question:
@@ -1343,7 +1343,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'SQSは「S3イベントを何で受けるか」の代表的な答えです。処理量が急増する、下流の処理速度を制御したい、失敗イベントをDLQへ逃がしたい、複数ワーカーで水平スケールしたい場合に有効です。Visibility TimeoutはLambdaの最大処理時間より短すぎると、処理中メッセージが再表示され重複処理につながります。失敗レコードだけを返すpartial batch responseも検討できます。ただしSQS標準キューでは重複や順序入れ替わりを前提に、処理を冪等にします。',
+            'SQS（Simple Queue Service）は「S3イベントを何で受けるか」の代表的な答えです。処理量が急増する、下流の処理速度を制御したい、失敗イベントをDLQ（Dead Letter Queue：処理不能メッセージの退避先）へ逃がしたい、複数ワーカーで水平スケールしたい場合に有効です。Visibility Timeout（処理中メッセージを一時的に隠す時間）はLambdaの最大処理時間より短すぎると、処理中メッセージが再表示され重複処理につながります。失敗レコードだけを返すpartial batch response（一部失敗だけを返せる応答）も検討できます。ただしSQS標準キューでは重複や順序入れ替わりを前提に、処理を冪等（同じ処理を複数回実行しても結果が壊れない性質）にします。',
     },
     {
         question:
@@ -1375,7 +1375,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'ファンアウト設計では、SNSとEventBridgeが候補になります。SNSは単純なPub/Subで複数購読者へ配信する用途に強く、SNSから複数SQSへ配れば各下流が独立に処理できます。EventBridgeはイベント内容に基づくルール、AWSサービス連携、外部SaaSやAPI Destination、将来の拡張に向きます。単に「複数処理へ流す」だけでなく、フィルタリング、運用、再試行、ターゲットの種類で選びます。',
+            'ファンアウト（1つのイベントを複数の処理先へ配る設計）では、SNS（Simple Notification Service）とEventBridgeが候補になります。SNSは単純なPub/Sub（Publish/Subscribe：発行・購読型の通知）で複数購読者へ配信する用途に強く、SNSから複数SQS（Simple Queue Service）へ配れば各下流が独立に処理できます。EventBridgeはイベント内容に基づくルール、AWSサービス連携、外部SaaS（Software as a Service）やAPI Destination、将来の拡張に向きます。単に「複数処理へ流す」だけでなく、フィルタリング、運用、再試行、ターゲットの種類で選びます。',
     },
     {
         question:
@@ -1407,7 +1407,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3イベントで順序や重複排除を強く意識する場合、S3 Event Notificationsの性質をそのまま信じるのではなく、EventBridge、SQS FIFO、MessageGroupId、重複排除ID、処理済み記録などを組み合わせて設計します。',
+            'S3イベントで順序や重複排除を強く意識する場合、S3 Event Notifications（S3イベント通知）の性質をそのまま信じるのではなく、EventBridge、SQS FIFO（First-In First-Out：順序制御に対応するSQSキュー）、MessageGroupId（FIFOキューで順序単位を表すID）、重複排除ID、処理済み記録などを組み合わせて設計します。',
     },
     {
         question:
@@ -1439,7 +1439,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'イベント駆動では「イベントが1回だけ、順番通りに届く」と仮定しないことが重要です。S3イベント、SQS標準キュー、EventBridgeなどはat-least-onceを前提にし、処理済み管理、条件付き書き込み、ユニークキー、リトライ可能な出力設計で冪等性を確保します。ETagはMultipart Uploadや暗号化条件によって単純なMD5とは限らないため、唯一の判断材料にしすぎない点にも注意します。',
+            'イベント駆動では「イベントが1回だけ、順番通りに届く」と仮定しないことが重要です。S3イベント、SQS（Simple Queue Service）標準キュー、EventBridgeなどはat-least-once（少なくとも1回配信）を前提にし、処理済み管理、条件付き書き込み、ユニークキー、リトライ可能な出力設計で冪等性（同じ処理を複数回実行しても結果が壊れない性質）を確保します。ETag（Entity Tag：オブジェクト内容の識別に使われる値）はMultipart Uploadや暗号化条件によって単純なMD5とは限らないため、唯一の判断材料にしすぎない点にも注意します。',
     },
     {
         question:
@@ -1471,7 +1471,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3イベント連携では「何で受けるか」を目的で分けます。シンプルさならLambda直呼び、バースト吸収ならSQS、単純ファンアウトならSNS、条件分岐や拡張性ならEventBridge、順序制御ならFIFOとアプリケーション設計が候補です。実務ではSNSから複数SQSへ配るなど、組み合わせることも多いです。',
+            'S3イベント連携では「何で受けるか」を目的で分けます。シンプルさならLambda直呼び、バースト吸収ならSQS（Simple Queue Service）、単純ファンアウトならSNS（Simple Notification Service）、条件分岐や拡張性ならEventBridge、順序制御ならFIFO（First-In First-Out）とアプリケーション設計が候補です。実務ではSNSから複数SQSへ配るなど、組み合わせることも多いです。',
     },
     {
         question:
@@ -1481,7 +1481,7 @@ export const testQuestions: Question[] = [
                 text: 'S3上のログをGlue Data Catalogでテーブル定義し、Athenaで必要なときだけSQLクエリする',
                 isCorrect: true,
                 explanation:
-                    'AthenaはS3上のデータを直接SQLでクエリできるサーバーレスサービスです。RDSのように常時稼働するデータベースへ全件ロードしなくても、必要なときだけログを分析できます。Athenaはクエリ実行時課金で、スキャン量がコストに直結します。Glue Data Catalogでテーブル定義やスキーマを管理すると、Athenaや他の分析サービスから参照しやすくなります。',
+                    'AthenaはS3上のデータを直接SQL（Structured Query Language：データ問い合わせ言語）でクエリできるサーバーレスサービスです。RDS（Relational Database Service：マネージドなリレーショナルデータベース）のように常時稼働するデータベースへ全件ロードしなくても、必要なときだけログを分析できます。Athenaはクエリ実行時課金で、スキャン量がコストに直結します。Glue Data Catalog（テーブル定義などのメタデータ管理サービス）でテーブル定義やスキーマを管理すると、Athenaや他の分析サービスから参照しやすくなります。',
             },
             {
                 text: 'RDSへ全ログをロードし、分析しない時間帯も常にインスタンスを起動し続ける',
@@ -1503,7 +1503,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3は単なるファイル置き場ではなく、データレイクの入口として使えます。頻繁な更新や低レイテンシのトランザクションが必要ならRDSなどを検討しますが、大量ログの低頻度分析ではS3 + Glue Data Catalog + Athenaが有力です。Glue Data Catalogはメタデータ管理であり、データ本体をS3から移動するものではありません。Athenaはクエリ対象データ量に応じた課金なので、形式、圧縮、パーティション、必要列だけSELECTする設計が重要です。',
+            'S3は単なるファイル置き場ではなく、データレイク（分析用データを集約する基盤）の入口として使えます。頻繁な更新や低レイテンシ（低遅延）のトランザクションが必要ならRDS（Relational Database Service）などを検討しますが、大量ログの低頻度分析ではS3 + Glue Data Catalog + Athenaが有力です。Glue Data Catalogはメタデータ管理であり、データ本体をS3から移動するものではありません。Athenaはクエリ対象データ量に応じた課金なので、形式、圧縮、パーティション、必要列だけSELECTする設計が重要です。',
     },
     {
         question:
@@ -1535,7 +1535,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Athenaはスキャンしたデータ量がコストと性能に強く影響します。CSVのまま全列・全期間をスキャンする設計は、データ量が増えると高コストになります。Parquet/ORC、圧縮、適切なファイルサイズ、パーティションを組み合わせるのがデータレイク設計の基本です。小さいファイルが大量にある場合は、メタデータオーバーヘッドやリクエスト増で遅くなるため、ファイル結合やコンパクションも検討します。',
+            'Athenaはスキャンしたデータ量がコストと性能に強く影響します。CSV（Comma-Separated Values：カンマ区切りテキスト）のまま全列・全期間をスキャンする設計は、データ量が増えると高コストになります。Parquet/ORC（列指向の分析向けファイル形式）、圧縮、適切なファイルサイズ、パーティション（検索条件で読み取り範囲を絞る分割）を組み合わせるのがデータレイク設計の基本です。小さいファイルが大量にある場合は、メタデータオーバーヘッドやリクエスト増で遅くなるため、ファイル結合やコンパクション（小さいファイルをまとめる処理）も検討します。',
     },
     {
         question:
@@ -1567,7 +1567,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'パーティション設計はAthenaコストの中心です。日付、リージョン、サービス名など、クエリでよく指定する条件を軸にします。ただし過剰なパーティションや小さいファイルの大量生成はメタデータオーバーヘッドを増やします。大量パーティションでは、パーティションを手動登録し続ける代わりにpartition projectionやGlue partition indexが有効な場合があります。',
+            'パーティション設計はAthenaコストの中心です。日付、リージョン、サービス名など、クエリでよく指定する条件を軸にします。ただし過剰なパーティションや小さいファイルの大量生成はメタデータオーバーヘッドを増やします。大量パーティションでは、パーティションを手動登録し続ける代わりにpartition projection（パーティションをメタデータ登録せず規則で推定する機能）やGlue partition index（パーティション検索を効率化する索引）が有効な場合があります。',
     },
     {
         question:
@@ -1599,7 +1599,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3 InventoryとS3 Storage Lensは似て見えますが目的が違います。Inventoryはオブジェクト単位の棚卸し、Storage Lensはストレージ利用状況やベストプラクティスの集計・可視化に向きます。大量オブジェクトに対してListObjectsを繰り返すより、Inventoryを出力してAthenaで分析する方が効率的な場面があります。監査、移行、暗号化状況確認、レプリケーション状況確認ではInventory + Athenaが強力です。',
+            'S3 Inventory（オブジェクト一覧を定期出力する機能）とS3 Storage Lens（S3利用状況を集計・可視化する分析機能）は似て見えますが目的が違います。Inventoryはオブジェクト単位の棚卸し、Storage Lensはストレージ利用状況やベストプラクティスの集計・可視化に向きます。大量オブジェクトに対してListObjectsを繰り返すより、Inventoryを出力してAthenaで分析する方が効率的な場面があります。監査、移行、暗号化状況確認、レプリケーション状況確認ではInventory + Athenaが強力です。',
     },
     {
         question:
@@ -1663,7 +1663,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'AthenaとRedshift SpectrumはどちらもS3上のデータをクエリできますが、使いどころが違います。Athenaはサーバーレスのアドホッククエリや探索、低頻度分析に向きます。Redshift SpectrumはRedshift環境と統合し、大規模BIや既存DWHデータとの結合に向くことがあります。RDSはオンラインアプリケーションやトランザクション向けです。データ形式、パーティション、Glue Data Catalog、Lake Formation、IAM権限設計も含めて設計します。',
+            'AthenaとRedshift SpectrumはどちらもS3上のデータをクエリできますが、使いどころが違います。Athenaはサーバーレスのアドホッククエリ（必要なときに行う都度分析）や探索、低頻度分析に向きます。Redshift SpectrumはRedshift環境と統合し、大規模BI（Business Intelligence：業務分析）や既存DWH（Data Warehouse：分析向けデータ基盤）データとの結合に向くことがあります。RDSはオンラインアプリケーションやトランザクション向けです。データ形式、パーティション、Glue Data Catalog、Lake Formation（データレイクの権限管理サービス）、IAM（Identity and Access Management）権限設計も含めて設計します。',
     },
     {
         question:
@@ -1673,7 +1673,7 @@ export const testQuestions: Question[] = [
                 text: 'Amazon Data Firehoseにログを送信し、S3宛先、バッファリング、Lambda変換、必要に応じてParquet/ORC変換を設定する',
                 isCorrect: true,
                 explanation:
-                    'Amazon Data Firehoseは、ストリーミングデータをS3などの宛先へnear real-timeに配信するフルマネージドサービスです。S3宛先では、受信レコードをバッファリングして一定サイズまたは一定時間ごとにS3オブジェクトとして配信できます。小さいファイル問題を避けつつ、Lambda変換やJSONからParquet/ORCへの形式変換も設定できます。',
+                    'Amazon Data Firehoseは、ストリーミングデータをS3などの宛先へnear real-time（ほぼリアルタイムだが即時ではない）に配信するフルマネージドサービスです。S3宛先では、受信レコードをバッファリング（一時的に貯めてまとめる処理）して一定サイズまたは一定時間ごとにS3オブジェクトとして配信できます。小さいファイル問題を避けつつ、Lambda変換やJSON（JavaScript Object Notation：構造化テキスト形式）からParquet/ORC（列指向の分析向け形式）への形式変換も設定できます。',
             },
             {
                 text: '各アプリケーションが1ログ行ごとにS3 PutObjectを直接実行し、1行1オブジェクトとして保存する',
@@ -1695,7 +1695,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Firehoseは「アプリから直接S3へ細かく書く」代わりに、配信・バッファリング・変換・圧縮・形式変換をマネージドに任せたい場合に向きます。S3をログ蓄積先にする場合、後段のAthena分析を意識して、ファイルサイズ、日付パーティションを意識したprefix、Parquet/ORC、圧縮、Glue Data Catalogとの連携、エラー出力prefixも考えます。完全な即時処理ではなくnear real-time配信である点も要件と照らします。',
+            'Firehoseは「アプリから直接S3へ細かく書く」代わりに、配信・バッファリング・変換・圧縮・形式変換をマネージドに任せたい場合に向きます。S3をログ蓄積先にする場合、後段のAthena分析を意識して、ファイルサイズ、日付パーティションを意識したprefix、Parquet/ORC（列指向の分析向け形式）、圧縮、Glue Data Catalogとの連携、エラー出力prefixも考えます。完全な即時処理ではなくnear real-time（ほぼリアルタイム）配信である点も要件と照らします。',
     },
     {
         question:
@@ -1727,7 +1727,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Data StreamsとFirehoseは似ていますが、目的が違います。Data Streamsはストリームを保持し、複数アプリケーションが低レイテンシに処理する基盤です。FirehoseはS3、Redshift、OpenSearch、HTTPエンドポイントなどへの配信をマネージド化するサービスです。Data Streams → Firehose → S3のように、リアルタイム処理とS3蓄積を組み合わせる構成も代表的です。',
+            'Data StreamsとFirehoseは似ていますが、目的が違います。Data Streamsはストリームを保持し、複数アプリケーションが低レイテンシ（低遅延）に処理する基盤です。FirehoseはS3、Redshift、OpenSearch、HTTP（Hypertext Transfer Protocol）エンドポイントなどへの配信をマネージド化するサービスです。Data Streams → Firehose → S3のように、リアルタイム処理とS3蓄積を組み合わせる構成も代表的です。',
     },
     {
         question:
@@ -1791,7 +1791,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'FirehoseのLambda変換は、軽量な正規化、マスキング、フィールド追加、不要レコードの破棄に向きます。ただし同期呼び出し、タイムアウト、リクエスト/レスポンスサイズ制限があるため、複雑で重いETL処理をすべて詰め込む場所ではありません。変換失敗データをどのS3 prefixへ退避するか、元データをバックアップするかも運用設計に含めます。',
+            'FirehoseのLambda変換は、軽量な正規化、マスキング（機密値の伏せ字化）、フィールド追加、不要レコードの破棄に向きます。ただし同期呼び出し、タイムアウト、リクエスト/レスポンスサイズ制限があるため、複雑で重いETL（Extract, Transform, Load：抽出・変換・ロード）処理をすべて詰め込む場所ではありません。変換失敗データをどのS3 prefixへ退避するか、元データをバックアップするかも運用設計に含めます。',
     },
     {
         question:
@@ -1823,7 +1823,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'ログをS3に置くだけでなく、置き方を分析向けに整えることが重要です。Firehoseの形式変換を使えば、取り込み時にJSONをParquet/ORC化して後段のAthenaやRedshift Spectrumで扱いやすくできます。ただしParquet/ORC化しても、prefix、パーティション、ファイルサイズ、小さいファイル問題、Glue Data Catalogのスキーマ管理は引き続き重要です。変換できる入力形式、スキーマ、失敗時のバックアップ先も設計します。',
+            'ログをS3に置くだけでなく、置き方を分析向けに整えることが重要です。Firehoseの形式変換を使えば、取り込み時にJSON（JavaScript Object Notation）をParquet/ORC（列指向の分析向け形式）化して後段のAthenaやRedshift Spectrumで扱いやすくできます。ただしParquet/ORC化しても、prefix、パーティション、ファイルサイズ、小さいファイル問題、Glue Data Catalogのスキーマ管理は引き続き重要です。変換できる入力形式、スキーマ、失敗時のバックアップ先も設計します。',
     },
     {
         question:
@@ -1855,7 +1855,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '直接S3書き込みは、単純な少量データやアプリ側でファイルサイズ、分割、再試行、形式を細かく制御したい場合には有効です。その代わり、それらはアプリケーション側の責務になります。一方、大量ログを継続的に集約し、分析向けに整えてS3へ蓄積したい場合はFirehoseが有力です。Firehoseは運用をマネージド化できる代わりに、near real-timeの遅延、変換制約、追加コスト、失敗時の扱い、S3 prefix設計を比較して選びます。',
+            '直接S3書き込みは、単純な少量データやアプリ側でファイルサイズ、分割、再試行、形式を細かく制御したい場合には有効です。その代わり、それらはアプリケーション側の責務になります。一方、大量ログを継続的に集約し、分析向けに整えてS3へ蓄積したい場合はFirehoseが有力です。Firehoseは運用をマネージド化できる代わりに、near real-time（ほぼリアルタイム）の遅延、変換制約、追加コスト、失敗時の扱い、S3 prefix設計を比較して選びます。',
     },
     {
         question:
@@ -1887,7 +1887,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '大容量アップロードでは「認可」と「データ転送」を分けるのが重要です。API Gateway + Lambdaは、ユーザー認証、アップロード先prefix、ファイル種別、サイズ上限、メタデータ条件、Presigned URL発行に使います。実際のバイト列はS3へ直接送ることで、サーバー中継のボトルネックを避けられます。ただし直接アップロードでも、完了後の検証、ウイルススキャン、状態管理、公開可否の制御は別途設計します。',
+            '大容量アップロードでは「認可」と「データ転送」を分けるのが重要です。API Gateway（APIの受付・認可・ルーティングを行うサービス） + Lambdaは、ユーザー認証、アップロード先prefix、ファイル種別、サイズ上限、メタデータ条件、Presigned URL（署名付きURL：期限付きで特定操作を許可するURL）発行に使います。実際のバイト列はS3へ直接送ることで、サーバー中継のボトルネックを避けられます。ただし直接アップロードでも、完了後の検証、ウイルススキャン、状態管理、公開可否の制御は別途設計します。',
     },
     {
         question:
@@ -1919,7 +1919,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Presigned URLは便利ですが、発行時点の認可設計が重要です。誰が、どのprefixに、どのメソッドで、どのくらいの時間、どのContent-Typeやメタデータ条件でアップロードできるかをAPI側で決めます。Presigned POSTはフォームベースの条件指定に向き、バケットポリシー条件キーと組み合わせて暗号化方式、prefix、署名バージョン、送信元条件などをさらに制御できます。漏えい時の影響を小さくするため、有効期限は短くします。',
+            'Presigned URL（署名付きURL）は便利ですが、発行時点の認可設計が重要です。誰が、どのprefixに、どのメソッドで、どのくらいの時間、どのContent-Type（HTTPリクエストのデータ形式を示すヘッダー）やメタデータ条件でアップロードできるかをAPI側で決めます。Presigned POST（ブラウザフォーム向けの署名付きPOST）はフォームベースの条件指定に向き、バケットポリシー条件キーと組み合わせて暗号化方式、prefix、署名バージョン、送信元条件などをさらに制御できます。漏えい時の影響を小さくするため、有効期限は短くします。',
     },
     {
         question:
@@ -1951,7 +1951,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Presigned URLのトラブルでは、署名、期限、リージョン、HTTPメソッド、署名対象ヘッダー、CORSを分けて確認します。特にブラウザアップロードでは、PreflightのOPTIONS、PUTやPOST、Content-Type、x-amz-*ヘッダーをCORSで許可しているかが重要です。CORSはブラウザ側の制約なので、サーバーサイドのHTTPクライアントでは同じ失敗にならないことがあります。',
+            'Presigned URLのトラブルでは、署名、期限、リージョン、HTTP（Hypertext Transfer Protocol）メソッド、署名対象ヘッダー、CORS（Cross-Origin Resource Sharing：異なるオリジン間のリクエスト制御）を分けて確認します。特にブラウザアップロードでは、Preflight（本リクエスト前の事前確認）のOPTIONS、PUTやPOST、Content-Type、x-amz-*ヘッダーをCORSで許可しているかが重要です。CORSはブラウザ側の制約なので、サーバーサイドのHTTPクライアントでは同じ失敗にならないことがあります。',
     },
     {
         question:
@@ -1983,7 +1983,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Presigned URLとMultipart Uploadを組み合わせると、大容量ファイルをサーバーで中継せずにアップロードできます。ただし、API側はUploadIdの管理、各パートURL発行、PartNumberとETagの管理、完了/中止処理、期限切れ時の再発行、未完了Multipart Uploadの清掃を設計する必要があります。失敗時にAbortMultipartUploadを呼ばないと、未完了パートの課金が残ります。',
+            'Presigned URLとMultipart Upload（複数パートに分けるアップロード）を組み合わせると、大容量ファイルをサーバーで中継せずにアップロードできます。ただし、API側はUploadId（マルチパートアップロードの識別子）の管理、各パートURL発行、PartNumber（パート番号）とETag（Entity Tag：アップロード済みパートの識別値）の管理、完了/中止処理、期限切れ時の再発行、未完了Multipart Uploadの清掃を設計する必要があります。失敗時にAbortMultipartUploadを呼ばないと、未完了パートの課金が残ります。',
     },
     {
         question:
@@ -2015,7 +2015,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Presigned URLの有効期限は、指定したExpiresInだけでなく、発行に使った認証情報の寿命にも左右されます。AWS CLI/SDKでは最大7日、S3コンソールでは最大12時間など、発行方法による上限もあります。AssumeRole、Cognito、IAMユーザーなど、発行元の認証情報の種類でも実効上限が変わります。長すぎるPresigned URLは漏えい時の影響が大きいため、用途に応じて短い期限にするのが基本です。',
+            'Presigned URLの有効期限は、指定したExpiresInだけでなく、発行に使った認証情報の寿命にも左右されます。AWS CLI（Command Line Interface：コマンドライン操作ツール）/SDK（Software Development Kit：開発用ライブラリ）では最大7日、S3コンソールでは最大12時間など、発行方法による上限もあります。AssumeRole（ロールを一時的に引き受ける操作）、Cognito、IAMユーザーなど、発行元の認証情報の種類でも実効上限が変わります。長すぎるPresigned URLは漏えい時の影響が大きいため、用途に応じて短い期限にするのが基本です。',
     },
     {
         question:
@@ -2047,7 +2047,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'アップロード設計では、Presigned URLによる直接アップロード、S3イベント、非同期処理を組み合わせるとスケールしやすくなります。アップロード直後のオブジェクトを未検査prefixに置き、検査済みprefixや公開prefixへ移動する、メタデータDBで状態管理する、失敗時に隔離するなどの運用も重要です。同期APIで全部処理するより、アップロード、検査、公開を段階に分ける方が障害時の復旧もしやすくなります。',
+            'アップロード設計では、Presigned URLによる直接アップロード、S3イベント、非同期処理を組み合わせるとスケールしやすくなります。アップロード直後のオブジェクトを未検査prefixに置き、検査済みprefixや公開prefixへ移動する、メタデータDB（Database：状態管理用データベース）で状態管理する、失敗時に隔離するなどの運用も重要です。同期APIで全部処理するより、アップロード、検査、公開を段階に分ける方が障害時の復旧もしやすくなります。',
     },
     {
         question:
@@ -2079,7 +2079,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3アクセス障害の切り分けでは、IAMだけを見ても不十分です。実務では、リクエストしたprincipal、bucket/key、versionId、HTTPメソッド、リージョン、IAM、バケットポリシー、明示的Deny/SCP、Block Public Access、Object Ownership、KMS、VPC Endpoint、CloudFront、Browser/CORSを順に確認します。CloudTrail Data Eventsを有効化していれば、実際の拒否理由や呼び出し元の確認にも役立ちます。403/404は「表示上の結果」であり、原因は複数レイヤーにまたがることがあります。',
+            'S3アクセス障害の切り分けでは、IAM（Identity and Access Management）だけを見ても不十分です。実務では、リクエストしたprincipal（呼び出し主体）、bucket/key、versionId、HTTPメソッド、リージョン、IAM、バケットポリシー、明示的Deny/SCP（Service Control Policy）、Block Public Access、Object Ownership、KMS（Key Management Service）、VPC Endpoint、CloudFront、Browser/CORS（ブラウザのクロスオリジン制約）を順に確認します。CloudTrail Data Events（データプレーンAPI呼び出しの監査ログ）を有効化していれば、実際の拒否理由や呼び出し元の確認にも役立ちます。403/404は「表示上の結果」であり、原因は複数レイヤーにまたがることがあります。',
     },
     {
         question:
@@ -2143,7 +2143,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'CloudFront配信では「CloudFrontで見えるか」と「S3直アクセスできるか」は分けて考えます。非公開配信では、S3直アクセスを拒否し、CloudFrontだけを許可するのが安全な設計です。障害時は、OAC/OAI、バケットポリシー、AWS:SourceArn、KMS権限、CloudFrontキャッシュ、オリジンエンドポイント種別を確認します。S3 REST APIエンドポイントはOACで非公開オリジンにしやすい一方、S3 Website endpointはHTTPのみでOACの対象ではないため、要件に応じて選びます。CloudFrontキャッシュにより、一時的にオリジン障害や権限変更が見えづらいこともあります。',
+            'CloudFront配信では「CloudFrontで見えるか」と「S3直アクセスできるか」は分けて考えます。非公開配信では、S3直アクセスを拒否し、CloudFrontだけを許可するのが安全な設計です。障害時は、OAC（Origin Access Control）/OAI（Origin Access Identity）、バケットポリシー、AWS:SourceArn、KMS（Key Management Service）権限、CloudFrontキャッシュ、オリジンエンドポイント種別を確認します。S3 REST API（Representational State Transfer Application Programming Interface）エンドポイントはOACで非公開オリジンにしやすい一方、S3 Website endpointはHTTPのみでOACの対象ではないため、要件に応じて選びます。CloudFrontキャッシュにより、一時的にオリジン障害や権限変更が見えづらいこともあります。',
     },
     {
         question:
@@ -2175,7 +2175,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3イベント処理の障害では、イベントが発生していないのか、フィルターで除外されているのか、S3が宛先を呼べないのか、宛先側で失敗しているのかを分けて見ます。Lambda直呼びならLambdaのリソースベースポリシーと同一リージョン制約、SQSならキューポリシー、S3からEventBridge経由ならEventBridgeルールとターゲット、いずれもログとメトリクスで確認します。再帰ループ防止のため、入力prefixと出力prefixを分ける設計も重要です。',
+            'S3イベント処理の障害では、イベントが発生していないのか、フィルターで除外されているのか、S3が宛先を呼べないのか、宛先側で失敗しているのかを分けて見ます。Lambda直呼びならLambdaのリソースベースポリシーと同一リージョン制約、SQS（Simple Queue Service）ならキューポリシー、S3からEventBridge経由ならEventBridgeルールとターゲット、いずれもログとメトリクスで確認します。再帰ループ防止のため、入力prefixと出力prefixを分ける設計も重要です。',
     },
     {
         question:
@@ -2207,7 +2207,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'KMS絡みのS3 AccessDeniedは実務で頻出です。S3の許可があっても、KMSキー側でDecryptやGenerateDataKeyが許可されていなければ失敗します。特にクロスアカウントでは、IAMポリシーだけでなくキーポリシー側の許可も必須です。CloudFront OAC、Replication、Athena、Lambdaなどサービス連携時は、サービスロール、キーポリシー、IAMポリシー、kms:ViaService条件、キー状態、リージョン一致をまとめて確認します。',
+            'KMS（Key Management Service）絡みのS3 AccessDeniedは実務で頻出です。S3の許可があっても、KMSキー側でDecryptやGenerateDataKeyが許可されていなければ失敗します。特にクロスアカウントでは、IAM（Identity and Access Management）ポリシーだけでなくキーポリシー側の許可も必須です。CloudFront OAC（Origin Access Control）、Replication（複製）、Athena、Lambdaなどサービス連携時は、サービスロール、キーポリシー、IAMポリシー、kms:ViaService条件、キー状態、リージョン一致をまとめて確認します。',
     },
     {
         question:
@@ -2239,7 +2239,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Lifecycleトラブルでは、「削除扱い」と「物理的に課金対象が減る」ことを分けて考えます。バージョニング、削除マーカー、非現行バージョン、Object Lock、Legal Hold、Filter、prefix/tag条件、最低保存期間、Glacier復元状態、Lifecycleの非同期性を確認します。大量オブジェクトではS3 Inventoryを出力し、Athenaで非現行バージョン、ストレージクラス、Object Lock状態、Replication statusを棚卸しするのが実務的です。',
+            'Lifecycleトラブルでは、「削除扱い」と「物理的に課金対象が減る」ことを分けて考えます。バージョニング、削除マーカー、非現行バージョン、Object Lock（削除・上書きを抑止する保持機能）、Legal Hold（期限なしの保留）、Filter、prefix/tag条件、最低保存期間、Glacier復元状態、Lifecycleの非同期性を確認します。大量オブジェクトではS3 Inventoryを出力し、Athenaで非現行バージョン、ストレージクラス、Object Lock状態、Replication statusを棚卸しするのが実務的です。',
     },
     {
         question:
@@ -2271,7 +2271,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'イベント駆動のトラブルでは、配信基盤に「一度だけ」「順序通り」を期待しすぎないことが重要です。SQS FIFOを組み合わせても、MessageGroupIdや重複排除ID、再試行、下流処理の冪等性設計が必要で、全体が自動的にexactly-onceになるわけではありません。S3 Event Notifications、EventBridge、SQS標準キュー、Lambda再試行を含め、重複、遅延、再実行を前提に、冪等な出力、処理済みテーブル、DLQ、リプレイ手順を設計します。',
+            'イベント駆動のトラブルでは、配信基盤に「一度だけ」「順序通り」を期待しすぎないことが重要です。SQS FIFO（First-In First-Out）を組み合わせても、MessageGroupIdや重複排除ID、再試行、下流処理の冪等性設計が必要で、全体が自動的にexactly-once（厳密に1回だけ処理）になるわけではありません。S3 Event Notifications、EventBridge、SQS標準キュー、Lambda再試行を含め、重複、遅延、再実行を前提に、冪等な出力、処理済みテーブル、DLQ（Dead Letter Queue：失敗メッセージの退避先）、リプレイ手順を設計します。',
     },
     {
         question:
@@ -2335,7 +2335,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '単発のサムネイル生成ならS3 Event NotificationsからLambda直呼びでも十分な場合があります。一方、検証、変換、保存、通知のように段階があり、分岐や再試行、失敗時通知、状態追跡が必要ならStep Functionsが候補になります。長時間実行、監査性、実行履歴、確実な状態追跡を重視するならStandard Workflow、短時間・高頻度・高スループット寄りならExpress Workflowも候補です。S3は保存、EventBridgeはイベントルーティング、Lambdaは個別処理、Step Functionsは処理全体の状態管理という役割で分けます。',
+            '単発のサムネイル生成ならS3 Event NotificationsからLambda直呼びでも十分な場合があります。一方、検証、変換、保存、通知のように段階があり、分岐や再試行、失敗時通知、状態追跡が必要ならStep Functions（ワークフローを状態として管理するサービス）が候補になります。長時間実行、監査性、実行履歴、確実な状態追跡を重視するならStandard Workflow、短時間・高頻度・高スループット寄りならExpress Workflowも候補です。S3は保存、EventBridgeはイベントルーティング、Lambdaは個別処理、Step Functionsは処理全体の状態管理という役割で分けます。',
     },
     {
         question:
@@ -2367,7 +2367,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Lambda直呼び、SQS経由、EventBridge、Step Functionsは役割が違います。シンプルさならLambda直呼び、バースト吸収、再試行、平準化ならSQS、イベント内容によるルーティングならEventBridge、状態遷移、分岐、再試行、可視化ならStep Functionsです。SQSは状態管理サービスではなく、処理待ちメッセージを保持してコンシューマーのペースに合わせるキューです。SQS、SNS、EventBridgeは似て見えますが、キュー、通知、イベントバスという目的の違いで選びます。',
+            'Lambda直呼び、SQS（Simple Queue Service）経由、EventBridge、Step Functionsは役割が違います。シンプルさならLambda直呼び、バースト吸収、再試行、平準化ならSQS、イベント内容によるルーティングならEventBridge、状態遷移、分岐、再試行、可視化ならStep Functionsです。SQSは状態管理サービスではなく、処理待ちメッセージを保持してコンシューマー（処理する側）のペースに合わせるキューです。SQS、SNS（Simple Notification Service）、EventBridgeは似て見えますが、キュー、通知、イベントバスという目的の違いで選びます。',
     },
     {
         question:
@@ -2399,7 +2399,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3 Event NotificationsとEventBridgeの比較では、単純な起動か、柔軟なルーティングかを見ます。ただしEventBridgeは大量データの処理バッファそのものではないため、高スループットの平準化にはSQS、継続的なログ配信にはFirehoseが向く場合があります。CloudFront signed URLとS3署名付きURLの比較では、配信経路を制限するのか、S3へ直接アップロード/ダウンロードさせるのかを見ます。処理パイプラインでは、アクセス制御、イベントルーティング、ワークフロー管理を混同しないことが重要です。',
+            'S3 Event NotificationsとEventBridgeの比較では、単純な起動か、柔軟なルーティングかを見ます。ただしEventBridgeは大量データの処理バッファそのものではないため、高スループットの平準化にはSQS（Simple Queue Service）、継続的なログ配信にはFirehoseが向く場合があります。CloudFront signed URL（CloudFront経由配信用の署名付きURL）とS3署名付きURLの比較では、配信経路を制限するのか、S3へ直接アップロード/ダウンロードさせるのかを見ます。処理パイプラインでは、アクセス制御、イベントルーティング、ワークフロー管理を混同しないことが重要です。',
     },
     {
         question:
@@ -2431,7 +2431,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'S3直接書き込みとFirehoseの比較では、アプリ側でファイルサイズや再試行を細かく制御するか、マネージドなバッファリングと配信に寄せるかを見ます。Firehoseは1件ごとの詳細な状態管理には向かず、Step Functionsで全ログを1件ずつ処理するのはコストと運用面で過剰になりがちです。Athena、RDS、Redshiftの比較では、S3上の低コスト分析、オンラインDB、DWHのどれが要件に合うかを判断します。Intelligent-TieringとLifecycleは保存コスト最適化の比較軸であり、処理パイプラインそのものの代替ではありません。',
+            'S3直接書き込みとFirehoseの比較では、アプリ側でファイルサイズや再試行を細かく制御するか、マネージドなバッファリングと配信に寄せるかを見ます。Firehoseは1件ごとの詳細な状態管理には向かず、Step Functionsで全ログを1件ずつ処理するのはコストと運用面で過剰になりがちです。Athena、RDS（Relational Database Service）、Redshiftの比較では、S3上の低コスト分析、オンラインDB（Database）、DWH（Data Warehouse）のどれが要件に合うかを判断します。Intelligent-Tiering（アクセス頻度に応じる自動階層化）とLifecycleは保存コスト最適化の比較軸であり、処理パイプラインそのものの代替ではありません。',
     },
     {
         question:
@@ -2463,6 +2463,6 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '応用問題では、単にサービス名を知っているかではなく、何を比較しているかを整理します。ACLは新規設計では避け、IAM/バケットポリシー中心にする。OACは新しいCloudFront + S3非公開配信、OAIは旧来方式。S3 Event Notificationsは単純連携、EventBridgeは条件分岐と拡張。SQSはキュー、SNSはPub/Sub通知。Versioningは過去バージョン保持、Object LockはWORM保持。Replicationは現在状態を別場所へ複製、Backupは復元点を保持。こうした比較を、シンプルさ、スループット、状態管理、再試行、コスト、監査性、将来拡張性の軸で判断します。',
+            '応用問題では、単にサービス名を知っているかではなく、何を比較しているかを整理します。ACL（Access Control List）は新規設計では避け、IAM（Identity and Access Management）/バケットポリシー中心にする。OAC（Origin Access Control）は新しいCloudFront + S3非公開配信、OAI（Origin Access Identity）は旧来方式。S3 Event Notificationsは単純連携、EventBridgeは条件分岐と拡張。SQS（Simple Queue Service）はキュー、SNS（Simple Notification Service）はPub/Sub通知。Versioningは過去バージョン保持、Object LockはWORM（Write Once Read Many）保持。Replicationは現在状態を別場所へ複製、Backupは復元点を保持。こうした比較を、シンプルさ、スループット、状態管理、再試行、コスト、監査性、将来拡張性の軸で判断します。',
     },
 ]
