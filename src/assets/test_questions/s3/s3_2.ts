@@ -1473,4 +1473,196 @@ export const testQuestions: Question[] = [
         explanation:
             'S3イベント連携では「何で受けるか」を目的で分けます。シンプルさならLambda直呼び、バースト吸収ならSQS、単純ファンアウトならSNS、条件分岐や拡張性ならEventBridge、順序制御ならFIFOとアプリケーション設計が候補です。実務ではSNSから複数SQSへ配るなど、組み合わせることも多いです。',
     },
+    {
+        question:
+            'Webアクセスログを日次でS3に保存しています。月に数回、SQLで集計するだけで、常時オンライン更新やトランザクション処理は不要です。低コストに月次分析したい場合、RDSへ全件ロードするより適切な設計はどれですか?',
+        options: [
+            {
+                text: 'S3上のログをGlue Data Catalogでテーブル定義し、Athenaで必要なときだけSQLクエリする',
+                isCorrect: true,
+                explanation:
+                    'AthenaはS3上のデータを直接SQLでクエリできるサーバーレスサービスです。RDSのように常時稼働するデータベースへ全件ロードしなくても、必要なときだけログを分析できます。Athenaはクエリ実行時課金で、スキャン量がコストに直結します。Glue Data Catalogでテーブル定義やスキーマを管理すると、Athenaや他の分析サービスから参照しやすくなります。',
+            },
+            {
+                text: 'RDSへ全ログをロードし、分析しない時間帯も常にインスタンスを起動し続ける',
+                isCorrect: false,
+                explanation:
+                    'RDSはオンライン更新、低レイテンシ照会、トランザクション処理やアプリケーションのDBに向きます。月に数回の大規模ログ分析だけが目的なら、常時稼働のDBへ全件ロードするより、S3 + Athenaの方が低コストで運用しやすい場合があります。',
+            },
+            {
+                text: 'S3ではSQL分析ができないため、必ずEC2上に独自DBを構築する',
+                isCorrect: false,
+                explanation:
+                    'Athenaを使うと、S3上のファイルに対してSQLクエリを実行できます。独自DBを構築しなくても分析できるケースがあります。',
+            },
+            {
+                text: 'S3に保存したログは、分析前に必ず全件をLambdaのメモリへ読み込む',
+                isCorrect: false,
+                explanation:
+                    '大量ログをLambdaのメモリへ全件読み込む設計はスケールしにくく、実行時間やメモリ制限にも引っかかりやすいです。Athenaのような分析サービスを使う方が自然です。',
+            },
+        ],
+        explanation:
+            'S3は単なるファイル置き場ではなく、データレイクの入口として使えます。頻繁な更新や低レイテンシのトランザクションが必要ならRDSなどを検討しますが、大量ログの低頻度分析ではS3 + Glue Data Catalog + Athenaが有力です。Glue Data Catalogはメタデータ管理であり、データ本体をS3から移動するものではありません。Athenaはクエリ対象データ量に応じた課金なので、形式、圧縮、パーティション、必要列だけSELECTする設計が重要です。',
+    },
+    {
+        question:
+            'S3にCSV形式で保存した数TBのイベントログをAthenaで分析しています。多くのクエリは数列だけを参照しますが、毎回スキャン量が大きく、コストと実行時間が問題です。最も適切な改善策はどれですか?',
+        options: [
+            {
+                text: 'CSVをParquetなどの列指向形式に変換し、圧縮して保存する',
+                isCorrect: true,
+                explanation:
+                    'ParquetやORCは列指向フォーマットで、Athenaが必要な列だけを読みやすくなります。圧縮も組み合わせることで、スキャン量、クエリ時間、コストを削減できます。CSVは扱いやすい一方、列単位の読み飛ばしや型情報の面で大規模分析には不利になりがちです。圧縮形式は圧縮率だけでなく、分割可能性やクエリエンジンのサポートも確認します。',
+            },
+            {
+                text: 'CSVのファイル名を短くすれば、Athenaのスキャン量は必ず大幅に減る',
+                isCorrect: false,
+                explanation:
+                    'ファイル名の長さはAthenaのデータスキャン量の主要因ではありません。スキャン量を減らすには、列指向形式、圧縮、パーティション、必要列だけを読む設計が重要です。',
+            },
+            {
+                text: 'すべてのCSVをZIPファイルにまとめれば、Athenaが最も高速に並列スキャンできる',
+                isCorrect: false,
+                explanation:
+                    'AthenaはZIP形式をサポートしません。圧縮形式にもサポート状況や分割可能性があります。大規模分析ではParquetやORCなどの列指向形式がよく使われます。',
+            },
+            {
+                text: 'Athenaは圧縮データを読み取れないため、すべて非圧縮CSVに戻す',
+                isCorrect: false,
+                explanation:
+                    'Athenaは多くの圧縮形式を読み取れます。ParquetやORCは圧縮と相性がよく、クエリ性能とコスト改善に役立ちます。',
+            },
+        ],
+        explanation:
+            'Athenaはスキャンしたデータ量がコストと性能に強く影響します。CSVのまま全列・全期間をスキャンする設計は、データ量が増えると高コストになります。Parquet/ORC、圧縮、適切なファイルサイズ、パーティションを組み合わせるのがデータレイク設計の基本です。小さいファイルが大量にある場合は、メタデータオーバーヘッドやリクエスト増で遅くなるため、ファイル結合やコンパクションも検討します。',
+    },
+    {
+        question:
+            'S3に保存したアクセスログをAthenaで日付指定して分析します。データは s3://bucket/logs/year=2026/month=05/day=17/ のように配置されています。日付条件のクエリで不要なデータスキャンを減らす設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'year、month、dayなどをパーティションとしてGlue Data Catalogに登録し、クエリで対象日付を絞る',
+                isCorrect: true,
+                explanation:
+                    'Athenaでは、S3上のデータをパーティションで分けると、クエリ条件に合うパーティションだけを読みやすくなります。これをパーティションプルーニングと呼びます。日付でよく絞るログなら、year/month/dayなどのパーティション設計によりスキャン量とコストを削減できます。',
+            },
+            {
+                text: '全ログを1つの巨大なCSVファイルにまとめれば、日付条件のクエリは必ず最小スキャンになる',
+                isCorrect: false,
+                explanation:
+                    '1つの巨大ファイルにまとめると、日付条件で一部だけ読みたい場合でも不要な範囲をスキャンしやすくなります。日付や利用頻度に応じたパーティション設計が重要です。',
+            },
+            {
+                text: 'パーティションを増やせば増やすほど常に高速になるため、ユーザーIDごとに無制限に細かく分ける',
+                isCorrect: false,
+                explanation:
+                    'パーティションを細かくしすぎると、メタデータ管理やクエリ計画、小さいファイルの増加で逆に遅くなることがあります。よく使う絞り込み条件とデータ量に基づいて、適切な粒度を選びます。',
+            },
+            {
+                text: 'Glue Data Catalogを使うと、AthenaはS3上のデータを読めなくなる',
+                isCorrect: false,
+                explanation:
+                    'Glue Data Catalogはテーブル定義やパーティション情報を管理するメタデータカタログです。AthenaはGlue Data Catalogのメタデータを使ってS3上のデータをクエリできます。',
+            },
+        ],
+        explanation:
+            'パーティション設計はAthenaコストの中心です。日付、リージョン、サービス名など、クエリでよく指定する条件を軸にします。ただし過剰なパーティションや小さいファイルの大量生成はメタデータオーバーヘッドを増やします。大量パーティションでは、パーティションを手動登録し続ける代わりにpartition projectionやGlue partition indexが有効な場合があります。',
+    },
+    {
+        question:
+            'S3バケット内に古い暗号化方式のオブジェクトや、特定ストレージクラスのオブジェクトがどれだけあるかを定期的に棚卸ししたいです。個々のオブジェクト単位で一覧をSQL分析したい場合、最も適切な組み合わせはどれですか?',
+        options: [
+            {
+                text: 'S3 Inventoryを有効化し、出力されたCSV/ORC/ParquetレポートをAthenaでクエリする',
+                isCorrect: true,
+                explanation:
+                    'S3 Inventoryは、バケット内オブジェクトの一覧とメタデータを日次または週次で出力する機能で、リアルタイム一覧ではありません。AthenaでInventoryレポートをクエリすれば、暗号化状態、ストレージクラス、レプリケーション状態、Object Lock関連情報などをオブジェクト単位で分析できます。S3 InventoryではORCやParquet形式が推奨されることがあります。',
+            },
+            {
+                text: 'S3 Storage Lensだけを使えば、必ず全オブジェクトキーをSQLで直接一覧できる',
+                isCorrect: false,
+                explanation:
+                    'S3 Storage Lensは組織、アカウント、リージョン、バケット、prefixなどの集計メトリクスと傾向分析に向きます。個々のオブジェクト一覧をSQLで分析したい場合はS3 Inventoryが適しています。',
+            },
+            {
+                text: 'CloudFrontのキャッシュログを見れば、S3内の全オブジェクトの暗号化状態が分かる',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontログは配信リクエストのログであり、S3バケット内の全オブジェクトメタデータの棚卸しには向きません。S3 Inventoryを使います。',
+            },
+            {
+                text: 'S3 Event Notificationsを有効化すれば、過去から存在する全オブジェクト一覧が即時に通知される',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsはイベント発生時の通知であり、既存オブジェクトの定期棚卸しではありません。過去から存在するオブジェクトの一覧にはS3 Inventoryが適しています。',
+            },
+        ],
+        explanation:
+            'S3 InventoryとS3 Storage Lensは似て見えますが目的が違います。Inventoryはオブジェクト単位の棚卸し、Storage Lensはストレージ利用状況やベストプラクティスの集計・可視化に向きます。大量オブジェクトに対してListObjectsを繰り返すより、Inventoryを出力してAthenaで分析する方が効率的な場面があります。監査、移行、暗号化状況確認、レプリケーション状況確認ではInventory + Athenaが強力です。',
+    },
+    {
+        question:
+            '組織全体でS3の利用状況を可視化し、急増しているバケット、古い非現行バージョン、未完了Multipart Upload、暗号化やバージョニングのベストプラクティス違反を見つけたいです。個々のオブジェクト一覧ではなく、集計・傾向・推奨を見たい場合に最も適切な機能はどれですか?',
+        options: [
+            {
+                text: 'S3 Storage Lensを使って、組織・アカウント・リージョン・バケット・prefix単位のメトリクスを可視化する',
+                isCorrect: true,
+                explanation:
+                    'S3 Storage Lensは、S3ストレージの利用状況やアクティビティを組織横断で可視化し、コスト最適化、データ保護、アクセス管理、パフォーマンス改善のヒントを得るための分析機能です。AWS Organizationsと連携して組織全体を見られます。未完了Multipart Uploadや非現行バージョン、暗号化、バージョニングなどの傾向把握に役立ちます。',
+            },
+            {
+                text: 'S3 Inventoryだけを使えば、組織全体のStorage Lensダッシュボードと同じ推奨事項が自動で表示される',
+                isCorrect: false,
+                explanation:
+                    'S3 Inventoryはオブジェクト単位の一覧出力です。Storage Lensのような組織横断ダッシュボード、集計メトリクス、推奨の可視化とは目的が異なります。',
+            },
+            {
+                text: 'Athenaで1つの空テーブルを作れば、S3全体の利用傾向が自動的に可視化される',
+                isCorrect: false,
+                explanation:
+                    'AthenaはSQLクエリエンジンです。S3全体の利用状況を自動的に可視化するダッシュボードではありません。必要なデータソースを用意してクエリする必要があります。',
+            },
+            {
+                text: 'S3 Transfer Accelerationを有効化すれば、古い非現行バージョンや未完了Multipart Uploadを自動的に検出できる',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationは長距離転送を高速化する機能です。S3利用状況の可視化やベストプラクティス違反検出にはStorage Lensを検討します。',
+            },
+        ],
+        explanation:
+            '個々のオブジェクトを調べたいならS3 Inventory、組織全体の傾向やコスト・保護・アクセス管理のメトリクスを見たいならS3 Storage Lens、と整理すると判断しやすいです。Storage Lensの高度なメトリクスやエクスポートには追加設定や追加料金が関係する場合があります。Storage LensのレポートをS3へエクスポートし、さらにAthenaなどで分析する設計もあります。',
+    },
+    {
+        question:
+            'S3上のデータレイクに蓄積した大規模データを、BIチームが高い同時実行性で定常的に分析します。既にRedshiftを利用しており、Redshift内のデータとS3上の外部データを組み合わせた複雑な分析も行いたいです。Athenaだけでなく検討すべき選択肢として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Amazon Redshift Spectrumを使い、RedshiftからS3上の外部テーブルをクエリする',
+                isCorrect: true,
+                explanation:
+                    'Redshift Spectrumを使うと、S3上の構造化・半構造化データをRedshiftから外部テーブルとしてクエリできます。既存のRedshiftデータとS3データを組み合わせた分析や、BI利用者が多い定常的なDWHワークロードでは候補になります。',
+            },
+            {
+                text: 'AthenaはS3をクエリできるため、RedshiftやRedshift Spectrumはどのような場合でも不要である',
+                isCorrect: false,
+                explanation:
+                    'Athenaはサーバーレスでアドホック分析に向きますが、既存Redshift環境との結合、BIワークロード、同時実行性、パフォーマンス要件によってはRedshift SpectrumやRedshiftへのロードが適する場合があります。',
+            },
+            {
+                text: 'Redshift Spectrumを使うには、S3上のデータを必ずRedshiftの内部テーブルへ全件ロードする必要がある',
+                isCorrect: false,
+                explanation:
+                    'Redshift SpectrumはS3上のデータを外部テーブルとしてクエリできます。全件をRedshift内部へロードしなくても、S3上にデータを置いたまま分析できます。',
+            },
+            {
+                text: 'S3上のデータを分析する場合、Glue Data Catalogや外部スキーマのようなメタデータ管理は一切不要である',
+                isCorrect: false,
+                explanation:
+                    'S3上のファイルをテーブルとして扱うには、スキーマやパーティションなどのメタデータ管理が必要です。AthenaでもRedshift Spectrumでも、Glue Data Catalogなどのメタデータ設計が重要です。',
+            },
+        ],
+        explanation:
+            'AthenaとRedshift SpectrumはどちらもS3上のデータをクエリできますが、使いどころが違います。Athenaはサーバーレスのアドホッククエリや探索、低頻度分析に向きます。Redshift SpectrumはRedshift環境と統合し、大規模BIや既存DWHデータとの結合に向くことがあります。RDSはオンラインアプリケーションやトランザクション向けです。データ形式、パーティション、Glue Data Catalog、Lake Formation、IAM権限設計も含めて設計します。',
+    },
 ]
