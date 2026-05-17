@@ -1729,4 +1729,420 @@ export const testQuestions: Question[] = [
         explanation:
             '初級段階では、S3 や API Gateway のような直接的なトリガーと、SQS や DynamoDB Streams のように Lambda が読み取りに行く連携がある、と整理すると理解しやすいです。',
     },
+    {
+        question:
+            'S3 イベントで Lambda を起動する代表的な用途として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3 バケットに画像がアップロードされたら、サムネイル作成処理を実行する',
+                isCorrect: true,
+                explanation:
+                    'S3 のオブジェクト作成イベントをトリガーにして Lambda を起動できます。画像アップロード後のサムネイル作成、メタデータ抽出、ファイル検査などによく使われます。',
+            },
+            {
+                text: 'S3 バケット名を変更するたびに、すべての EC2 インスタンスを必ず削除する',
+                isCorrect: false,
+                explanation:
+                    'S3 イベント連携は、S3 で起きた出来事をきっかけに Lambda を起動する仕組みです。EC2 インスタンス削除を必ず行うものではありません。',
+            },
+            {
+                text: 'Lambda 関数を OS にログインして常時起動する',
+                isCorrect: false,
+                explanation:
+                    'S3 イベント連携では、S3 のイベントをきっかけに Lambda が実行されます。OS にログインして常時起動する使い方ではありません。',
+            },
+            {
+                text: 'S3 の保存容量を Lambda のメモリ設定として自動反映する',
+                isCorrect: false,
+                explanation:
+                    'S3 の保存容量が Lambda のメモリ設定に自動反映されるわけではありません。',
+            },
+        ],
+        explanation:
+            'S3 イベント連携は、「ファイルが置かれたら処理する」というイベント駆動の典型例です。',
+    },
+    {
+        question:
+            'S3 イベントで Lambda を起動する構成の注意点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda が同じバケットへファイルを書き戻すと、設定によっては再び Lambda が起動してループする可能性がある',
+                isCorrect: true,
+                explanation:
+                    'S3 のアップロードをトリガーにした Lambda が同じバケットへ別ファイルを書き込むと、その書き込みでも再度 Lambda が起動する可能性があります。入力用と出力用のバケットやプレフィックス（フォルダ名のようなパスの先頭部分）を分けるなどの工夫が必要です。',
+            },
+            {
+                text: 'S3 イベントを使うと Lambda のタイムアウトが無制限になる',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントで起動しても Lambda のタイムアウトは無制限になりません。関数のタイムアウト設定に従います。',
+            },
+            {
+                text: 'S3 イベントでは Lambda にイベントデータが一切渡されない',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントでは、バケット名やオブジェクトキー（S3 内でのファイル名やパスのような識別子）などの情報がイベントデータとして渡されます。',
+            },
+            {
+                text: 'S3 イベントを使うには、Lambda 関数名を必ず bucket にする必要がある',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数名を bucket にする必要はありません。イベント通知や権限設定が重要です。',
+            },
+        ],
+        explanation:
+            'S3 と Lambda の連携では、処理結果を書き込む場所が再度トリガー対象にならないように注意します。',
+    },
+    {
+        question:
+            'API Gateway と Lambda を組み合わせる用途として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'HTTP リクエストを受け付ける API のバックエンド処理を Lambda で実行する',
+                isCorrect: true,
+                explanation:
+                    'API Gateway（HTTP API を公開・管理できるサービス）を入口にし、Lambda をバックエンド処理として実行できます。小規模 API やサーバーレス API の構成でよく使われます。',
+            },
+            {
+                text: 'Lambda 関数の実行環境へ SSH ログインする入口を作る',
+                isCorrect: false,
+                explanation:
+                    'API Gateway は HTTP API の入口を作るサービスです。Lambda の実行環境へ SSH ログインするための入口ではありません。',
+            },
+            {
+                text: 'DynamoDB テーブルのパーティションキーを自動で設計する',
+                isCorrect: false,
+                explanation:
+                    'API Gateway は DynamoDB のテーブル設計を自動化するサービスではありません。',
+            },
+            {
+                text: 'Lambda のメモリをアクセス数に応じて自動で最大化する',
+                isCorrect: false,
+                explanation:
+                    'API Gateway と連携しても、Lambda のメモリ設定が自動で最大化されるわけではありません。',
+            },
+        ],
+        explanation:
+            'API Gateway はリクエストの入口、Lambda は処理本体、という役割分担で考えると理解しやすいです。',
+    },
+    {
+        question:
+            'API Gateway から Lambda を呼び出すシナリオで、Lambda の戻り値について最も適切な説明はどれですか?',
+        options: [
+            {
+                text: '構成によっては、Lambda の戻り値が HTTP レスポンスとしてクライアントに返される',
+                isCorrect: true,
+                explanation:
+                    'API Gateway と Lambda の統合では、Lambda の戻り値を HTTP レスポンス（ブラウザやアプリへ返す結果データ）としてクライアントへ返す構成があります。ステータスコードやレスポンス本文を意識して実装します。',
+            },
+            {
+                text: 'Lambda の戻り値は必ず S3 バケットとして作成される',
+                isCorrect: false,
+                explanation:
+                    'Lambda の戻り値が自動的に S3 バケットとして作成されることはありません。',
+            },
+            {
+                text: 'API Gateway から呼び出した場合、Lambda は戻り値を一切返せない',
+                isCorrect: false,
+                explanation:
+                    'API Gateway との統合では、Lambda の戻り値をレスポンスとして扱う構成があります。',
+            },
+            {
+                text: 'Lambda の戻り値は必ず DynamoDB Streams のレコードになる',
+                isCorrect: false,
+                explanation:
+                    'Lambda の戻り値が DynamoDB Streams のレコードになるわけではありません。DynamoDB Streams は DynamoDB テーブル変更の履歴を扱う仕組みです。',
+            },
+        ],
+        explanation:
+            'API のバックエンドとして Lambda を使う場合、処理結果をどのような HTTP レスポンスとして返すかを考えます。',
+    },
+    {
+        question:
+            'EventBridge を使って Lambda を定期実行する用途として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '毎日深夜に古い一時データを削除する処理を実行する',
+                isCorrect: true,
+                explanation:
+                    'EventBridge や EventBridge Scheduler（指定時刻や定期スケジュールで処理を実行できる機能）を使うと、決まった時刻や一定間隔で Lambda を起動できます。定期的なメンテナンス処理に向いています。',
+            },
+            {
+                text: 'HTTP API の入口としてリクエストを受け付ける',
+                isCorrect: false,
+                explanation:
+                    'HTTP API の入口には API Gateway などを使います。EventBridge はイベントやスケジュールをきっかけに処理を起動する用途に向いています。',
+            },
+            {
+                text: 'S3 オブジェクトを永続保存するストレージとして使う',
+                isCorrect: false,
+                explanation:
+                    'EventBridge はストレージサービスではありません。S3 がオブジェクトストレージサービスです。',
+            },
+            {
+                text: 'Lambda 関数のソースコードを自動生成する',
+                isCorrect: false,
+                explanation:
+                    'EventBridge は Lambda のソースコード自動生成サービスではありません。',
+            },
+        ],
+        explanation:
+            'スケジュール実行では、Lambda 単体ではなく EventBridge 系のサービスと組み合わせて「いつ実行するか」を決めます。',
+    },
+    {
+        question:
+            'SQS と Lambda を組み合わせる用途として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'キューに入ったメッセージを Lambda で順次処理する',
+                isCorrect: true,
+                explanation:
+                    'SQS（メッセージを一時的にためるキューサービス）と Lambda を組み合わせると、キューに入ったメッセージを Lambda で処理できます。処理を非同期化したい場合に使いやすい構成です。',
+            },
+            {
+                text: 'Lambda 関数のコードを画像形式で保存する',
+                isCorrect: false,
+                explanation:
+                    'SQS はメッセージキューサービスです。Lambda 関数のコードを画像形式で保存するサービスではありません。',
+            },
+            {
+                text: 'HTTP リクエストの入口を公開する',
+                isCorrect: false,
+                explanation:
+                    'HTTP リクエストの入口には API Gateway などを使います。SQS はメッセージをためて後で処理する用途に向いています。',
+            },
+            {
+                text: 'Lambda の実行環境へ SSH 接続する',
+                isCorrect: false,
+                explanation:
+                    'SQS は Lambda 実行環境へ SSH 接続するためのサービスではありません。',
+            },
+        ],
+        explanation:
+            'SQS を挟むと、送信側と処理側を分離しやすくなります。送信側はすぐ処理を終えられ、処理側は後から順番に処理できます。処理が一時的に遅れても、メッセージをキューにためておけます。',
+    },
+    {
+        question:
+            'SQS から Lambda でメッセージ処理する場合の基本的な注意点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '同じメッセージが複数回処理される可能性を考え、処理を冪等にする',
+                isCorrect: true,
+                explanation:
+                    'SQS と Lambda の連携では、エラーや再試行により同じメッセージが複数回処理される可能性があります。冪等性（同じ処理を複数回実行しても、データ重複や不整合が起きにくい性質）を意識します。',
+            },
+            {
+                text: 'SQS を使うと Lambda の実行ロールが不要になる',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数には実行ロールが必要です。SQS から読み取るための権限なども関係します。',
+            },
+            {
+                text: 'SQS を使うと Lambda のタイムアウトが無制限になる',
+                isCorrect: false,
+                explanation:
+                    'SQS から起動しても Lambda のタイムアウトは無制限にはなりません。',
+            },
+            {
+                text: 'SQS のメッセージは必ず 1 回だけ、絶対に重複なく処理される',
+                isCorrect: false,
+                explanation:
+                    'SQS と Lambda の連携では、重複処理の可能性を考慮します。処理側で安全に再実行できる設計が重要です。',
+            },
+        ],
+        explanation:
+            'キュー処理では、失敗時の再試行や重複処理を前提に設計します。これは初級段階でも重要な考え方です。',
+    },
+    {
+        question:
+            'DynamoDB Streams と Lambda を組み合わせる用途として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'DynamoDB テーブルの項目追加や更新をきっかけに、後続処理を実行する',
+                isCorrect: true,
+                explanation:
+                    'DynamoDB Streams は、DynamoDB テーブルの変更履歴をイベントとして扱う仕組みです。項目追加、更新、削除などの変更情報を Lambda に渡し、データ変更をきっかけに後続処理を実行できます。',
+            },
+            {
+                text: 'DynamoDB のテーブル名を Lambda 関数名に自動変更する',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB Streams はテーブル名を変更する機能ではありません。テーブル変更の情報を処理するために使います。',
+            },
+            {
+                text: 'Lambda 関数のメモリ使用量を DynamoDB に自動保存する専用機能',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB Streams は Lambda のメモリ使用量を自動保存する機能ではありません。DynamoDB テーブルの変更履歴を扱います。',
+            },
+            {
+                text: 'HTTP リクエストを受け付ける API の入口を作る',
+                isCorrect: false,
+                explanation:
+                    'HTTP API の入口には API Gateway などを使います。DynamoDB Streams はテーブル変更イベントを扱う仕組みです。',
+            },
+        ],
+        explanation:
+            'DynamoDB Streams と Lambda は、データ変更に連動した処理に向いています。変更履歴ストリームを使った監査ログ作成、集計、別サービスへの通知などが例です。',
+    },
+    {
+        question:
+            'DynamoDB Streams から Lambda を起動する場合の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'イベントソースマッピングを使って、ストリームのレコードを Lambda に渡す',
+                isCorrect: true,
+                explanation:
+                    'DynamoDB Streams と Lambda の連携では、イベントソースマッピングを作成して、ストリームのレコードを Lambda 関数へ渡します。Lambda が変更レコードを処理する形です。',
+            },
+            {
+                text: 'DynamoDB のすべてのテーブルが自動で Lambda を起動する',
+                isCorrect: false,
+                explanation:
+                    'すべての DynamoDB テーブルが自動で Lambda を起動するわけではありません。Streams を有効化し、Lambda との連携を設定します。',
+            },
+            {
+                text: 'Lambda 関数名を table にすると自動で連携される',
+                isCorrect: false,
+                explanation:
+                    '関数名だけで DynamoDB Streams との連携が自動設定されるわけではありません。イベントソースマッピングなどの設定が必要です。',
+            },
+            {
+                text: 'DynamoDB Streams を使うと、Lambda のコードは一切不要になる',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB Streams は変更情報を渡しますが、その後どう処理するかは Lambda 関数のコードで実装します。',
+            },
+        ],
+        explanation:
+            'DynamoDB Streams は、データ変更そのものをイベントとして扱える点が特徴です。',
+    },
+    {
+        question:
+            'Lambda 関数から DynamoDB にデータを書き込みたい場合、必要になるものとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda の実行ロールに DynamoDB への書き込み権限を付与する',
+                isCorrect: true,
+                explanation:
+                    'Lambda 関数から DynamoDB に書き込むには、実行ロール（IAM を使って Lambda 関数へ AWS リソースへのアクセス権限を与える仕組み）に `PutItem`（DynamoDB にデータを書き込む API）など必要な DynamoDB 権限を付与します。',
+            },
+            {
+                text: 'DynamoDB テーブル名を必ず Lambda にする',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB テーブル名を Lambda にする必要はありません。必要なのは、対象テーブルへアクセスするための権限とコードです。',
+            },
+            {
+                text: 'Lambda 関数の説明欄にパスワードを書く',
+                isCorrect: false,
+                explanation:
+                    '説明欄にパスワードを書くのは避けるべきです。DynamoDB へのアクセスは IAM 権限で制御します。',
+            },
+            {
+                text: 'CloudWatch Logs の保存期間を 0 日にする',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs の保存期間は DynamoDB 書き込み権限とは関係ありません。',
+            },
+        ],
+        explanation:
+            'Lambda から他の AWS サービスへアクセスする場合は、コードだけでなく実行ロールの権限も確認します。',
+    },
+    {
+        question:
+            'Lambda 関数から S3 にファイルを保存したい場合の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'コードで S3 へ書き込む処理を実装し、実行ロールに S3 書き込み権限を付与する',
+                isCorrect: true,
+                explanation:
+                    'Lambda から S3 にファイルを保存するには、AWS SDK（AWS サービスをコードから操作するためのライブラリ）などで S3 に書き込む処理を実装し、実行ロールに必要な S3 権限を付与します。',
+            },
+            {
+                text: 'Lambda の戻り値にファイル名を書くだけで、必ず S3 に保存される',
+                isCorrect: false,
+                explanation:
+                    '戻り値にファイル名を書くだけで S3 に自動保存されるわけではありません。S3 へ書き込む処理をコードで実装します。',
+            },
+            {
+                text: 'S3 に保存するには Lambda のメモリを必ず最大にする必要がある',
+                isCorrect: false,
+                explanation:
+                    'S3 への保存に必ず最大メモリが必要なわけではありません。処理内容に応じてメモリ設定を調整します。',
+            },
+            {
+                text: 'S3 に保存するには Lambda 関数名を bucket にする必要がある',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数名を bucket にする必要はありません。S3 へアクセスするためのコードと権限が必要です。',
+            },
+        ],
+        explanation:
+            'Lambda から S3 や DynamoDB へアクセスする場合、「コードで何をするか」と「実行ロールに権限があるか」の両方を確認します。',
+    },
+    {
+        question:
+            'Lambda と他 AWS サービスを連携するときの権限の考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda が他サービスへアクセスする権限と、他サービスが Lambda を呼び出す権限を分けて考える',
+                isCorrect: true,
+                explanation:
+                    'Lambda では、関数が S3 や DynamoDB へアクセスするための実行ロール権限と、S3 や API Gateway などが Lambda を呼び出すための権限を分けて考えます。例えば、Lambda が S3 にファイルを書き込むには Lambda 側の実行ロール権限が必要です。一方、S3 が Lambda を起動するには、S3 側から Lambda を呼び出せる設定も関係します。',
+            },
+            {
+                text: '一度 Lambda 関数を作れば、すべての AWS サービスへ自動で無制限アクセスできる',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数はすべての AWS サービスへ自動で無制限アクセスできるわけではありません。必要な権限を付与します。',
+            },
+            {
+                text: '他サービスと連携する場合、IAM は一切関係しない',
+                isCorrect: false,
+                explanation:
+                    'IAM（Identity and Access Management: AWS の認証・認可を管理する仕組み）は Lambda の権限管理に関係します。',
+            },
+            {
+                text: '権限が不足していても、Lambda は必ず自動で権限を追加する',
+                isCorrect: false,
+                explanation:
+                    'Lambda が不足した権限を必ず自動追加するわけではありません。アクセス拒否エラーが出た場合は、必要な権限を確認します。',
+            },
+        ],
+        explanation:
+            '連携のトラブルでは、「誰が誰を呼び出すのか」「Lambda がどのサービスへアクセスするのか」を分けて確認すると原因を見つけやすくなります。',
+    },
+    {
+        question:
+            '画像アップロード後にサムネイルを作成し、結果を別の S3 バケットへ保存する構成として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '入力用 S3 バケットの作成イベントで Lambda を起動し、Lambda が出力用 S3 バケットへサムネイルを書き込む',
+                isCorrect: true,
+                explanation:
+                    '入力用バケットと出力用バケットを分けると、Lambda が出力したファイルで同じトリガーが再実行されるループを避けやすくなります。Lambda には出力先 S3 への書き込み権限も必要です。',
+            },
+            {
+                text: 'Lambda の `/tmp` にサムネイルを保存すれば、永続的な公開ファイルとして必ず使える',
+                isCorrect: false,
+                explanation:
+                    '`/tmp` は一時領域です。永続的に保存したいサムネイルは S3 などに保存します。',
+            },
+            {
+                text: 'API Gateway を使えば、S3 のアップロードイベント設定は必ず不要になる',
+                isCorrect: false,
+                explanation:
+                    'S3 アップロードをきっかけに処理したい場合は、S3 イベント通知などの設定が必要です。API Gateway は HTTP リクエストの入口として使います。',
+            },
+            {
+                text: 'DynamoDB Streams を使えば、S3 にアップロードされた画像を必ず自動検出できる',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB Streams は DynamoDB テーブルの変更を扱う仕組みです。S3 のオブジェクト作成イベントとは別です。',
+            },
+        ],
+        explanation:
+            'サービス連携では、イベントの発生元、Lambda の処理、出力先、権限、ループ防止をセットで考えます。',
+    },
 ]

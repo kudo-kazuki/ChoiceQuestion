@@ -8,7 +8,7 @@ export const questionSetCounts = {
     '/dns/dns2': 15,
     '/dynamodb/dynamodb1': 14,
     '/dynamodb/dynamodb2': 5,
-    '/lambda/lambda1': 54,
+    '/lambda/lambda1': 67,
     '/lambda/lambda2': 1,
     '/s3/s3_1': 54,
     '/s3/s3_2': 77,
