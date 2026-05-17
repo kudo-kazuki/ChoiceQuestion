@@ -321,4 +321,196 @@ export const testQuestions: Question[] = [
         explanation:
             'ネットワーク条件を使ったS3制御では、インターネット経由、NAT経由、Gateway Endpoint経由、Interface Endpoint（PrivateLink）経由で評価に使う条件やネットワーク上の見え方が変わる点に注意します。Gateway EndpointはPrivateLinkではなく、Interface EndpointはENIを持つ有料のPrivateLink型です。経路制御だけでなく、IAMプリンシパルの最小権限も併用するのが基本です。',
     },
+    {
+        question:
+            '非公開のS3バケットに保存した画像を、利用者にはCloudFront経由でだけ配信したいです。S3のURLへ直接アクセスされることは避けたい場合、最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'S3バケットを通常のS3オリジンとしてCloudFrontに設定し、OACを使ってCloudFrontからのアクセスだけをバケットポリシーで許可する',
+                isCorrect: true,
+                explanation:
+                    'OAC（Origin Access Control：CloudFrontからS3オリジンへのアクセスを制御する仕組み）を使うと、S3バケットを非公開にしたままCloudFrontからのリクエストだけを許可できます。バケットポリシーではCloudFrontサービスプリンシパルをPrincipalにし、aws:SourceArn条件で対象CloudFrontディストリビューションのARNに絞ります。CloudFrontはサービスとしてS3へアクセスするため、利用者本人ではなくCloudFrontサービスプリンシパルを許可する点が重要です。',
+            },
+            {
+                text: 'S3バケットをpublic readにして、CloudFrontのキャッシュ時間を長くする',
+                isCorrect: false,
+                explanation:
+                    'public readにすると、利用者はS3のURLへ直接アクセスできる可能性があります。CloudFront経由だけにしたい要件では、S3は非公開にしてOACなどでCloudFrontからのアクセスだけを許可します。',
+            },
+            {
+                text: 'S3の静的Webサイトホスティングを有効化し、OACを必ず設定する',
+                isCorrect: false,
+                explanation:
+                    'S3静的WebサイトエンドポイントはCloudFrontではカスタムオリジンとして扱います。この構成ではOACやOAIを使えません。非公開S3をCloudFront経由だけで配信したい場合は、Webサイトエンドポイントではなく通常のS3 REST APIエンドポイントをオリジンにします。',
+            },
+            {
+                text: 'S3オブジェクトごとに推測しにくいキー名を付ければ、バケットポリシーは不要である',
+                isCorrect: false,
+                explanation:
+                    '推測しにくいキー名はアクセス制御の代わりになりません。S3直アクセスを防ぐには、バケットを非公開にし、バケットポリシーでCloudFrontからのアクセスだけを明示的に許可します。',
+            },
+        ],
+        explanation:
+            'S3 + CloudFrontの非公開配信では、「S3を公開してCloudFrontも置く」のではなく、「S3は非公開、CloudFrontだけがS3を読める」形にします。CloudFrontを前段に置くだけではS3直アクセスは防げません。OAC設定、バケットポリシー、Block Public Accessを組み合わせて初めて意図した非公開配信になります。現在の新規設計ではOAI（Origin Access Identity）よりOACが推奨され、SSE-KMSや一部の動的リクエストなどにも対応しやすくなります。',
+    },
+    {
+        question:
+            '既存システムではCloudFrontのOAIを使ってS3バケットを非公開配信しています。新しく作る配信基盤ではSSE-KMSで暗号化したS3オブジェクトも扱い、将来はPUTリクエストをCloudFront経由でS3へ送る可能性もあります。最も適切な判断はどれですか?',
+        options: [
+            {
+                text: '新規構成ではOACを採用し、S3バケットポリシーや必要なKMS権限をCloudFrontからのアクセスに合わせて設定する',
+                isCorrect: true,
+                explanation:
+                    'OACはOAIより新しい方式で、CloudFrontからS3へのオリジンリクエストをSigV4（Signature Version 4）で署名できます。すべてのS3リージョン、SSE-KMS、PUTやDELETEなどの動的リクエストに対応しやすい設計です。SSE-KMSを使う場合は、S3バケットポリシーだけでなくKMSキー側の許可も確認します。',
+            },
+            {
+                text: 'OAIはOACより新しい方式なので、SSE-KMSやPUTを扱う新規構成では必ずOAIを選ぶ',
+                isCorrect: false,
+                explanation:
+                    'OAIは従来方式です。既存構成で使われていることはありますが、新規設計ではOACの方が推奨されます。特にSSE-KMSや動的リクエストを考える場合、OAIでは制約や追加対応が問題になりやすいです。',
+            },
+            {
+                text: 'SSE-KMSを使う場合、CloudFrontとS3の間の制御は不要になり、S3をpublic readにしてよい',
+                isCorrect: false,
+                explanation:
+                    'SSE-KMSは暗号化の仕組みであり、公開アクセスを安全にする機能ではありません。S3をpublic readにすると、CloudFrontを経由しないアクセスを許すことになります。アクセス制御と暗号化は別に設計します。',
+            },
+            {
+                text: 'OACを使う場合、S3バケットポリシーは不要で、CloudFrontに設定するだけで自動的にS3直アクセスが遮断される',
+                isCorrect: false,
+                explanation:
+                    'OACを作成してCloudFrontに関連付けるだけでは十分ではありません。S3バケット側で、CloudFrontからのアクセスを許可し、それ以外を許可しないポリシー設計が必要です。',
+            },
+        ],
+        explanation:
+            'OAIを知っていると「S3非公開配信 = OAI」と覚えがちですが、現在の新規設計ではOACを優先します。AWSドキュメント上もOACの利用が推奨されており、OAIは既存構成で残っていることが多い従来方式として扱うと整理しやすいです。ただし既存OAI構成をすぐ壊す必要があるわけではなく、要件追加や更改のタイミングでOACへの移行を検討します。',
+    },
+    {
+        question:
+            'S3に置いた静的サイトをCloudFrontで配信します。index.htmlや404.htmlをS3静的Webサイトホスティングの機能で処理したい一方、S3バケットは完全非公開にしたいという要件があります。この要件の整理として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3静的Webサイトエンドポイントを使う場合はCloudFrontではカスタムオリジンになり、OAC/OAIで非公開S3として保護する構成とは両立しない',
+                isCorrect: true,
+                explanation:
+                    'S3静的Webサイトエンドポイントは、Webサイト機能を使える代わりにCloudFrontからはカスタムオリジンとして扱います。この場合、通常のS3オリジン向けのOACやOAIは使えません。またS3 Webサイトエンドポイント自体はHTTPのみです。非公開S3をCloudFront経由だけで配信したいなら、HTTPSに対応するS3 REST APIエンドポイントをオリジンにしてOACを使う設計を検討します。',
+            },
+            {
+                text: 'S3静的Webサイトエンドポイントを使う場合でも、OACを設定すればバケットを完全非公開にできる',
+                isCorrect: false,
+                explanation:
+                    'S3静的WebサイトエンドポイントはOAC/OAIの対象ではありません。Webサイトエンドポイントを使う場合は、オリジンとしての扱いが通常のS3 REST APIエンドポイントとは異なります。',
+            },
+            {
+                text: 'S3 REST APIエンドポイントを使うと、S3の静的Webサイトホスティングのindex.htmlや404.html機能をそのまま利用できる',
+                isCorrect: false,
+                explanation:
+                    'S3 REST APIエンドポイントはHTTPSに対応し、OACで非公開配信しやすい一方、S3静的WebサイトホスティングのWebサイト機能とは別です。CloudFront側のデフォルトルートオブジェクトやカスタムエラーレスポンスなどで代替設計することがあります。',
+            },
+            {
+                text: 'CloudFrontを使うと、S3のオリジン種別に関係なく必ずS3直アクセスが自動的に禁止される',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontを前段に置くだけでS3直アクセスが自動的に禁止されるわけではありません。通常のS3オリジンならOACとバケットポリシー、Webサイトエンドポイントなら公開範囲や別の制御を考える必要があります。',
+            },
+        ],
+        explanation:
+            'S3の「REST APIエンドポイント」と「Webサイトエンドポイント」は試験でも実務でも混同しやすい点です。非公開配信とHTTPS対応を優先するならREST APIエンドポイント + OAC、S3のWebサイト機能を優先するならWebサイトエンドポイントをカスタムオリジンとして使う、というように要件で選びます。利便性と非公開配信の安全性はトレードオフになります。',
+    },
+    {
+        question:
+            '独自ドメインの静的サイトをHTTPSで配信したいです。コンテンツはS3に置きますが、利用者にはHTTPSでアクセスさせ、証明書管理も適切に行いたい場合、最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'CloudFrontに独自ドメインを設定し、us-east-1のACM証明書を関連付けて、S3をオリジンとして配信する',
+                isCorrect: true,
+                explanation:
+                    'CloudFrontで独自ドメインのHTTPS配信をする場合、CloudFrontに関連付けるACM証明書は米国東部（バージニア北部、us-east-1）で発行またはインポートします。CloudFrontはグローバルサービスであり、ディストリビューション用の証明書はus-east-1で管理する必要があります。S3をオリジンにし、必要に応じてOACで非公開配信にします。',
+            },
+            {
+                text: 'S3静的WebサイトエンドポイントにACM証明書を直接関連付ければ、独自ドメインのHTTPS配信ができる',
+                isCorrect: false,
+                explanation:
+                    'S3静的Webサイトエンドポイント自体にACM証明書を直接関連付けてHTTPS化する構成ではありません。独自ドメインでHTTPS配信したい場合は、CloudFrontを前段に置くのが代表的な設計です。',
+            },
+            {
+                text: 'S3バケット名を独自ドメインと同じにすれば、証明書なしでHTTPS配信できる',
+                isCorrect: false,
+                explanation:
+                    'バケット名を独自ドメインに合わせるだけでは、独自ドメインのHTTPS証明書は用意されません。HTTPSでは証明書とドメイン名の一致が必要です。',
+            },
+            {
+                text: 'CloudFrontではHTTPSを使えないため、S3のHTTPエンドポイントを直接公開する',
+                isCorrect: false,
+                explanation:
+                    'CloudFrontは利用者向けのHTTPS配信に対応しています。S3のHTTPエンドポイントを直接公開すると、HTTPS要件やキャッシュ、WAF連携、S3直アクセス制御などの面で要件を満たしにくくなります。',
+            },
+        ],
+        explanation:
+            'S3単体の静的Webサイトホスティングは手軽ですが、独自ドメインのHTTPS、グローバル配信、WAF連携、キャッシュ制御を考えるとCloudFrontを前段に置く設計が自然です。CloudFrontはグローバルに動作するサービスですが、ACM証明書はus-east-1のものを関連付ける必要があります。このリージョン指定は試験の引っかけになりやすい点です。',
+    },
+    {
+        question:
+            'S3上のJavaScriptファイルを更新しましたが、利用者にはしばらく古い内容が返っています。CloudFrontで長めのTTLを設定している構成です。頻繁に更新される静的ファイルを安定して配信する設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ファイル名にバージョンやハッシュを含めて新しいURLで配信し、必要な場合だけCloudFront Invalidationを使う',
+                isCorrect: true,
+                explanation:
+                    '静的アセットでは app.abc123.js のようにファイル名を変えると、CloudFrontやブラウザに古いファイルが残っていても新しいURLで確実に新バージョンを取得できます。Cache-Controlで長いmax-ageとimmutableを付ける戦略とも相性がよいです。既存URLのキャッシュを早く消したい場合はInvalidationを使います。',
+            },
+            {
+                text: 'S3でオブジェクトを上書きすれば、CloudFrontの全エッジキャッシュは常に即時更新される',
+                isCorrect: false,
+                explanation:
+                    'S3のオブジェクトを更新しても、CloudFrontのエッジキャッシュが即時に消えるわけではありません。TTLが切れるまで古いレスポンスが返る可能性があります。',
+            },
+            {
+                text: 'すべてのオブジェクトにTTL 0を設定すれば、常に最も低コストで高性能な配信になる',
+                isCorrect: false,
+                explanation:
+                    'TTL 0に近づけるとCloudFrontが毎回オリジンへ確認しやすくなり、S3へのリクエスト増加やレイテンシ増加につながります。Cache-ControlヘッダーやCloudFrontのキャッシュポリシーを使い、更新頻度とキャッシュ効率のバランスを取る必要があります。',
+            },
+            {
+                text: 'Invalidationを毎秒実行すれば、コストや運用負荷を気にせず常に最適になる',
+                isCorrect: false,
+                explanation:
+                    'Invalidationは便利ですが、頻繁に大量実行すると運用負荷やコストの要因になります。ビルド時にファイル名を変えるバージョニング戦略の方が、静的アセットでは扱いやすいことが多いです。',
+            },
+        ],
+        explanation:
+            'CloudFrontのキャッシュは性能とコストを改善する一方、S3更新の反映タイミングを考える必要があります。さらに利用者のブラウザキャッシュも影響するため、CloudFrontだけをInvalidationしてもブラウザに古いファイルが残る場合があります。HTMLのように短めTTLが向くもの、JS/CSS/画像のようにファイル名バージョニング、長めTTL、immutableが向くものを分けて設計します。',
+    },
+    {
+        question:
+            '有料会員だけに動画ファイルを一定時間だけ配信したいです。ファイルは非公開S3バケットに置き、世界中の利用者へ低遅延で配信したい場合、最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'S3をOAC付きCloudFrontのオリジンにし、CloudFront signed URLまたはsigned cookiesで視聴権限を制御する',
+                isCorrect: true,
+                explanation:
+                    'CloudFront signed URLやsigned cookiesを使うと、CloudFront経由のコンテンツ配信に有効期限や条件を付けられます。S3はOACで非公開にし、利用者はS3ではなくCloudFrontから取得します。単一ファイルならsigned URL、複数ファイルをまとめて許可したい場合はsigned cookiesが候補になります。HLSのように複数セグメントを読む動画配信ではsigned cookiesが扱いやすいことがあります。',
+            },
+            {
+                text: 'S3 presigned URLだけを利用者に配布し、CloudFrontは使わない',
+                isCorrect: false,
+                explanation:
+                    'S3 presigned URLはS3オブジェクトへの一時アクセスには有効ですが、利用者はCloudFrontではなくS3へ直接アクセスします。世界中への低遅延配信、CloudFrontキャッシュ、S3直アクセス遮断を重視するならCloudFrontの署名付きURLやsigned cookiesを検討します。',
+            },
+            {
+                text: 'S3バケットをpublic readにして、アプリ側で会員かどうかを画面表示だけで制御する',
+                isCorrect: false,
+                explanation:
+                    'バケットを公開すると、URLを知っている人がアプリを経由せずにアクセスできる可能性があります。有料コンテンツでは、配信レイヤーで署名付きURLや署名付きCookieを使ってアクセス制御します。',
+            },
+            {
+                text: 'CloudFront signed URLを使えば、S3バケットはpublic readにしておく必要がある',
+                isCorrect: false,
+                explanation:
+                    'CloudFront signed URLはCloudFrontへのアクセスを制御する仕組みです。S3オリジンはOACなどで非公開にし、CloudFrontからだけ読めるようにするのが基本です。',
+            },
+        ],
+        explanation:
+            'S3 presigned URLとCloudFront signed URLはどちらも一時的なアクセス制御に使えますが、どこへアクセスするURLかが違います。S3 presigned URLはS3へ直接アクセスするURLです。CloudFront signed URLはCloudFront経由でアクセスするURLです。S3へ直接アップロード・ダウンロードさせたいならS3 presigned URL、CloudFront経由で低遅延に配信しつつ利用者制限したいならCloudFront signed URLやsigned cookiesを使います。',
+    },
 ]
