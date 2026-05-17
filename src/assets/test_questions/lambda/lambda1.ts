@@ -2561,4 +2561,388 @@ export const testQuestions: Question[] = [
         explanation:
             'シナリオごとに「Lambda がどのサービスへ、どの操作をするか」を書き出すと、必要な権限を整理しやすくなります。',
     },
+    {
+        question:
+            'Lambda 関数が失敗したとき、まず確認する情報として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudWatch Logs に出力されたエラーメッセージや処理の進み具合',
+                isCorrect: true,
+                explanation:
+                    'Lambda のトラブルシューティングでは、まず CloudWatch Logs（AWS のログ監視・保存サービス）でエラー内容や処理の進み具合を確認します。どこまで処理が進み、どこで失敗したかを追うのが基本です。',
+            },
+            {
+                text: '関数名の文字数だけ',
+                isCorrect: false,
+                explanation:
+                    '関数名の文字数だけを見ても、失敗原因は分かりません。ログやエラー内容を確認します。',
+            },
+            {
+                text: 'S3 バケット名が Lambda と完全一致しているかだけ',
+                isCorrect: false,
+                explanation:
+                    'S3 バケット名と Lambda 関数名の一致は、一般的な失敗原因の確認ポイントではありません。',
+            },
+            {
+                text: '説明欄が空欄かどうかだけ',
+                isCorrect: false,
+                explanation:
+                    '説明欄は運用上の分かりやすさには役立ちますが、失敗原因の特定にはログや実行結果の確認が重要です。',
+            },
+        ],
+        explanation:
+            'ログには、エラーメッセージ、処理中に出力した情報、実行時間やメモリ使用量の手がかりが含まれます。',
+    },
+    {
+        question:
+            'CloudWatch Logs を使った Lambda の調査として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '関数のログを確認し、エラー行、リクエスト ID、処理時間などを手がかりに原因を絞る',
+                isCorrect: true,
+                explanation:
+                    'CloudWatch Logs では、エラー行や自分で出力したログ、リクエスト ID、CloudWatch Logs に自動出力される REPORT 行（実行時間やメモリ使用量などの実行結果情報）などを確認できます。これらを手がかりに原因を絞ります。',
+            },
+            {
+                text: 'CloudWatch Logs を開けば、コードのバグが必ず自動修正される',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs はログ確認のためのサービスです。コードの自動修正は行いません。',
+            },
+            {
+                text: 'ログを見るには必ず EC2 に SSH ログインする',
+                isCorrect: false,
+                explanation:
+                    'Lambda のログは Lambda コンソールや CloudWatch コンソール、AWS CLI などから確認できます。EC2 への SSH ログインは不要です。',
+            },
+            {
+                text: 'CloudWatch Logs は S3 バケットのフォルダ名を変更するための機能である',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs はログの保存・確認に使うサービスです。S3 のフォルダ名変更機能ではありません。',
+            },
+        ],
+        explanation:
+            '障害調査では、ログに出す情報も重要です。処理開始、外部サービス呼び出し前後、エラー時の情報を残すと原因を追いやすくなります。',
+    },
+    {
+        question:
+            'Lambda 関数がタイムアウトした場合、最初に確認する観点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '処理がどこで時間を使っているか、タイムアウト設定が処理内容に対して短すぎないかを確認する',
+                isCorrect: true,
+                explanation:
+                    'タイムアウトは、関数が最大実行時間を超えたときに発生します。ログで処理の進み具合を確認し、外部 API 呼び出し（外部サービスへの通信）、S3 からの大きなファイル取得、重い計算などで時間を使っていないかを見ます。',
+            },
+            {
+                text: '関数名を短くすれば必ずタイムアウトしなくなる',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さは通常、タイムアウトの原因ではありません。処理時間や外部サービスの応答を確認します。',
+            },
+            {
+                text: 'CloudWatch Logs を削除すればタイムアウトしなくなる',
+                isCorrect: false,
+                explanation:
+                    'ログを削除してもタイムアウトの根本原因は解決しません。処理内容やタイムアウト設定を確認します。',
+            },
+            {
+                text: 'タイムアウトは Lambda では発生しないため確認不要',
+                isCorrect: false,
+                explanation:
+                    'Lambda にはタイムアウト設定があり、設定時間を超えると実行が停止されます。',
+            },
+        ],
+        explanation:
+            'タイムアウト時は、単に設定値を大きくするだけでなく、処理を分割できないか、外部サービス呼び出しが遅くないかも確認します。',
+    },
+    {
+        question:
+            'Lambda 関数から S3 にアクセスしたとき AccessDenied が出た場合、最も適切な確認はどれですか?',
+        options: [
+            {
+                text: '実行ロールに対象 S3 バケットへの必要な操作権限があるか確認する',
+                isCorrect: true,
+                explanation:
+                    'Lambda から S3 へアクセスする場合は、実行ロールに対象バケットへの必要な権限が必要です。読み取りなら `GetObject`（S3 オブジェクトを読み取る API）、書き込みなら `PutObject`（S3 にファイルを書き込む API）など、操作に応じた権限を確認します。',
+            },
+            {
+                text: 'Lambda 関数の説明欄を長くする',
+                isCorrect: false,
+                explanation:
+                    '説明欄を長くしても S3 へのアクセス権限は付与されません。',
+            },
+            {
+                text: 'テストイベントを空にすれば必ず解決する',
+                isCorrect: false,
+                explanation:
+                    'テストイベントを空にしても権限不足は解決しません。実行ロールや対象リソースを確認します。',
+            },
+            {
+                text: 'メモリ設定を最大にすれば権限不足は自動解消される',
+                isCorrect: false,
+                explanation:
+                    'メモリ設定と IAM 権限は別です。AccessDenied は権限設定を確認します。',
+            },
+        ],
+        explanation:
+            '権限不足の調査では、「誰が」「どのリソースに」「どの操作をしようとしているか」を整理します。',
+    },
+    {
+        question:
+            'S3 イベントを設定したのに Lambda が起動しない場合、確認する観点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3 側のイベント通知設定と、S3 が Lambda を呼び出せる権限を確認する',
+                isCorrect: true,
+                explanation:
+                    'S3 から Lambda を起動するには、S3 のイベント通知設定と、S3 が Lambda を呼び出せる権限が必要です。これは Lambda の実行ロールとは別で、S3 から Lambda を呼び出せる許可設定を確認します。',
+            },
+            {
+                text: 'Lambda のメモリを最大にすれば必ず S3 から起動する',
+                isCorrect: false,
+                explanation:
+                    'メモリ設定を最大にしても、S3 のイベント通知や呼び出し権限が正しくなければ起動しません。',
+            },
+            {
+                text: 'DynamoDB テーブルを作成すれば S3 イベントが自動設定される',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB テーブル作成で S3 イベント通知が自動設定されるわけではありません。',
+            },
+            {
+                text: 'Lambda の環境変数をすべて削除する',
+                isCorrect: false,
+                explanation:
+                    '環境変数削除は S3 イベント通知の基本的な確認ポイントではありません。',
+            },
+        ],
+        explanation:
+            '「Lambda が外へアクセスする権限」と「外部サービスが Lambda を呼び出す権限」を分けて確認します。',
+    },
+    {
+        question:
+            'Lambda のハンドラー設定ミスが疑われる状況として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'デプロイはできたが、実行時に処理の入口となる関数が見つからないエラーになる',
+                isCorrect: true,
+                explanation:
+                    'ハンドラー設定は、Lambda が最初に呼び出す関数を指定します。ファイル名や関数名の指定がコードと合っていないと、実行時に入口を見つけられずエラーになります。',
+            },
+            {
+                text: 'S3 バケット名が短いため必ず実行できない',
+                isCorrect: false,
+                explanation:
+                    'S3 バケット名の長さだけでハンドラー設定ミスとは判断できません。',
+            },
+            {
+                text: 'CloudWatch Logs の保持期間が 1 年だから必ず失敗する',
+                isCorrect: false,
+                explanation:
+                    'ログ保持期間はハンドラー設定ミスとは別の設定です。',
+            },
+            {
+                text: 'DynamoDB テーブルにデータが 1 件以上あるから必ず失敗する',
+                isCorrect: false,
+                explanation:
+                    'DynamoDB のデータ件数はハンドラー設定ミスの直接原因ではありません。',
+            },
+        ],
+        explanation:
+            'ハンドラー設定ミスは、コードの配置、ファイル名、エクスポート名、Lambda 側のハンドラー設定を照らし合わせて確認します。',
+    },
+    {
+        question:
+            'Lambda 関数で環境変数 `TABLE_NAME` を使っているのに KeyError や undefined のようなエラーが出る場合、まず確認することはどれですか?',
+        options: [
+            {
+                text: 'Lambda の環境変数に `TABLE_NAME` が設定されているか、名前の大文字小文字が一致しているかを確認する',
+                isCorrect: true,
+                explanation:
+                    '環境変数の設定漏れや名前の不一致はよくある原因です。言語によってエラー名は異なりますが、環境変数が取得できていない可能性があります。`TABLE_NAME` と `table_name` のように大文字小文字が違うだけでも、コードから参照できない場合があります。',
+            },
+            {
+                text: 'Lambda 関数名を TABLE_NAME に変更する',
+                isCorrect: false,
+                explanation:
+                    '関数名を変更しても、環境変数 `TABLE_NAME` が自動設定されるわけではありません。',
+            },
+            {
+                text: 'CloudWatch Logs を削除すれば環境変数が復元される',
+                isCorrect: false,
+                explanation:
+                    'ログを削除しても環境変数は復元されません。Lambda の設定を確認します。',
+            },
+            {
+                text: 'S3 バケットを新規作成すれば環境変数が自動追加される',
+                isCorrect: false,
+                explanation:
+                    'S3 バケット作成で Lambda の環境変数が自動追加されるわけではありません。',
+            },
+        ],
+        explanation:
+            '環境変数のトラブルでは、設定漏れ、名前のスペルミス、大文字小文字、期待する環境にデプロイされているかを確認します。',
+    },
+    {
+        question:
+            '本番環境の Lambda が開発用 DynamoDB テーブルを参照してしまう場合、疑うべき設定として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '環境変数に設定したテーブル名が本番用ではなく開発用になっていないか',
+                isCorrect: true,
+                explanation:
+                    '環境変数でテーブル名を切り替えている場合、本番環境に開発用の値が入っていると誤ったテーブルを参照します。環境ごとの設定値を確認します。',
+            },
+            {
+                text: 'Lambda 関数の説明欄が短すぎないか',
+                isCorrect: false,
+                explanation:
+                    '説明欄の長さは、参照先 DynamoDB テーブルの切り替えとは通常関係ありません。',
+            },
+            {
+                text: 'CloudWatch Logs のログ保持期間が長すぎないか',
+                isCorrect: false,
+                explanation:
+                    'ログ保持期間は参照先テーブル名の設定とは別です。',
+            },
+            {
+                text: 'SQS キューが存在するかどうか',
+                isCorrect: false,
+                explanation:
+                    'このシナリオでは、まず Lambda が参照しているテーブル名の設定を確認します。',
+            },
+        ],
+        explanation:
+            '環境変数は環境ごとの設定切り替えに便利ですが、値の入れ間違いは実務上よくあるトラブルです。',
+    },
+    {
+        question:
+            'テストイベントを使ったトラブルシューティングとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '実際のイベントに近い入力データを用意し、関数が期待どおり処理できるか確認する',
+                isCorrect: true,
+                explanation:
+                    'テストイベントでは、S3 イベントや API リクエストに近い JSON（キーと値で構成されたデータ形式）を用意して、関数の動作を確認します。実運用に近い入力ほど、問題を見つけやすくなります。',
+            },
+            {
+                text: 'テストイベントは常に空 JSON にすれば十分である',
+                isCorrect: false,
+                explanation:
+                    '空 JSON では、実際のイベントに含まれるバケット名、オブジェクトキー、リクエスト本文などを確認できません。実際に近い形を用意します。',
+            },
+            {
+                text: 'テストイベントを作ると、IAM 権限が自動で全許可になる',
+                isCorrect: false,
+                explanation:
+                    'テストイベントを作っても IAM 権限が自動で全許可になるわけではありません。権限は実行ロールなどで管理します。',
+            },
+            {
+                text: 'テストイベントを使うと、CloudWatch Logs は確認できなくなる',
+                isCorrect: false,
+                explanation:
+                    'テストイベントで実行した場合も、ログは CloudWatch Logs などで確認できます。',
+            },
+        ],
+        explanation:
+            'テストイベントは、関数ロジックを小さく確認するための有効な手段です。入力データの形が実際と違うと、見逃す問題もあります。',
+    },
+    {
+        question:
+            'Lambda のテストイベントで S3 イベントを再現したい場合、含める情報として自然なものはどれですか?',
+        options: [
+            {
+                text: '対象のバケット名とオブジェクトキー',
+                isCorrect: true,
+                explanation:
+                    'S3 イベントを再現するなら、どのバケットのどのオブジェクトに対するイベントかを表す情報が重要です。オブジェクトキーは S3 内でのファイル名やパスのような識別子です。',
+            },
+            {
+                text: 'Lambda 関数へ SSH ログインするためのパスワード',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数へ SSH ログインする使い方はしません。テストイベントにも SSH パスワードを入れるべきではありません。',
+            },
+            {
+                text: 'AWS アカウントのルートユーザーパスワード',
+                isCorrect: false,
+                explanation:
+                    'ルートユーザーパスワードをテストイベントに含めてはいけません。機密情報を不用意に入れないようにします。',
+            },
+            {
+                text: 'CloudWatch Logs の保存期間だけ',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントの再現には、バケット名やオブジェクトキーなど、実際のイベントに近い情報が必要です。',
+            },
+        ],
+        explanation:
+            'イベントの形が実際と違うと、コードが正しく動くか判断しにくくなります。AWS サービスごとのイベント形式を意識します。',
+    },
+    {
+        question:
+            '「ローカルでは動いたが Lambda では失敗する」場合の初歩的な確認として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda 上のログ、環境変数、実行ロール、ランタイムやアーキテクチャの違いを確認する',
+                isCorrect: true,
+                explanation:
+                    'ローカル環境と Lambda 実行環境では、環境変数、権限、ランタイム、CPU アーキテクチャ、ファイル配置などが異なることがあります。CloudWatch Logs を見ながら差分を確認します。',
+            },
+            {
+                text: 'Lambda は必ずローカルと完全に同じ環境なので確認不要',
+                isCorrect: false,
+                explanation:
+                    'Lambda とローカル環境は完全に同じとは限りません。環境差分を確認することが重要です。',
+            },
+            {
+                text: '関数名を長くすれば必ず動く',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さでローカルとの差分は解決しません。',
+            },
+            {
+                text: 'S3 バケットを削除すれば原因が必ず分かる',
+                isCorrect: false,
+                explanation:
+                    '不要な削除は避けるべきです。まずログや設定を確認します。',
+            },
+        ],
+        explanation:
+            'Lambda の基本的なトラブルシューティングでは、ログ、入力イベント、環境変数、権限、実行環境の差分を順に確認します。',
+    },
+    {
+        question:
+            'Lambda のトラブルシューティングで、ログに出すと役立つ情報として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '処理開始、主要な分岐、外部サービス呼び出し前後、エラー内容など',
+                isCorrect: true,
+                explanation:
+                    'ログには、処理開始、重要な入力の一部、主要な分岐、外部サービス呼び出し前後、エラー内容などを出すと調査しやすくなります。ただし、パスワードや API キーなどの機密情報は出さないようにします。',
+            },
+            {
+                text: 'AWS アカウントのルートユーザーパスワード',
+                isCorrect: false,
+                explanation:
+                    'パスワードなどの機密情報をログに出してはいけません。',
+            },
+            {
+                text: 'すべてのユーザーの個人情報を無条件で出力する',
+                isCorrect: false,
+                explanation:
+                    '個人情報や機密情報を不用意にログへ出すのは避けるべきです。必要最小限の情報にします。',
+            },
+            {
+                text: 'ログは一切出さない方が必ず調査しやすい',
+                isCorrect: false,
+                explanation:
+                    'ログがないと、どこで失敗したか分かりにくくなります。必要な範囲で適切にログを出します。',
+            },
+        ],
+        explanation:
+            'ログは多ければよいわけではありません。調査に必要な情報を、機密情報を避けて出すことが大切です。',
+    },
 ]
