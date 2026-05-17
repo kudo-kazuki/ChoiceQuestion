@@ -1281,4 +1281,196 @@ export const testQuestions: Question[] = [
         explanation:
             'S3性能問題では、S3単体だけを見ると原因を見誤ることがあります。SSE-KMS、CloudFrontキャッシュ、VPC Endpoint、NAT Gateway、クライアントの接続数、リトライ設定、EC2のネットワーク帯域など、周辺要素もボトルネックになります。特にKMSは高頻度S3ワークロードで見落とされやすい確認ポイントです。SSE-S3とSSE-KMSでは、暗号化の管理責任だけでなく性能・クォータ面の考慮も変わります。',
     },
+    {
+        question:
+            'S3に画像がアップロードされたら、サムネイル生成だけをすぐ実行したいです。処理は軽く、失敗時の再試行はLambda側の標準的な非同期実行の範囲で十分です。最もシンプルで適切な構成はどれですか?',
+        options: [
+            {
+                text: 'S3 Event NotificationsからLambdaを直接呼び出し、対象prefixだけをイベント条件にする',
+                isCorrect: true,
+                explanation:
+                    '単一の軽い後続処理であれば、S3 Event NotificationsからLambdaを直接非同期呼び出しする構成がシンプルです。prefixや.jpg、.pngなどのsuffixフィルターで入力ファイルだけを対象にし、出力先prefixを分けることで不要な起動や再帰実行ループを避けます。',
+            },
+            {
+                text: '必ずSQSとSNSとEventBridgeをすべて挟まないと、S3イベントからLambdaは起動できない',
+                isCorrect: false,
+                explanation:
+                    'S3 Event NotificationsはLambdaを直接宛先にできます。SQSやSNS、EventBridgeは、バッファリング、ファンアウト、ルーティング、リトライ制御などが必要な場合に検討します。',
+            },
+            {
+                text: 'Lambdaの出力サムネイルを同じ入力prefixに保存し、すべてのObjectCreatedイベントを対象にする',
+                isCorrect: false,
+                explanation:
+                    '同じbucket/prefixに出力し、同じイベント条件で再度Lambdaが起動すると、Lambdaが自分の出力で再び起動する再帰実行ループを起こす可能性があります。入力prefixと出力prefixを分ける、別バケットに出す、suffix条件を使うなどの対策が必要です。',
+            },
+            {
+                text: 'S3 Inventoryを毎日出力し、それを待ってLambdaを実行する',
+                isCorrect: false,
+                explanation:
+                    'S3 Inventoryは定期的なオブジェクト一覧の出力に向く機能で、アップロード直後のイベント処理には向きません。即時処理にはS3 Event NotificationsやEventBridgeを使います。',
+            },
+        ],
+        explanation:
+            'S3イベント処理では、要件が単純ならLambda直呼びが最も小さく済みます。ただし、Lambda直呼びはバースト吸収や下流処理量の制御が弱くなりがちです。処理時間が長い、失敗時に確実に再処理したい、処理量を平準化したい、複数処理へ配りたい場合は、SQS、SNS、EventBridgeを組み合わせる設計に変わります。Lambdaが起動しない場合は、Lambdaのリソースベースポリシー、prefix/suffixフィルター、イベント種別を確認します。',
+    },
+    {
+        question:
+            'S3に大量のログファイルが短時間にアップロードされます。各ファイルを後続処理で解析しますが、Lambdaへ直接イベントを流すと一時的なバーストで処理が詰まり、失敗時の再処理も管理しづらいです。最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'S3 Event Notificationsの宛先をSQSキューにし、LambdaはSQSをポーリングして処理し、DLQも設計する',
+                isCorrect: true,
+                explanation:
+                    'SQSを挟むと、S3イベントをキューに蓄積して後続処理のペースを制御できます。LambdaはSQSイベントソースマッピングで処理でき、同時実行数やバッチサイズで処理量を調整しやすくなります。失敗時の再試行、可視性タイムアウト、DLQ（Dead Letter Queue：処理不能メッセージの退避先）も設計しやすくなります。',
+            },
+            {
+                text: 'S3 Event NotificationsからLambdaを直接呼び出せば、どれだけバーストしても必ず順序通り1件ずつ処理される',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsは順序保証を提供しません。Lambda直呼びはシンプルですが、バースト吸収や処理ペース制御、失敗メッセージの退避を細かく設計したい場合はSQSを挟む方が適しています。',
+            },
+            {
+                text: 'S3バケットをpublic readにすれば、Lambdaのバースト処理問題は解消する',
+                isCorrect: false,
+                explanation:
+                    '公開設定はイベント処理のバースト吸収や再試行制御とは関係ありません。不要な公開はセキュリティリスクになります。',
+            },
+            {
+                text: 'SQSを使うとメッセージが保存されないため、バースト吸収には使えない',
+                isCorrect: false,
+                explanation:
+                    'SQSはメッセージを一定期間保持するキューサービスで、バースト吸収や非同期処理のデカップリングに向きます。コンシューマー側の処理能力に合わせて処理できます。',
+            },
+        ],
+        explanation:
+            'SQSは「S3イベントを何で受けるか」の代表的な答えです。処理量が急増する、下流の処理速度を制御したい、失敗イベントをDLQへ逃がしたい、複数ワーカーで水平スケールしたい場合に有効です。Visibility TimeoutはLambdaの最大処理時間より短すぎると、処理中メッセージが再表示され重複処理につながります。失敗レコードだけを返すpartial batch responseも検討できます。ただしSQS標準キューでは重複や順序入れ替わりを前提に、処理を冪等にします。',
+    },
+    {
+        question:
+            'S3にファイルがアップロードされたら、サムネイル生成、メタデータ抽出、監査ログ記録の3つの独立した処理をそれぞれ起動したいです。各処理は互いに依存せず、後から処理を追加する可能性もあります。最も適切な構成はどれですか?',
+        options: [
+            {
+                text: 'S3イベントをEventBridgeへ送信し、EventBridgeルールで各処理のLambdaやSQSへルーティングする',
+                isCorrect: true,
+                explanation:
+                    'EventBridgeを使うと、S3から送られたイベントをルールで複数ターゲットへ振り分けられます。条件に応じたルーティングや後からのターゲット追加がしやすく、複数の独立処理を疎結合にできます。この問題では「後から処理を追加する可能性」と「条件分岐」があるため、単純なPub/SubよりEventBridgeが自然です。',
+            },
+            {
+                text: 'S3 Event Notificationsでは1つの通知設定に複数の宛先を同時指定できるため、1設定だけで3つのLambdaを直接指定する',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsでは、1つのイベント通知設定で指定できる宛先は1つです。複数処理へ配る場合は、複数の通知設定、SNS、EventBridgeなどを検討します。条件の重複にも注意が必要です。',
+            },
+            {
+                text: 'サムネイル生成Lambdaの最後で、他の2つのLambdaを必ず同期呼び出しする',
+                isCorrect: false,
+                explanation:
+                    '処理が独立しているなら、1つのLambdaに後続処理の起動責務を集めると結合が強くなります。失敗時の切り分けや処理追加も難しくなります。イベントバスやPub/Subで疎結合にする方が自然です。',
+            },
+            {
+                text: 'S3のバケットポリシーで3つのLambdaをPrincipalに指定すれば、自動的にファンアウトされる',
+                isCorrect: false,
+                explanation:
+                    'バケットポリシーはアクセス制御の仕組みであり、イベントを複数処理へ配信する機能ではありません。イベント配信にはS3 Event Notifications、SNS、SQS、EventBridgeなどを使います。',
+            },
+        ],
+        explanation:
+            'ファンアウト設計では、SNSとEventBridgeが候補になります。SNSは単純なPub/Subで複数購読者へ配信する用途に強く、SNSから複数SQSへ配れば各下流が独立に処理できます。EventBridgeはイベント内容に基づくルール、AWSサービス連携、外部SaaSやAPI Destination、将来の拡張に向きます。単に「複数処理へ流す」だけでなく、フィルタリング、運用、再試行、ターゲットの種類で選びます。',
+    },
+    {
+        question:
+            'S3のObjectCreatedイベントをSQS FIFOキューで受け、同じオブジェクトキー単位で順序を保って処理したいです。S3 Event Notificationsの宛先にSQS FIFOキューを直接指定しようとしました。最も適切な説明はどれですか?',
+        options: [
+            {
+                text: 'S3 Event NotificationsはSQS FIFOキューを直接宛先にできないため、EventBridgeを経由してSQS FIFOへ送る構成を検討する',
+                isCorrect: true,
+                explanation:
+                    'S3 Event Notificationsの宛先としてSQS Standardキューは使えますが、SQS FIFOキューは直接サポートされません。S3イベントをSQS FIFOキューへ送りたい場合は、EventBridgeを経由する構成を検討します。ただしEventBridge経由でも、MessageGroupIdや重複排除IDをどう設計するかを考える必要があります。',
+            },
+            {
+                text: 'S3 Event NotificationsからSQS FIFOキューへ直接送れるため、EventBridgeは不要である',
+                isCorrect: false,
+                explanation:
+                    'S3 Event NotificationsはSQS FIFOキューを直接宛先にできません。FIFOキューを使いたい場合はEventBridgeなど別の経路を考えます。',
+            },
+            {
+                text: 'S3 Event Notificationsはすべてのイベントを厳密に順序保証するため、FIFOキュー自体が不要である',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsは少なくとも1回配信で、イベント発生順に到着する保証はありません。順序が重要な処理では、キュー設計やアプリケーション側の整合性管理が必要です。',
+            },
+            {
+                text: 'SQS FIFOキューを使えば、S3からの重複イベントが完全に発生しなくなる',
+                isCorrect: false,
+                explanation:
+                    'FIFOキューには重複排除機能がありますが、設計次第です。S3イベント自体は重複する可能性があり、FIFOを使ってもアプリケーション側の冪等性が不要になるわけではありません。',
+            },
+        ],
+        explanation:
+            'S3イベントで順序や重複排除を強く意識する場合、S3 Event Notificationsの性質をそのまま信じるのではなく、EventBridge、SQS FIFO、MessageGroupId、重複排除ID、処理済み記録などを組み合わせて設計します。',
+    },
+    {
+        question:
+            'S3イベントを使って注文ファイルを処理しています。まれに同じオブジェクトに対するイベントが重複し、処理結果が二重登録されることがあります。最も適切なアプリケーション設計はどれですか?',
+        options: [
+            {
+                text: 'S3イベントはat-least-once配信で重複や順序入れ替わりがあり得るため、オブジェクトキーやversionId、ETagなどを使って冪等に処理する',
+                isCorrect: true,
+                explanation:
+                    'S3 Event Notificationsは少なくとも1回配信されますが、重複イベントが発生する場合があり、イベント順序も保証されません。処理済みIDをDynamoDBなどに条件付き書き込みで記録する、同じキーとversionIdの処理を二重実行しない、非バージョニングバケットではETagやsequencerなども使って判定する、出力を上書き安全にするなど、冪等性（同じ処理を複数回実行しても結果が壊れない性質）を設計します。',
+            },
+            {
+                text: 'S3 Event Notificationsはexactly-once配信なので、二重登録はアプリケーションでは考慮しなくてよい',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsはexactly-onceではありません。重複や順序入れ替わりを前提にアプリケーションを設計する必要があります。',
+            },
+            {
+                text: 'Lambdaのメモリを増やせば、S3イベントの重複は発生しなくなる',
+                isCorrect: false,
+                explanation:
+                    'Lambdaのメモリ設定は処理性能に影響しますが、S3イベントの配信保証をexactly-onceに変えるものではありません。重複対策はアプリケーションロジックやキュー設計で行います。',
+            },
+            {
+                text: '重複イベントが嫌な場合は、S3バケットをpublic readにすればよい',
+                isCorrect: false,
+                explanation:
+                    '公開設定はイベント配信の重複対策ではありません。不要な公開は情報漏えいリスクを増やします。',
+            },
+        ],
+        explanation:
+            'イベント駆動では「イベントが1回だけ、順番通りに届く」と仮定しないことが重要です。S3イベント、SQS標準キュー、EventBridgeなどはat-least-onceを前提にし、処理済み管理、条件付き書き込み、ユニークキー、リトライ可能な出力設計で冪等性を確保します。ETagはMultipart Uploadや暗号化条件によって単純なMD5とは限らないため、唯一の判断材料にしすぎない点にも注意します。',
+    },
+    {
+        question:
+            'S3アップロード後の処理で、複数の下流システムへ通知したいです。一部は人向け通知、一部はキュー処理、一部は後から追加される外部HTTPエンドポイントです。SNS、SQS、EventBridgeの使い分けとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'SQSはバッファリングとワーカー処理、SNSはPub/Sub通知、EventBridgeはイベントルールによる柔軟なルーティングやAWSサービス連携に向く',
+                isCorrect: true,
+                explanation:
+                    'SQSはコンシューマーがポーリングするキューで、通知というより処理の平準化、バッファリング、再試行に向きます。SNSはPub/Subで複数購読者へプッシュ配信する通知に向きます。EventBridgeはイベントバスとルールで、イベント内容に応じたルーティング、AWSサービスや外部SaaS連携、API Destination、後からの拡張に向きます。',
+            },
+            {
+                text: 'SQS、SNS、EventBridgeは完全に同じ機能なので、どれを選んでも設計上の違いはない',
+                isCorrect: false,
+                explanation:
+                    '3つはすべて疎結合化に使えますが、通信モデル、保持、フィルタリング、配信先、順序、再試行、運用方法が異なります。要件に応じて選びます。',
+            },
+            {
+                text: 'SNSはメッセージを長期間キューに保持して、ワーカーが好きなタイミングでポーリングするためのサービスである',
+                isCorrect: false,
+                explanation:
+                    'ワーカーがポーリングして処理するキューはSQSです。SNSはPub/Subの通知サービスで、購読者へプッシュ配信します。必要ならSNSからSQSへファンアウトして、各処理が自分のキューで処理できます。',
+            },
+            {
+                text: 'EventBridgeを使う場合、イベント内容に基づくルールやターゲット追加はできない',
+                isCorrect: false,
+                explanation:
+                    'EventBridgeはイベントパターンに基づいてルールを定義し、複数のAWSサービスやHTTPエンドポイントなどへルーティングできます。後から処理を追加しやすい点が強みです。',
+            },
+        ],
+        explanation:
+            'S3イベント連携では「何で受けるか」を目的で分けます。シンプルさならLambda直呼び、バースト吸収ならSQS、単純ファンアウトならSNS、条件分岐や拡張性ならEventBridge、順序制御ならFIFOとアプリケーション設計が候補です。実務ではSNSから複数SQSへ配るなど、組み合わせることも多いです。',
+    },
 ]
