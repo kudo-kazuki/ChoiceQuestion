@@ -513,4 +513,196 @@ export const testQuestions: Question[] = [
         explanation:
             'S3 presigned URLとCloudFront signed URLはどちらも一時的なアクセス制御に使えますが、どこへアクセスするURLかが違います。S3 presigned URLはS3へ直接アクセスするURLです。CloudFront signed URLはCloudFront経由でアクセスするURLです。S3へ直接アップロード・ダウンロードさせたいならS3 presigned URL、CloudFront経由で低遅延に配信しつつ利用者制限したいならCloudFront signed URLやsigned cookiesを使います。',
     },
+    {
+        question:
+            '過去の契約書PDFをS3に長期アーカイブ用途で保存します。アクセス頻度は年に数回ですが、問い合わせ対応では数秒以内に取得できる必要があります。可用性も複数AZ相当を維持しつつ、保存コストも抑えたい場合、最も適切なストレージクラスはどれですか?',
+        options: [
+            {
+                text: 'S3 Glacier Instant Retrieval',
+                isCorrect: true,
+                explanation:
+                    'S3 Glacier Instant Retrievalは、ほとんどアクセスされない長期保存データで、ミリ秒単位の取得が必要な場合に向きます。複数AZに保存され、アーカイブ復元待ちなしでGETできます。最低保存期間は90日で、取り出し料金や128KBの最小オブジェクトサイズも考慮します。Standard-IAもミリ秒取得できますが、Glacier Instant Retrievalは四半期に1回程度のアクセスで長期保存するデータ向けに、より低い保存コストを狙う選択肢です。',
+            },
+            {
+                text: 'S3 Glacier Deep Archive',
+                isCorrect: false,
+                explanation:
+                    'S3 Glacier Deep Archiveは非常に低コストですが、取り出しに通常数時間から最大48時間程度かかる前提のアーカイブ向けです。数秒以内に取得する要件には合いません。',
+            },
+            {
+                text: 'S3 One Zone-IA',
+                isCorrect: false,
+                explanation:
+                    'S3 One Zone-IAは1つのアベイラビリティゾーン内に保存されるため、複数AZ相当の可用性を維持したい要件には合いません。再作成可能なデータやAZ障害時のリスクを許容できるデータに向きます。',
+            },
+            {
+                text: 'S3 Standard',
+                isCorrect: false,
+                explanation:
+                    'S3 Standardも数秒以内取得や複数AZ相当の要件は満たせます。しかし、問題では長期アーカイブ用途で保存コストも抑えたいという条件があります。年に数回しか読まない長期保存データでは、Standardは保存コストが高くなりがちです。',
+            },
+        ],
+        explanation:
+            'ストレージクラス選定では、保存単価だけでなく「取り出しまで待てるか」「最低保存期間を満たすか」「AZ障害を許容できるか」「取り出し料金が問題にならないか」を同時に見ます。Deep Archiveは安いですが、即時取得要件がある時点で外れます。「安いストレージクラス = 常に最適」ではなく、RTO（復旧・取得までに許容できる時間）や利用者対応の要件で候補が変わります。',
+    },
+    {
+        question:
+            '画像サムネイルを数千万個S3に保存しています。各オブジェクトは20KB程度で、作成後30日以内に削除されるものも多いです。保存容量は小さいのにS3コストが期待ほど下がりません。最も注意すべき設計上の論点はどれですか?',
+        options: [
+            {
+                text: '小さいオブジェクトでは、IA系ストレージクラスの最小課金サイズや最低保存期間、リクエスト料金が効きやすい',
+                isCorrect: true,
+                explanation:
+                    'S3 Standard-IAやOne Zone-IAは128KB未満のオブジェクトでも128KB相当で課金され、30日の最低保存期間があります。Glacier Instant Retrievalも128KBの最小オブジェクトサイズと90日の最低保存期間があります。小さいオブジェクトが大量にあり、短期間で削除される場合は、保存容量よりも最小課金サイズ、早期削除、PUT/GET/LISTなどのリクエスト料金が目立つことがあります。',
+            },
+            {
+                text: 'S3ではオブジェクトが128KB未満なら、すべてのストレージクラスで保存料金が無料になる',
+                isCorrect: false,
+                explanation:
+                    '小さいオブジェクトが無料になるわけではありません。むしろIA系やGlacier Instant Retrievalでは最小課金サイズがあるため、実データ量より大きく課金される場合があります。Intelligent-Tieringでも128KB未満のオブジェクトは自動階層化の対象外になり、頻繁アクセス階層に残ります。',
+            },
+            {
+                text: 'S3 Standard-IAへ移行すれば、30日以内に削除しても最低保存期間の影響は受けない',
+                isCorrect: false,
+                explanation:
+                    'S3 Standard-IAやOne Zone-IAには30日の最低保存期間があります。30日より前に削除、上書き、別クラスへ移行しても、残り期間分の料金が発生することがあります。',
+            },
+            {
+                text: '大量の小さいオブジェクトでは、GETやLISTのリクエスト料金は常に0になる',
+                isCorrect: false,
+                explanation:
+                    'S3では保存容量だけでなく、PUT、GET、LISTなどのリクエストにも料金が発生します。小さいオブジェクトを大量に扱う場合、リクエスト回数がコストの主因になることがあります。',
+            },
+        ],
+        explanation:
+            '「低頻度アクセスだからIAへ移す」と単純に考えると、小さいオブジェクトや短期保存では逆にコスト最適化にならない場合があります。小さいファイルが大量にある場合は、圧縮してまとめる、キー設計や集計単位を見直す、ライフサイクル対象を慎重に絞るなどの設計も検討します。オブジェクトサイズ、保持期間、リクエスト回数、取り出し料金を合わせて見るのが実務的です。',
+    },
+    {
+        question:
+            'アクセスパターンが読みにくい大量のレポートファイルをS3に保存します。ある月は頻繁に読まれますが、数か月まったく読まれないこともあります。運用チームは細かいLifecycleルールを頻繁に調整したくありません。最も適切な選択はどれですか?',
+        options: [
+            {
+                text: 'S3 Intelligent-Tieringを使い、アクセスパターンに応じた自動階層化に任せる',
+                isCorrect: true,
+                explanation:
+                    'S3 Intelligent-Tieringは、アクセスパターンが不明または変化するデータに向きます。監視・自動化料金は発生しますが、30日アクセスがないと低頻度アクセス階層、90日アクセスがないとArchive Instant Access階層へ自動移動するなど、運用負荷を抑えてコスト最適化できます。128KB未満のオブジェクトは自動階層化の対象外で、頻繁アクセス階層に残ります。',
+            },
+            {
+                text: 'すべてのファイルを作成直後からS3 Glacier Deep Archiveへ保存する',
+                isCorrect: false,
+                explanation:
+                    'Deep Archiveは取り出しに時間がかかるアーカイブ向けです。頻繁に読まれる月があるデータや、急に必要になる可能性があるデータを最初からDeep Archiveに置くと、復元待ちや復元料金が問題になります。',
+            },
+            {
+                text: 'S3 Standard-IAへ固定し、アクセスが増えた場合もそのまま使い続ける',
+                isCorrect: false,
+                explanation:
+                    'Standard-IAは低頻度アクセス向けで、取り出し料金が発生します。アクセス頻度が大きく変動する場合は、頻繁に読まれる期間の取り出し料金が効いてくる可能性があります。',
+            },
+            {
+                text: 'Lifecycleルールを毎日手動で書き換え、前日に読まれたファイルだけStandardへ戻す',
+                isCorrect: false,
+                explanation:
+                    '手動運用はミスや運用負荷が大きくなります。アクセスパターンが予測しにくい場合に自動で階層を調整したい、という要件にはIntelligent-Tieringが合います。',
+            },
+        ],
+        explanation:
+            'Intelligent-TieringとLifecycleの使い分けでは、アクセスパターンを予測できるかが重要です。一定期間後に必ずアーカイブするログならLifecycleが向きます。一方、読まれ方が変動し、運用で細かく調整したくないデータならIntelligent-Tieringが候補になります。アーカイブアクセス階層やディープアーカイブアクセス階層を有効化する場合は、即時取得ではなく復元時間が発生する点も要件と照らして確認します。',
+    },
+    {
+        question:
+            '監査ログを7年間保存します。通常は参照しませんが、監査時には数時間から半日程度待てばよく、取得コストも抑えたいです。最低保存期間を満たす長期保管であることを前提に、最も適切なストレージクラスはどれですか?',
+        options: [
+            {
+                text: 'S3 Glacier Deep Archive',
+                isCorrect: true,
+                explanation:
+                    'S3 Glacier Deep Archiveは、年に1回未満のアクセスで、復元に時間を待てる長期アーカイブに向きます。Standard retrievalでは通常12時間以内、Bulk retrievalでは通常48時間以内が目安です。最低保存期間は180日で、7年保存のような長期保持なら最低保存期間の制約を満たしやすいです。',
+            },
+            {
+                text: 'S3 Standard',
+                isCorrect: false,
+                explanation:
+                    'S3 Standardは即時アクセスできますが、ほぼ参照しない7年保存の監査ログでは保存コストが高くなりがちです。復元待ちを許容できるならアーカイブ系を検討します。',
+            },
+            {
+                text: 'S3 Glacier Instant Retrieval',
+                isCorrect: false,
+                explanation:
+                    'Glacier Instant Retrievalはミリ秒単位の取得が必要な低頻度アクセス向けです。監査時に数時間から半日待てるなら、より低コストなDeep Archiveが候補になります。',
+            },
+            {
+                text: 'S3 One Zone-IA',
+                isCorrect: false,
+                explanation:
+                    'One Zone-IAは1つのAZに保存される低頻度アクセス向けです。7年間の監査ログ保管では、AZ障害時の耐久性やコンプライアンス要件を考えると、多くの場合は複数AZに保存されるアーカイブ系を検討します。',
+            },
+        ],
+        explanation:
+            'Glacier系は「安い」だけで選ぶのではなく、復元時間と最低保存期間を見る必要があります。Glacier Flexible Retrievalは90日、Deep Archiveは180日の最低保存期間があります。短期で消すデータをDeep Archiveへ移すと、早期削除コストで期待ほど安くならないことがあります。監査ログではコストだけでなく、Object Lock、Compliance mode、Governance mode、リーガルホールドなどを使った保持要件と削除防止も検討します。',
+    },
+    {
+        question:
+            'S3に保存したバックアップをS3 Glacier Flexible Retrievalへ移行しました。障害対応で一部のバックアップをすぐに使いたいのですが、GETしてもすぐには取得できません。最も適切な理解はどれですか?',
+        options: [
+            {
+                text: 'Glacier Flexible Retrievalのオブジェクトはアーカイブ状態のため、RestoreObjectで復元を開始し、復元完了後に一時コピーへアクセスする',
+                isCorrect: true,
+                explanation:
+                    'S3 Glacier Flexible RetrievalやDeep Archiveのオブジェクトは、通常のGETで即時取得できる状態ではありません。RestoreObjectで復元を開始し、Expedited、Standard、Bulkなどの復元オプションに応じた時間を待ってから、一時的にアクセス可能な復元コピーへアクセスします。',
+            },
+            {
+                text: 'Glacier Flexible RetrievalはStandardと同じく、常にミリ秒単位で直接GETできる',
+                isCorrect: false,
+                explanation:
+                    'ミリ秒単位で取得できるGlacier系はS3 Glacier Instant Retrievalです。Glacier Flexible Retrievalは復元処理が必要なアーカイブストレージクラスです。',
+            },
+            {
+                text: '復元を開始すると、オブジェクトは必ずS3 Standardへ完全移行され、元のアーカイブは削除される',
+                isCorrect: false,
+                explanation:
+                    '復元では、指定した期間アクセスできる一時コピーが作られます。元のアーカイブオブジェクトが自動的に削除されるわけではありません。復元期間が切れると再び直接GETできなくなります。恒久的にStandardなどへ戻したい場合は、復元後にCopyObjectなどで別ストレージクラスへコピーします。',
+            },
+            {
+                text: 'Bulk復元を選べば、常に最速で取得できる',
+                isCorrect: false,
+                explanation:
+                    'Bulk復元は低コストで大量復元に向く選択肢ですが、最速ではありません。急ぐ場合はGlacier Flexible RetrievalのExpedited復元などを検討します。ただしDeep ArchiveにはExpedited復元はありません。',
+            },
+        ],
+        explanation:
+            'アーカイブ系ストレージでは、障害時のRTO（Recovery Time Objective：復旧までに許容できる時間）を満たせるかが重要です。保存コストだけでDeep ArchiveやFlexible Retrievalを選ぶと、復元待ち時間や復元料金が復旧要件に合わないことがあります。復元コピーの有効期間、恒久的なストレージクラス変更の必要性、RPO（Recovery Point Objective：どの時点まで戻せる必要があるか）も合わせて考えます。',
+    },
+    {
+        question:
+            '同じリージョン内のアプリケーションがS3へ大量のログを書き込み、別リージョンの分析基盤がそのログを定期的に読み取ります。S3コストを見積もるとき、保存容量以外で特に考慮すべきものとして最も適切な組み合わせはどれですか?',
+        options: [
+            {
+                text: 'PUT/LIST/GETなどのリクエスト料金、別リージョンへのデータ転送料金、低頻度アクセス系なら取り出し料金',
+                isCorrect: true,
+                explanation:
+                    'S3のコストは保存容量だけではありません。大量ログではPUT、GET、LISTなどのリクエストが増えます。さらに別リージョンへ読み出す場合はクロスリージョンのデータ転送料金が問題になります。Standard-IAやGlacier系を使う場合は取り出し料金や復元料金も考慮します。',
+            },
+            {
+                text: 'バケット名の長さ、オブジェクトキーのスラッシュ数、フォルダ表示の階層数',
+                isCorrect: false,
+                explanation:
+                    'バケット名の長さやスラッシュ数そのものでは課金されません。キー設計は運用性や一覧・分析のしやすさに影響しますが、主要なコスト要素は保存容量、リクエスト、データ転送、取り出し、管理機能などです。',
+            },
+            {
+                text: 'S3 Standardを使っていれば、リクエスト料金やデータ転送料金は発生しない',
+                isCorrect: false,
+                explanation:
+                    'S3 Standardでもリクエスト料金やデータ転送料金は発生します。ストレージクラスをStandardにすれば容量以外の料金が消えるわけではありません。',
+            },
+            {
+                text: '同じAWSアカウント内であれば、リージョン間の読み取りでもデータ転送料金は常に無料になる',
+                isCorrect: false,
+                explanation:
+                    '同じアカウントかどうかだけでデータ転送料金が決まるわけではありません。リージョン間転送やインターネット向け転送など、通信の向きと宛先を確認する必要があります。',
+            },
+        ],
+        explanation:
+            'S3コスト最適化では「GB単価が安いクラスにする」だけでは不十分です。ログや分析用途では、PUT/LIST/GETの回数、ライフサイクル移行リクエスト、別リージョンやインターネットへのデータ転送、Athenaなど周辺サービスのスキャン量、取り出し料金、Intelligent-Tieringの監視・自動化料金まで含めて設計します。',
+    },
 ]
