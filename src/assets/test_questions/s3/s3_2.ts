@@ -2305,4 +2305,164 @@ export const testQuestions: Question[] = [
         explanation:
             'ブラウザアップロードの障害では、ブラウザに表示されるCORSエラーだけを鵜呑みにしないことが重要です。Preflightの成否、実リクエストのステータス、S3のエラーコード、署名生成時のメソッド・ヘッダー・リージョン・期限・時刻、CORSのAllowedHeadersを分けて確認します。Content-Typeが署名時と実送信で違う、ブラウザやライブラリがヘッダーを自動追加する、x-amz-content-sha256やhostヘッダーが想定と違う、といった差分もSignatureDoesNotMatchの原因になります。',
     },
+    {
+        question:
+            'S3にアップロードされたCSVファイルを、検証、形式変換、保存、通知の順に処理したいです。検証結果に応じた分岐、ステップごとの再試行、失敗時の通知、処理状態の追跡も必要です。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'S3イベントを起点にStep Functionsを開始し、Lambdaなどのタスクを検証、変換、保存、通知の各ステップとして定義する',
+                isCorrect: true,
+                explanation:
+                    '複数ステップの処理、分岐、再試行、タイムアウト、失敗時処理、状態管理が必要な場合は、Step Functionsでワークフローとして表現するのが適しています。S3からStep Functionsを直接起動するというより、S3イベントをEventBridgeやLambda経由でStep Functions開始につなげる構成が一般的です。各処理はLambdaやAWS SDK連携に分割します。',
+            },
+            {
+                text: 'S3 Lifecycleルールだけで、CSV検証、形式変換、通知まで順序制御する',
+                isCorrect: false,
+                explanation:
+                    'S3 Lifecycleはストレージクラス移行や期限切れ削除のための仕組みであり、任意のファイル検証、変換、通知のワークフローを順序制御する機能ではありません。',
+            },
+            {
+                text: '1つの巨大なLambda関数にすべての処理を詰め込み、分岐や再試行は関数内のwhileループで実装する',
+                isCorrect: false,
+                explanation:
+                    '単純な処理なら1つのLambdaでも足りますが、複数ステップ、分岐、再試行、状態管理、失敗時の再開が必要な場合は関数が複雑になりやすいです。Step Functionsでステップを分けると、どこで失敗したかを追いやすくなります。',
+            },
+            {
+                text: 'S3バケットポリシーに処理順序を書けば、アップロード後の検証と通知を自動実行できる',
+                isCorrect: false,
+                explanation:
+                    'バケットポリシーはアクセス制御の仕組みであり、処理ワークフローを定義するものではありません。処理の起動にはS3イベント、EventBridge、Lambda、Step Functionsなどを使います。',
+            },
+        ],
+        explanation:
+            '単発のサムネイル生成ならS3 Event NotificationsからLambda直呼びでも十分な場合があります。一方、検証、変換、保存、通知のように段階があり、分岐や再試行、失敗時通知、状態追跡が必要ならStep Functionsが候補になります。長時間実行、監査性、実行履歴、確実な状態追跡を重視するならStandard Workflow、短時間・高頻度・高スループット寄りならExpress Workflowも候補です。S3は保存、EventBridgeはイベントルーティング、Lambdaは個別処理、Step Functionsは処理全体の状態管理という役割で分けます。',
+    },
+    {
+        question:
+            'S3にアップロードされたファイルを処理するLambdaが、外部APIの一時障害で失敗することがあります。処理量のバーストもあり、後続処理を一定ペースで進めたいです。Step Functionsを使う前に、最も自然に検討すべき構成はどれですか?',
+        options: [
+            {
+                text: 'S3イベントをSQSに入れ、Lambdaがキューからバッチ処理し、Visibility Timeout、DLQ、同時実行数で処理量と再試行を制御する',
+                isCorrect: true,
+                explanation:
+                    '単一処理のバースト吸収や再試行制御が主目的なら、SQSを挟む構成が自然です。Lambdaの同時実行数やバッチサイズで処理量を制御し、Visibility TimeoutをLambda処理時間より十分長く設定し、DLQで失敗時の隔離を設計できます。複数ステップの分岐や長い状態管理が必要になったらStep Functionsを検討します。',
+            },
+            {
+                text: 'S3からLambdaを直接起動すれば、下流APIのレート制限に合わせて自動的に処理量が完全制御される',
+                isCorrect: false,
+                explanation:
+                    'Lambda直呼びはシンプルですが、バースト吸収や下流の処理量制御は弱くなりがちです。外部APIのレート制限や一時障害がある場合は、SQSを挟んで処理を平準化する設計が有効です。',
+            },
+            {
+                text: 'SNSを使えば、メッセージは必ず1件ずつ順序通りに処理されるため、SQSは不要である',
+                isCorrect: false,
+                explanation:
+                    'SNSはPub/Sub通知やファンアウトに向くサービスで、処理の平準化やコンシューマー側のペース制御はSQSの方が向いています。SNSから複数SQSへ配る構成もよく使われます。',
+            },
+            {
+                text: 'EventBridgeを使うと、失敗した外部API呼び出しの処理状態を自動的に永続管理し、途中から再開できる',
+                isCorrect: false,
+                explanation:
+                    'EventBridgeはイベントルーティングに強いサービスですが、複数ステップの状態管理や途中再開を自動で担うものではありません。状態を持つワークフローにはStep Functions、バッファリングにはSQSを検討します。',
+            },
+        ],
+        explanation:
+            'Lambda直呼び、SQS経由、EventBridge、Step Functionsは役割が違います。シンプルさならLambda直呼び、バースト吸収、再試行、平準化ならSQS、イベント内容によるルーティングならEventBridge、状態遷移、分岐、再試行、可視化ならStep Functionsです。SQSは状態管理サービスではなく、処理待ちメッセージを保持してコンシューマーのペースに合わせるキューです。SQS、SNS、EventBridgeは似て見えますが、キュー、通知、イベントバスという目的の違いで選びます。',
+    },
+    {
+        question:
+            'S3にアップロードされたファイルの種類によって、画像ならサムネイル生成、CSVならGlueジョブ、動画なら長時間の変換処理へ分岐したいです。後から処理対象も増える予定です。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'S3イベントをEventBridgeに送り、イベントパターンで対象を振り分け、必要に応じてStep FunctionsやLambdaをターゲットにする',
+                isCorrect: true,
+                explanation:
+                    'EventBridgeはイベントパターンに基づくルーティングやターゲット追加に向きます。単純に1つのLambdaを起動するだけならS3 Event Notificationsで足りますが、ファイル種別ごとの分岐、複数ターゲット、ルール分割、将来拡張がある場合はEventBridgeを挟むと疎結合にしやすくなります。複数ステップの処理はStep Functionsへ渡します。',
+            },
+            {
+                text: 'S3 Event NotificationsはEventBridgeより常に高機能なので、複数サービスへの分岐にも必ず単独で使う',
+                isCorrect: false,
+                explanation:
+                    'S3 Event Notificationsはシンプルな宛先連携に向きますが、複雑なルーティングや将来のターゲット追加ではEventBridgeの方が扱いやすい場合があります。どちらが常に上位というより、要件で使い分けます。',
+            },
+            {
+                text: 'バケットACLに画像、CSV、動画の処理先を設定すれば、S3が自動で分岐する',
+                isCorrect: false,
+                explanation:
+                    'ACLはアクセス制御であり、イベントルーティングや処理分岐の設定ではありません。現在はACLよりもBucket owner enforcedとポリシーベースのアクセス制御が推奨されます。',
+            },
+            {
+                text: 'CloudFront signed URLを使えば、S3アップロード後の処理分岐を自動で実行できる',
+                isCorrect: false,
+                explanation:
+                    'CloudFront signed URLはCloudFront経由の配信アクセスを制限する仕組みです。S3アップロード後のイベントルーティングや処理分岐には、S3イベント、EventBridge、Lambda、Step Functionsなどを使います。',
+            },
+        ],
+        explanation:
+            'S3 Event NotificationsとEventBridgeの比較では、単純な起動か、柔軟なルーティングかを見ます。ただしEventBridgeは大量データの処理バッファそのものではないため、高スループットの平準化にはSQS、継続的なログ配信にはFirehoseが向く場合があります。CloudFront signed URLとS3署名付きURLの比較では、配信経路を制限するのか、S3へ直接アップロード/ダウンロードさせるのかを見ます。処理パイプラインでは、アクセス制御、イベントルーティング、ワークフロー管理を混同しないことが重要です。',
+    },
+    {
+        question:
+            '大量のアプリケーションログをS3に蓄積し、一部は取り込み時に軽く変換し、後でAthenaで月次分析します。Step Functionsで全ログを1件ずつ処理する案と、Kinesis Data FirehoseでS3へ配信する案を比較しています。最も適切な判断はどれですか?',
+        options: [
+            {
+                text: '継続的な大量ログ配信、バッファリング、圧縮、軽い変換、S3保存が中心ならFirehoseを優先し、複雑なファイル単位ワークフローにはStep Functionsを使い分ける',
+                isCorrect: true,
+                explanation:
+                    'Data FirehoseはログやストリーミングデータをS3などへnear real-timeにマネージド配信する用途に向きます。バッファリング、圧縮、Parquet/ORC形式変換、失敗時のバックアップをサービス側に寄せられ、小さいファイル問題を抑えやすくなります。一方、Step Functionsはファイル単位の検証、承認、変換、通知など、状態を持つ複数ステップのワークフローに向きます。',
+            },
+            {
+                text: 'Firehoseを使うとAthenaではクエリできなくなるため、必ずStep FunctionsでS3へ1件ずつPutObjectする',
+                isCorrect: false,
+                explanation:
+                    'FirehoseでS3へ保存したデータも、形式、prefix、パーティション、Glue Data Catalogを適切に設計すればAthenaで分析できます。むしろログ分析ではFirehoseとS3 + Athenaの組み合わせがよく使われます。',
+            },
+            {
+                text: 'Athenaを使う場合、必ずRDSへ全ログをロードしてからSQLを実行する',
+                isCorrect: false,
+                explanation:
+                    'AthenaはS3上のデータを直接クエリできるサーバーレス分析サービスです。オンライン更新や低レイテンシのトランザクションにはRDS、DWHやBI統合にはRedshift、低頻度やアドホックな大規模ログ分析にはS3 + Athenaが候補になります。',
+            },
+            {
+                text: 'Intelligent-Tieringを有効化すれば、ログの取り込み、変換、パーティション作成、Athenaテーブル作成がすべて自動化される',
+                isCorrect: false,
+                explanation:
+                    'Intelligent-Tieringはアクセス頻度に応じたストレージ階層化の仕組みです。ログの取り込み、変換、パーティション設計、Glue Data Catalog登録、Athenaテーブル作成を自動で完了させるものではありません。',
+            },
+        ],
+        explanation:
+            'S3直接書き込みとFirehoseの比較では、アプリ側でファイルサイズや再試行を細かく制御するか、マネージドなバッファリングと配信に寄せるかを見ます。Firehoseは1件ごとの詳細な状態管理には向かず、Step Functionsで全ログを1件ずつ処理するのはコストと運用面で過剰になりがちです。Athena、RDS、Redshiftの比較では、S3上の低コスト分析、オンラインDB、DWHのどれが要件に合うかを判断します。Intelligent-TieringとLifecycleは保存コスト最適化の比較軸であり、処理パイプラインそのものの代替ではありません。',
+    },
+    {
+        question:
+            'S3を中心にした設計レビューで、複数の候補サービスが混ざっています。比較軸の整理として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'アクセス制御はIAM/バケットポリシー/ACL、配信はCloudFront/S3直配信、イベントはS3 Event Notifications/EventBridge、処理制御はSQS/Step Functions、保護はReplication/Backup/Object Lock/Versioningで役割を分ける',
+                isCorrect: true,
+                explanation:
+                    'S3設計では、似た選択肢を役割で分けることが重要です。IAMポリシーはprincipal側、バケットポリシーはリソース側、ACLは現在の新規設計では基本的に非推奨寄りのオブジェクト単位制御です。CloudFrontは配信、S3直配信は単純アクセスです。S3 Event Notificationsは単純イベント連携、EventBridgeはルーティング、SQSはバッファリング、Step Functionsは状態管理です。Replicationは別場所への複製、Backupは復元点保持、Object LockはWORM保持、Versioningは過去バージョン保持です。',
+            },
+            {
+                text: 'IAMポリシー、バケットポリシー、ACLは完全に同じ機能なので、どれを使っても運用上の違いはない',
+                isCorrect: false,
+                explanation:
+                    'IAMポリシー、バケットポリシー、ACLは評価対象や運用上の意味が異なります。特に現在はACLを無効化し、IAMとバケットポリシーで制御する設計が一般的です。',
+            },
+            {
+                text: 'Replicationを設定すれば、バックアップ、WORM保持、過去時点復旧、リージョン切替がすべて自動的に満たされる',
+                isCorrect: false,
+                explanation:
+                    'Replicationは主にオブジェクトを別バケットや別リージョンへ非同期複製する仕組みです。過去時点への復旧はBackup、削除防止や改ざん防止はObject Lock、アプリの切替はDR設計として別途考える必要があります。',
+            },
+            {
+                text: 'S3署名付きURLとCloudFront signed URLはどちらも同じURLであり、常にS3直アクセスになる',
+                isCorrect: false,
+                explanation:
+                    'S3署名付きURLはS3へ直接アクセスするURLです。CloudFront signed URLはCloudFront経由の配信アクセスを制限するURLです。どの経路にアクセスさせたいかで使い分けます。',
+            },
+        ],
+        explanation:
+            '応用問題では、単にサービス名を知っているかではなく、何を比較しているかを整理します。ACLは新規設計では避け、IAM/バケットポリシー中心にする。OACは新しいCloudFront + S3非公開配信、OAIは旧来方式。S3 Event Notificationsは単純連携、EventBridgeは条件分岐と拡張。SQSはキュー、SNSはPub/Sub通知。Versioningは過去バージョン保持、Object LockはWORM保持。Replicationは現在状態を別場所へ複製、Backupは復元点を保持。こうした比較を、シンプルさ、スループット、状態管理、再試行、コスト、監査性、将来拡張性の軸で判断します。',
+    },
 ]
