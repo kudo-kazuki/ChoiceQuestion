@@ -1345,4 +1345,388 @@ export const testQuestions: Question[] = [
         explanation:
             '初級段階では、アーキテクチャは「関数をどの CPU 種類で動かすか」の設定と理解すれば十分です。外部ライブラリを使う場合は対応状況に注意します。',
     },
+    {
+        question:
+            'Lambda 関数を手動で実行して動作確認したい場合、最も自然な方法はどれですか?',
+        options: [
+            {
+                text: 'AWS マネジメントコンソールの Lambda 画面で、テストイベントを作成して実行する',
+                isCorrect: true,
+                explanation:
+                    'AWS マネジメントコンソールの Lambda 画面では、テストイベント（関数に渡すサンプルのイベントデータ）を作成して関数を手動実行できます。初期の動作確認に使いやすい方法です。',
+            },
+            {
+                text: '必ず EC2 に SSH ログインして Lambda プロセスを起動する',
+                isCorrect: false,
+                explanation:
+                    'Lambda は EC2 に SSH ログインしてプロセスを起動するサービスではありません。コンソールや AWS CLI、SDK などから呼び出せます。',
+            },
+            {
+                text: 'S3 バケット名を関数名と同じにしないと手動実行できない',
+                isCorrect: false,
+                explanation:
+                    'S3 バケット名と関数名を同じにする必要はありません。手動実行ではテストイベントを使えます。',
+            },
+            {
+                text: 'Lambda は手動実行できず、必ず他サービスからしか起動できない',
+                isCorrect: false,
+                explanation:
+                    'Lambda は他サービスのイベントから起動できるだけでなく、コンソールや AWS CLI などから手動で呼び出すこともできます。',
+            },
+        ],
+        explanation:
+            '最初に関数を作ったときは、AWS マネジメントコンソールのテストイベントで入力データとログを確認すると、基本的な動作を確認しやすいです。',
+    },
+    {
+        question:
+            'Lambda のテストイベントの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '関数に渡すイベントオブジェクトのサンプルを用意して、手動実行に使うもの',
+                isCorrect: true,
+                explanation:
+                    'テストイベントは、Lambda 関数へ渡すイベントオブジェクトのサンプルです。S3 イベントや API リクエストを想定した JSON（キーと値で構成されたデータ形式）を用意して動作確認できます。',
+            },
+            {
+                text: 'Lambda 関数を本番環境では絶対に実行できなくする設定',
+                isCorrect: false,
+                explanation:
+                    'テストイベントは実行禁止の設定ではありません。関数を手動実行して動作確認するための入力データです。',
+            },
+            {
+                text: 'CloudWatch Logs を自動削除するためだけの設定',
+                isCorrect: false,
+                explanation:
+                    'テストイベントはログ削除の設定ではありません。Lambda 関数への入力データとして使います。',
+            },
+            {
+                text: 'Lambda 関数のメモリを自動で最大値にする機能',
+                isCorrect: false,
+                explanation:
+                    'テストイベントでメモリ設定が自動的に最大値になるわけではありません。メモリは関数の設定で指定します。',
+            },
+        ],
+        explanation:
+            'テストイベントを使うと、実際の S3 アップロードや API 呼び出しを待たずに、関数の処理ロジックを確認できます。実際の S3 イベントや API リクエストに近い JSON を用意すると、実運用に近い形で動作確認できます。',
+    },
+    {
+        question:
+            'AWS CLI から Lambda 関数を直接呼び出したい場合に使う代表的なコマンドはどれですか?',
+        options: [
+            {
+                text: 'aws lambda invoke',
+                isCorrect: true,
+                explanation:
+                    'AWS CLI（ターミナルやコマンドラインから AWS を操作するツール）では、`aws lambda invoke` を使って Lambda 関数を直接呼び出せます。',
+            },
+            {
+                text: 'aws s3 mb',
+                isCorrect: false,
+                explanation:
+                    '`aws s3 mb` は S3 バケットを作成するためのコマンドです。Lambda 関数の呼び出しには `aws lambda invoke` を使います。',
+            },
+            {
+                text: 'aws ec2 start-instances',
+                isCorrect: false,
+                explanation:
+                    '`aws ec2 start-instances` は EC2 インスタンスを起動するコマンドです。Lambda 関数の呼び出しとは別です。',
+            },
+            {
+                text: 'aws iam create-user',
+                isCorrect: false,
+                explanation:
+                    '`aws iam create-user` は IAM ユーザーを作成するコマンドです。Lambda 関数の呼び出しには使いません。',
+            },
+        ],
+        explanation:
+            'AWS CLI から呼び出すと、自動テストや運用スクリプトから Lambda 関数を実行しやすくなります。',
+    },
+    {
+        question:
+            'AWS SDK から Lambda 関数を呼び出す説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'アプリケーションコードから AWS SDK を使って Lambda の Invoke API を呼び出す',
+                isCorrect: true,
+                explanation:
+                    'AWS SDK（AWS サービスをコードから操作するためのライブラリ）を使うと、アプリケーションコードから Lambda 関数を呼び出せます。内部ツールやバックエンド処理から Lambda を実行したい場合に使えます。',
+            },
+            {
+                text: 'Lambda 関数の中では AWS SDK を一切使えない',
+                isCorrect: false,
+                explanation:
+                    'Lambda 関数内でも AWS SDK を使って他の AWS サービスを操作できます。また、外部のアプリケーションから SDK で Lambda を呼び出すこともできます。',
+            },
+            {
+                text: 'AWS SDK は S3 バケット名を自動で Lambda 関数名に変更する機能である',
+                isCorrect: false,
+                explanation:
+                    'AWS SDK は AWS サービスをコードから操作するためのライブラリです。S3 バケット名を自動で Lambda 関数名に変更する機能ではありません。',
+            },
+            {
+                text: 'AWS SDK で呼び出す場合は、Lambda のコードが必ず Java でなければならない',
+                isCorrect: false,
+                explanation:
+                    'SDK から呼び出す側の言語と、Lambda 関数の実装言語は必ず同じである必要はありません。',
+            },
+        ],
+        explanation:
+            'Lambda はコンソールだけでなく、CLI や SDK からも呼び出せます。どこから実行したいかに応じて方法を選びます。',
+    },
+    {
+        question:
+            '他の AWS サービスから Lambda を起動する例として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3 にファイルがアップロードされたことをきっかけに Lambda を実行する',
+                isCorrect: true,
+                explanation:
+                    'S3 のオブジェクト作成イベントをトリガーにして Lambda 関数を起動できます。他にも API Gateway、EventBridge、SQS、DynamoDB Streams などから Lambda を起動できます。',
+            },
+            {
+                text: 'Lambda 関数名を S3 バケット名と同じにすると、必ず毎秒起動する',
+                isCorrect: false,
+                explanation:
+                    '関数名と S3 バケット名を同じにしても、自動で毎秒起動するわけではありません。イベント通知やスケジュールなどの設定が必要です。',
+            },
+            {
+                text: 'EC2 の OS パッチ適用が完了すると、すべての Lambda 関数が必ず起動する',
+                isCorrect: false,
+                explanation:
+                    'EC2 の OS パッチ適用とすべての Lambda 関数の起動は直接結び付きません。何をきっかけに起動するかを設定します。',
+            },
+            {
+                text: 'CloudWatch Logs を開いただけで、すべての Lambda 関数が自動実行される',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs を開くことが、すべての Lambda 関数の実行トリガーになるわけではありません。',
+            },
+        ],
+        explanation:
+            'Lambda はイベント駆動のサービスです。他の AWS サービスで起きた出来事をきっかけに処理を実行できます。',
+    },
+    {
+        question:
+            'Lambda の「トリガー」の基本的な説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda 関数を起動するきっかけとなるイベントやサービス連携の設定',
+                isCorrect: true,
+                explanation:
+                    'トリガーは、Lambda 関数を起動するきっかけです。例えば S3 のファイル作成、API Gateway の HTTP リクエスト、EventBridge のスケジュールなどがトリガーになります。',
+            },
+            {
+                text: 'Lambda 関数のメモリを自動で最大にする設定',
+                isCorrect: false,
+                explanation:
+                    'トリガーはメモリ設定ではありません。関数をいつ、何をきっかけに起動するかに関わる設定です。',
+            },
+            {
+                text: 'Lambda 関数のソースコードを暗号化しないようにする設定',
+                isCorrect: false,
+                explanation:
+                    'トリガーは暗号化無効化の設定ではありません。関数起動のきっかけに関する設定です。',
+            },
+            {
+                text: 'Lambda 関数を削除するためだけのボタン',
+                isCorrect: false,
+                explanation:
+                    'トリガーは関数削除用のボタンではありません。関数を呼び出すきっかけを設定するものです。',
+            },
+        ],
+        explanation:
+            '初級段階では、トリガーを「Lambda を動かすきっかけ」と覚えると理解しやすいです。',
+    },
+    {
+        question:
+            '同期呼び出しの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '呼び出し元が Lambda 関数の完了を待ち、戻り値を受け取る方式',
+                isCorrect: true,
+                explanation:
+                    '同期呼び出しは、呼び出し元が Lambda 関数の処理完了まで待つ方式です。完了後に戻り値やエラー情報を受け取れます。',
+            },
+            {
+                text: '呼び出し元が関数の完了を一切待たず、戻り値も直接受け取らない方式',
+                isCorrect: false,
+                explanation:
+                    'これは非同期呼び出しの説明です。同期呼び出しでは、呼び出し元が処理完了を待ちます。',
+            },
+            {
+                text: 'Lambda 関数を常に 24 時間起動し続ける方式',
+                isCorrect: false,
+                explanation:
+                    '同期呼び出しは常時起動を意味しません。呼び出し元が処理完了まで待つ呼び出し方式です。',
+            },
+            {
+                text: 'S3 バケットを作成するたびに必ず実行される方式',
+                isCorrect: false,
+                explanation:
+                    '同期呼び出しは S3 バケット作成専用の方式ではありません。Lambda の呼び出し元と応答の待ち方に関する考え方です。',
+            },
+        ],
+        explanation:
+            'API のバックエンドなど、呼び出し元がその場で結果を受け取りたい場合は、同期呼び出しの考え方が重要になります。',
+    },
+    {
+        question:
+            '非同期呼び出しの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '呼び出し元がイベントを渡した後、関数の完了を待たずに次の処理へ進む方式',
+                isCorrect: true,
+                explanation:
+                    '非同期呼び出しは、呼び出し元が Lambda にイベントを渡した後、関数の完了や戻り値を待たずに次へ進む方式です。処理結果を残したい場合は、関数内で S3 や DynamoDB などに保存する設計を考えます。',
+            },
+            {
+                text: '呼び出し元が Lambda の処理完了まで必ず待ち、戻り値を受け取る方式',
+                isCorrect: false,
+                explanation:
+                    'これは同期呼び出しの説明です。非同期呼び出しでは、呼び出し元は完了を待ちません。',
+            },
+            {
+                text: 'Lambda 関数が実行されない方式',
+                isCorrect: false,
+                explanation:
+                    '非同期呼び出しでも Lambda 関数は実行されます。違いは、呼び出し元が完了を待つかどうかです。',
+            },
+            {
+                text: 'Lambda 関数を削除するための呼び出し方式',
+                isCorrect: false,
+                explanation:
+                    '非同期呼び出しは関数削除の方式ではありません。関数実行の呼び出し方式です。',
+            },
+        ],
+        explanation:
+            '非同期呼び出しは、時間のかかる処理や、呼び出し元がすぐに結果を必要としない処理で使われます。',
+    },
+    {
+        question:
+            'AWS CLI で Lambda を非同期呼び出ししたい場合の考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'InvocationType を Event にして、呼び出し元が完了を待たない方式にする',
+                isCorrect: true,
+                explanation:
+                    'AWS CLI や Invoke API では、InvocationType を Event にすると非同期呼び出しになります。例えば `aws lambda invoke --invocation-type Event ...` のように指定します。呼び出し元は関数の完了や戻り値を待ちません。',
+            },
+            {
+                text: 'メモリ設定を 0 MB にすると非同期呼び出しになる',
+                isCorrect: false,
+                explanation:
+                    'メモリ設定で同期・非同期は決まりません。呼び出し方式は InvocationType などで指定します。',
+            },
+            {
+                text: '関数名を async にすると必ず非同期呼び出しになる',
+                isCorrect: false,
+                explanation:
+                    '関数名に async を含めても呼び出し方式は変わりません。呼び出し時の設定が重要です。',
+            },
+            {
+                text: 'CloudWatch Logs を無効にすると非同期呼び出しになる',
+                isCorrect: false,
+                explanation:
+                    'ログ出力設定と同期・非同期の呼び出し方式は別の概念です。',
+            },
+        ],
+        explanation:
+            '同期・非同期は、Lambda をどう呼び出すかの指定です。CLI や SDK から呼び出す場合は、呼び出し時のパラメータを確認します。',
+    },
+    {
+        question:
+            'API Gateway から Lambda を呼び出す構成の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'HTTP リクエストを受けた API Gateway が Lambda 関数を呼び出し、API のバックエンド処理を実行する',
+                isCorrect: true,
+                explanation:
+                    'API Gateway（HTTP API を公開・管理できるサービス）と Lambda を組み合わせると、HTTP リクエストをきっかけに Lambda 関数を実行できます。Web API のバックエンドとしてよく使われます。',
+            },
+            {
+                text: 'API Gateway は Lambda 関数のメモリを自動で最大化するサービスである',
+                isCorrect: false,
+                explanation:
+                    'API Gateway は HTTP API の公開・管理に使うサービスです。Lambda のメモリを自動で最大化するサービスではありません。',
+            },
+            {
+                text: 'API Gateway を使うと Lambda 関数のコードが不要になる',
+                isCorrect: false,
+                explanation:
+                    'API Gateway はリクエストの入口を提供しますが、処理内容は Lambda 関数などで実装します。',
+            },
+            {
+                text: 'API Gateway は S3 の一時領域 `/tmp` を増やす設定である',
+                isCorrect: false,
+                explanation:
+                    'API Gateway は `/tmp` の容量設定ではありません。HTTP リクエストを受ける入口として使います。',
+            },
+        ],
+        explanation:
+            'HTTP リクエストを受けてすぐ結果を返す API では、Lambda の戻り値が HTTP レスポンスに関係するため、同期呼び出しの考え方も重要です。',
+    },
+    {
+        question:
+            'EventBridge を使って Lambda を起動する例として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '毎日決まった時刻に Lambda 関数を実行する',
+                isCorrect: true,
+                explanation:
+                    'EventBridge や EventBridge Scheduler（指定時刻や定期スケジュールで処理を実行できる機能）を使うと、決まった時刻や一定間隔で Lambda 関数を起動できます。',
+            },
+            {
+                text: 'Lambda 関数のソースコードを自動で日本語に翻訳する',
+                isCorrect: false,
+                explanation:
+                    'EventBridge はコード翻訳サービスではありません。イベントやスケジュールをもとに処理を起動するために使います。',
+            },
+            {
+                text: 'Lambda 関数のタイムアウトを無制限にする',
+                isCorrect: false,
+                explanation:
+                    'EventBridge を使っても Lambda のタイムアウトが無制限になるわけではありません。',
+            },
+            {
+                text: 'S3 バケット内のファイルを必ず永久保存する',
+                isCorrect: false,
+                explanation:
+                    'EventBridge は S3 ファイルの永久保存設定ではありません。イベントやスケジュールに応じて処理を起動するサービスです。',
+            },
+        ],
+        explanation:
+            '定期実行したい処理は、Lambda 単体ではなく EventBridge などのスケジュール機能と組み合わせて設計します。',
+    },
+    {
+        question:
+            'SQS や DynamoDB Streams などから Lambda を起動する場合に出てくる「イベントソースマッピング」の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'キューやストリームからレコードを読み取り、Lambda 関数へ渡すための設定',
+                isCorrect: true,
+                explanation:
+                    'イベントソースマッピングは、SQS、DynamoDB Streams、Kinesis などのキューやストリームからデータを読み取り、Lambda 関数を呼び出すための設定です。複数レコードをまとめて渡す場合もあります。',
+            },
+            {
+                text: 'Lambda 関数の表示名を自動で変更する設定',
+                isCorrect: false,
+                explanation:
+                    'イベントソースマッピングは関数名を変更する設定ではありません。イベントソースから Lambda へデータを渡すための設定です。',
+            },
+            {
+                text: 'CloudWatch Logs の保持期間だけを決める設定',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs の保持期間とは別の設定です。イベントソースマッピングは、キューやストリームと Lambda 関数の連携に使います。',
+            },
+            {
+                text: 'Lambda 関数の環境変数をすべて削除する機能',
+                isCorrect: false,
+                explanation:
+                    'イベントソースマッピングは環境変数削除の機能ではありません。',
+            },
+        ],
+        explanation:
+            '初級段階では、S3 や API Gateway のような直接的なトリガーと、SQS や DynamoDB Streams のように Lambda が読み取りに行く連携がある、と整理すると理解しやすいです。',
+    },
 ]
