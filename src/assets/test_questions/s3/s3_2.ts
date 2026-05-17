@@ -1857,4 +1857,196 @@ export const testQuestions: Question[] = [
         explanation:
             '直接S3書き込みは、単純な少量データやアプリ側でファイルサイズ、分割、再試行、形式を細かく制御したい場合には有効です。その代わり、それらはアプリケーション側の責務になります。一方、大量ログを継続的に集約し、分析向けに整えてS3へ蓄積したい場合はFirehoseが有力です。Firehoseは運用をマネージド化できる代わりに、near real-timeの遅延、変換制約、追加コスト、失敗時の扱い、S3 prefix設計を比較して選びます。',
     },
+    {
+        question:
+            'モバイルアプリから数GBの動画をアップロードします。APIサーバーで動画本体を受け取ってからS3へ転送する案と、APIで認可後にS3のPresigned URLを発行し、クライアントからS3へ直接アップロードする案があります。最も適切な判断はどれですか?',
+        options: [
+            {
+                text: 'API Gateway + Lambdaなどでユーザー認可とキー決定だけを行い、短い有効期限のPresigned URLを発行してクライアントからS3へ直接アップロードさせる',
+                isCorrect: true,
+                explanation:
+                    '大容量ファイルをAPIサーバーで中継すると、API Gatewayのペイロードサイズ制限、Lambdaの実行時間・メモリ・同時実行数、サーバー帯域、タイムアウト、コストの制約を受けやすくなります。Presigned URLを使うと、認可済みユーザーに対して特定のS3操作を短時間だけ許可し、ファイル本体はクライアントからS3へ直接送れます。API側はキー名、サイズ、Content-Type、アップロード可能なユーザーなどを検証してからURLを発行します。',
+            },
+            {
+                text: 'セキュリティのため、動画本体は必ずAPI GatewayとLambdaを経由してS3へ転送する',
+                isCorrect: false,
+                explanation:
+                    'API GatewayやLambdaで大容量ファイル本体を中継すると、ペイロードサイズや実行時間、帯域、コストの制約に当たりやすくなります。認可はAPIで行い、データ転送はS3へ直接行わせる構成がよく使われます。',
+            },
+            {
+                text: 'S3バケットをpublic writeにすれば、Presigned URLや認可APIは不要になる',
+                isCorrect: false,
+                explanation:
+                    'public writeは誰でも書き込める危険な設定で、悪用やコスト増、マルウェア配置につながります。Presigned URLや一時認証情報で、ユーザーと操作範囲を限定します。',
+            },
+            {
+                text: 'Presigned URLを使うと、アップロードされたオブジェクトは自動的にウイルススキャン済みになる',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLは一時的なS3操作権限を与える仕組みであり、ファイル検査を自動実行する機能ではありません。必要ならアップロード後にイベント駆動で検査や変換を行います。',
+            },
+        ],
+        explanation:
+            '大容量アップロードでは「認可」と「データ転送」を分けるのが重要です。API Gateway + Lambdaは、ユーザー認証、アップロード先prefix、ファイル種別、サイズ上限、メタデータ条件、Presigned URL発行に使います。実際のバイト列はS3へ直接送ることで、サーバー中継のボトルネックを避けられます。ただし直接アップロードでも、完了後の検証、ウイルススキャン、状態管理、公開可否の制御は別途設計します。',
+    },
+    {
+        question:
+            'Presigned URLでS3へアップロードできるようにしました。URLを受け取ったユーザーが、想定外のContent-Typeや別のキーへアップロードできないようにしたいです。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'API側でユーザーを認可し、許可するbucket/key、HTTPメソッド、有効期限、必要なヘッダー条件を含めてPresigned URLまたはPresigned POSTを発行する',
+                isCorrect: true,
+                explanation:
+                    'Presigned URLは、発行に使った認証情報の権限をもとに、特定のS3操作を期限付きで許可します。PutObject用に発行したURLは、指定したbucket/keyや署名対象ヘッダーに結びつきます。ブラウザフォームでContent-Typeやサイズなどの条件を強く縛りたい場合はPresigned POSTも候補になり、content-length-rangeのような条件でアップロードサイズを制約できます。',
+            },
+            {
+                text: 'Presigned URLを発行すれば、ユーザーは同じバケット内の任意のキーへ自由にアップロードできる',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLは署名された特定のリクエストに対して有効です。任意のキーに自由にアップロードできる包括的な認証情報を渡すものではありません。ただし発行側が広すぎる権限や不適切なkeyを許すと危険です。',
+            },
+            {
+                text: 'Presigned URLの有効期限を長くすればするほど、アップロード可能範囲は自動的に狭くなる',
+                isCorrect: false,
+                explanation:
+                    '有効期限を長くしても権限範囲が狭くなるわけではありません。むしろ漏えい時の悪用可能時間が長くなります。必要最小限の期限と条件で発行します。',
+            },
+            {
+                text: 'URLをHTTPSではなくHTTPで配布すれば、署名情報が保護される',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLには署名情報が含まれるため、HTTPSで扱うべきです。HTTPで送ると盗聴や漏えいのリスクが高まります。',
+            },
+        ],
+        explanation:
+            'Presigned URLは便利ですが、発行時点の認可設計が重要です。誰が、どのprefixに、どのメソッドで、どのくらいの時間、どのContent-Typeやメタデータ条件でアップロードできるかをAPI側で決めます。Presigned POSTはフォームベースの条件指定に向き、バケットポリシー条件キーと組み合わせて暗号化方式、prefix、署名バージョン、送信元条件などをさらに制御できます。漏えい時の影響を小さくするため、有効期限は短くします。',
+    },
+    {
+        question:
+            'ブラウザからPresigned URLを使ってS3へ直接アップロードしようとしたところ、URL自体は正しいのにブラウザでCORSエラーになりました。最も適切な対応はどれですか?',
+        options: [
+            {
+                text: 'S3バケットのCORS設定で、許可するOrigin、HTTPメソッド、ヘッダーをアップロード要件に合わせて設定する',
+                isCorrect: true,
+                explanation:
+                    'ブラウザから別オリジンのS3へ直接アップロードする場合、S3バケット側のCORS（Cross-Origin Resource Sharing：異なるオリジン間のリクエスト制御）設定が必要です。PUTや独自ヘッダーを含むリクエストでは、事前にPreflightのOPTIONSリクエストが送られることがあります。Presigned URLの署名が正しくても、ブラウザのCORSチェックに失敗すればリクエストはブロックされます。',
+            },
+            {
+                text: 'CORSエラーはIAM権限不足だけが原因なので、常にs3:*を許可すれば解決する',
+                isCorrect: false,
+                explanation:
+                    'CORSとIAM権限は別の制御です。IAMや署名が正しくてもCORS設定が不足していればブラウザはブロックします。過剰なs3:*許可は最小権限に反します。',
+            },
+            {
+                text: 'CORSを避けるには、S3バケットをpublic writeにする必要がある',
+                isCorrect: false,
+                explanation:
+                    'public writeは不要で危険です。CORSはブラウザのクロスオリジン制御であり、公開書き込みにする必要はありません。必要なOriginとメソッドだけを許可します。',
+            },
+            {
+                text: 'Presigned URLを使う場合、ブラウザはCORSを一切確認しない',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLを使っても、ブラウザからクロスオリジンでアクセスする場合はCORSチェックが行われます。サーバーサイドからのHTTPクライアントとブラウザでは挙動が異なります。',
+            },
+        ],
+        explanation:
+            'Presigned URLのトラブルでは、署名、期限、リージョン、HTTPメソッド、署名対象ヘッダー、CORSを分けて確認します。特にブラウザアップロードでは、PreflightのOPTIONS、PUTやPOST、Content-Type、x-amz-*ヘッダーをCORSで許可しているかが重要です。CORSはブラウザ側の制約なので、サーバーサイドのHTTPクライアントでは同じ失敗にならないことがあります。',
+    },
+    {
+        question:
+            '10GBの動画をPresigned URLでS3へアップロードしたいです。単一PUTでは失敗時の再送が重く、安定しません。クライアントから直接S3へ大容量アップロードする設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Multipart Uploadを使い、各パート用のPresigned URLを発行してクライアントが並列アップロードし、最後にCompleteMultipartUploadする',
+                isCorrect: true,
+                explanation:
+                    '大容量ファイルではMultipart Uploadを使うと、パート単位で並列アップロードや再送ができます。Presigned URLを各UploadPartに対して発行し、クライアントがS3へ直接パートを送信します。最後にUploadId、PartNumber、各パートのETagを使ってCompleteMultipartUploadを呼び、1つのオブジェクトとして確定します。',
+            },
+            {
+                text: '10GBのファイルは必ずAPI Gateway経由でLambdaへ送り、Lambdaのメモリに全体を載せてからS3へPUTする',
+                isCorrect: false,
+                explanation:
+                    'API GatewayやLambdaで10GBのファイル本体を中継する設計は、ペイロードサイズ、実行時間、メモリ、帯域の制約に合いません。大容量ファイルはS3 Multipart Uploadで直接アップロードさせる方が自然です。',
+            },
+            {
+                text: 'Presigned URLではMultipart Uploadを使えないため、5GBを超えるオブジェクトはアップロードできない',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLはUploadPartなどのS3操作にも使えます。5GBを超えるオブジェクトではMultipart Uploadが必要で、各パートに対して署名付きURLを発行する設計ができます。',
+            },
+            {
+                text: 'S3 Transfer Accelerationを有効化すれば、Multipart Uploadの完了処理やパート管理は不要になる',
+                isCorrect: false,
+                explanation:
+                    'Transfer Accelerationは長距離転送の最適化であり、Multipart Uploadのパート管理や完了処理を不要にする機能ではありません。必要に応じて両方を組み合わせます。',
+            },
+        ],
+        explanation:
+            'Presigned URLとMultipart Uploadを組み合わせると、大容量ファイルをサーバーで中継せずにアップロードできます。ただし、API側はUploadIdの管理、各パートURL発行、PartNumberとETagの管理、完了/中止処理、期限切れ時の再発行、未完了Multipart Uploadの清掃を設計する必要があります。失敗時にAbortMultipartUploadを呼ばないと、未完了パートの課金が残ります。',
+    },
+    {
+        question:
+            'Presigned URLを7日間有効にしてファイル共有したいです。発行には一時的なSTS認証情報を使っており、その認証情報は1時間で期限切れになります。この場合の挙動として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Presigned URLは指定した期限より前でも、発行に使った一時認証情報が失効すると使えなくなる',
+                isCorrect: true,
+                explanation:
+                    'Presigned URLは、発行に使った認証情報に基づいて署名されます。一時認証情報で発行した場合、URLのExpiresInを長くしても、その認証情報が期限切れ、無効化、削除されるとPresigned URLも使えなくなります。実効期限は、URLに指定した期限と認証情報の期限の短い方です。',
+            },
+            {
+                text: 'Presigned URLは常に指定したExpiresInだけ有効で、発行元の認証情報の期限とは無関係である',
+                isCorrect: false,
+                explanation:
+                    '発行元の認証情報が失効すると、Presigned URLも使えなくなります。一時認証情報を使う場合は、URLの有効期限と認証情報の有効期限の短い方が実質的な上限になります。',
+            },
+            {
+                text: 'Presigned URLは一度発行すると、認証情報が削除されても永久に使える',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLは永久権限ではありません。期限付きであり、発行元の認証情報の状態にも影響されます。',
+            },
+            {
+                text: 'Presigned URLは有効期限を設定できないため、必ず1分で期限切れになる',
+                isCorrect: false,
+                explanation:
+                    'Presigned URLには有効期限を設定できます。AWS CLIやSDKでは最大7日まで指定できますが、一時認証情報で発行する場合はその認証情報の期限にも制約されます。',
+            },
+        ],
+        explanation:
+            'Presigned URLの有効期限は、指定したExpiresInだけでなく、発行に使った認証情報の寿命にも左右されます。AWS CLI/SDKでは最大7日、S3コンソールでは最大12時間など、発行方法による上限もあります。AssumeRole、Cognito、IAMユーザーなど、発行元の認証情報の種類でも実効上限が変わります。長すぎるPresigned URLは漏えい時の影響が大きいため、用途に応じて短い期限にするのが基本です。',
+    },
+    {
+        question:
+            'ユーザーがPresigned URLでS3へアップロードした後、ウイルススキャン、メタデータ登録、サムネイル生成などを行いたいです。アップロードAPIの応答を速く保ちつつ、後続処理も確実に実行したい場合、最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'Presigned URLでS3へ直接アップロードさせ、ObjectCreatedイベントをEventBridgeやSQS/Lambdaへ連携して後続処理を非同期に実行する',
+                isCorrect: true,
+                explanation:
+                    '大容量ファイル本体はS3へ直接アップロードさせ、アップロード完了後の処理はS3イベントを起点に非同期で実行すると、APIの応答性と後続処理の分離を両立できます。SQSを挟めばバースト吸収、再試行、DLQ設計がしやすくなり、複数ステップの検査や変換が必要ならStep Functionsでワークフロー化する選択肢もあります。',
+            },
+            {
+                text: 'アップロードAPI内で動画全体を受け取り、スキャンとサムネイル生成が完了するまで同期的に待ってからS3へ保存する',
+                isCorrect: false,
+                explanation:
+                    '大容量ファイル処理をAPIリクエスト内で同期実行すると、タイムアウトやスケール、ユーザー体験の問題が出やすくなります。アップロードと後続処理は分離する方が実務的です。',
+            },
+            {
+                text: 'Presigned URLでアップロードすれば、S3が自動的にウイルススキャンとサムネイル生成を行う',
+                isCorrect: false,
+                explanation:
+                    'S3はオブジェクトを保存するサービスであり、Presigned URLだけでウイルススキャンやサムネイル生成が自動実行されるわけではありません。必要な処理はイベント駆動で別途実装します。',
+            },
+            {
+                text: '後続処理が必要な場合、S3への直接アップロードは使えない',
+                isCorrect: false,
+                explanation:
+                    'S3直接アップロードと後続処理は両立できます。S3 Event Notifications、EventBridge、SQS、Lambda、Step Functionsなどを組み合わせて処理パイプラインを構成します。',
+            },
+        ],
+        explanation:
+            'アップロード設計では、Presigned URLによる直接アップロード、S3イベント、非同期処理を組み合わせるとスケールしやすくなります。アップロード直後のオブジェクトを未検査prefixに置き、検査済みprefixや公開prefixへ移動する、メタデータDBで状態管理する、失敗時に隔離するなどの運用も重要です。同期APIで全部処理するより、アップロード、検査、公開を段階に分ける方が障害時の復旧もしやすくなります。',
+    },
 ]
