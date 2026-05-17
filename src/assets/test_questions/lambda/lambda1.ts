@@ -3329,4 +3329,388 @@ export const testQuestions: Question[] = [
         explanation:
             'リトライや重複処理を調査するには、同じイベントを識別できる情報を安全な範囲でログに残すことが有効です。',
     },
+    {
+        question:
+            'Lambda の使いどころとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3 にファイルがアップロードされたときだけ、短い変換処理を実行する',
+                isCorrect: true,
+                explanation:
+                    'Lambda は、イベントをきっかけに短時間の処理を実行する用途に向いています。S3 アップロード後の画像変換やメタデータ抽出などは典型例です。',
+            },
+            {
+                text: 'OS にログインして GUI アプリを常時表示し続ける',
+                isCorrect: false,
+                explanation:
+                    'Lambda は OS にログインして GUI（画面操作を前提としたアプリケーション）を常時動かす用途には向きません。常駐アプリには EC2 やコンテナ系サービス（アプリケーションをコンテナ単位で実行・管理するサービス）などを検討します。',
+            },
+            {
+                text: '数日間かかる処理を 1 回の関数呼び出しで実行する',
+                isCorrect: false,
+                explanation:
+                    'Lambda には 1 回の呼び出しで実行できる最大時間があります。数日間かかる処理には別の構成を検討します。',
+            },
+            {
+                text: '大量のユーザー状態をメモリに保持し続ける常駐サーバー',
+                isCorrect: false,
+                explanation:
+                    'Lambda は呼び出しごとに短い処理を行う考え方に向いています。ユーザー状態をメモリに保持し続ける常駐サーバー用途には向きにくいです。',
+            },
+        ],
+        explanation:
+            'Lambda は「必要なときだけ起動して、短い処理を終える」用途と相性が良いサービスです。',
+    },
+    {
+        question:
+            'Lambda が向いている自動化処理として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '毎日決まった時刻に不要な一時データを削除する',
+                isCorrect: true,
+                explanation:
+                    'EventBridge や EventBridge Scheduler（指定時刻や定期スケジュールで処理を実行できる機能）と Lambda を組み合わせると、定期的な自動化処理を実行できます。',
+            },
+            {
+                text: '管理者が SSH で入って手作業する前提の長時間メンテナンス',
+                isCorrect: false,
+                explanation:
+                    'Lambda は SSH で入って手作業するサーバーではありません。長時間の手作業メンテナンスには向きません。',
+            },
+            {
+                text: '24 時間同じプロセスで画面を表示し続ける',
+                isCorrect: false,
+                explanation:
+                    'Lambda は常時画面表示を続ける用途には向きません。イベントごとに処理する設計が基本です。',
+            },
+            {
+                text: '関数内で無限ループを動かし続けて定期実行を実現する',
+                isCorrect: false,
+                explanation:
+                    'Lambda にはタイムアウト（関数の最大実行時間）があります。定期実行は無限ループではなく、EventBridge などのスケジュール機能を使います。',
+            },
+        ],
+        explanation:
+            'Lambda は、定期実行、自動通知、ファイル処理など、人が常に操作しなくてもよい小さな自動化に向いています。',
+    },
+    {
+        question:
+            'API のバックエンドとして Lambda を使うケースとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'API Gateway で HTTP リクエストを受け、Lambda で認証後の簡単なデータ取得処理を行う',
+                isCorrect: true,
+                explanation:
+                    'API Gateway（HTTP API を公開・管理できるサービス）を入口にし、Lambda をバックエンド処理として使う構成はよくあります。小規模 API やアクセス量が変動する API と相性があります。',
+            },
+            {
+                text: 'Lambda 関数を SSH サーバーとして公開する',
+                isCorrect: false,
+                explanation:
+                    'Lambda は SSH サーバーとして公開する用途ではありません。HTTP API の入口には API Gateway などを使います。',
+            },
+            {
+                text: 'Lambda の環境変数に HTML を全部保存して Web サーバーとして常時配信する',
+                isCorrect: false,
+                explanation:
+                    '環境変数は設定値を渡すための仕組みであり、Web サイト全体を常時配信する保存場所ではありません。',
+            },
+            {
+                text: 'WebSocket の常時接続を 1 つの Lambda 実行で何日も維持する',
+                isCorrect: false,
+                explanation:
+                    'Lambda は 1 回の実行時間に上限があり、1 つの実行で何日も常時接続を保持する用途には向きません。',
+            },
+        ],
+        explanation:
+            'API バックエンドでは、リクエストを受けたときだけ Lambda が処理し、結果を HTTP レスポンスとして返す構成がよく使われます。',
+    },
+    {
+        question:
+            'Lambda で扱いやすい軽量バッチ処理として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'S3 に置かれた小さな CSV ファイルを読み、集計結果を DynamoDB に保存する',
+                isCorrect: true,
+                explanation:
+                    '短時間で終わる軽量なバッチ処理は Lambda に向いています。CSV（カンマ区切りの表形式データファイル）などを S3 から読み、DynamoDB や S3 に結果を保存する構成が考えられます。',
+            },
+            {
+                text: '数十時間かかる巨大なデータ処理を 1 回の Lambda 実行で行う',
+                isCorrect: false,
+                explanation:
+                    'Lambda は短時間の処理向けで、1 回の実行時間にも上限があります。長時間の巨大データ処理には別のサービスや処理分割を検討します。',
+            },
+            {
+                text: 'OS にログインして対話的にコマンドを実行し続ける',
+                isCorrect: false,
+                explanation:
+                    'Lambda は OS にログインして対話操作するサービスではありません。',
+            },
+            {
+                text: '関数のグローバル変数だけに集計結果を永続保存する',
+                isCorrect: false,
+                explanation:
+                    'グローバル変数は永続保存先ではありません。永続的な結果は DynamoDB、S3、RDS などに保存します。',
+            },
+        ],
+        explanation:
+            'Lambda のバッチ利用は、短時間で完了し、入力と出力が明確な処理に向いています。',
+    },
+    {
+        question:
+            'Lambda に向きにくいケースとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '長時間動き続ける常駐プロセスを自分で管理したいケース',
+                isCorrect: true,
+                explanation:
+                    'Lambda はイベントごとに短時間の処理を実行する用途に向いています。長時間動き続ける常駐プロセスを自分で管理したい場合は、EC2、ECS や Fargate（コンテナを実行・管理する AWS サービス）なども検討します。',
+            },
+            {
+                text: 'S3 にファイルが置かれたときだけ処理したいケース',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントをきっかけに処理する用途は Lambda に向いています。',
+            },
+            {
+                text: 'EventBridge で 1 日 1 回だけ処理したいケース',
+                isCorrect: false,
+                explanation:
+                    'EventBridge と Lambda を組み合わせた定期実行はよく使われます。',
+            },
+            {
+                text: 'API Gateway から短いバックエンド処理を呼びたいケース',
+                isCorrect: false,
+                explanation:
+                    'API Gateway と Lambda を組み合わせた短い API バックエンド処理は Lambda に向いています。',
+            },
+        ],
+        explanation:
+            'Lambda は便利ですが、常時起動や長時間処理を中心にしたい場合は、別のコンピューティングサービスも検討します。',
+    },
+    {
+        question:
+            'Lambda の最大実行時間に関する説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '1 回の関数呼び出しには最大実行時間があり、長時間処理には注意が必要である',
+                isCorrect: true,
+                explanation:
+                    'Lambda には 1 回の関数呼び出しで実行できる最大時間があります。現在の一般的な上限は 15 分です。長時間処理は分割や別サービスの利用を検討します。',
+            },
+            {
+                text: 'Lambda は 1 回の呼び出しで何日でも実行できる',
+                isCorrect: false,
+                explanation:
+                    'Lambda は 1 回の呼び出しで何日でも実行できるサービスではありません。タイムアウト上限があります。',
+            },
+            {
+                text: '最大実行時間は関数名を長くすると無制限になる',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さで最大実行時間が無制限になることはありません。',
+            },
+            {
+                text: '最大実行時間は CloudWatch Logs を削除すると伸びる',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs の削除で Lambda の最大実行時間が伸びるわけではありません。',
+            },
+        ],
+        explanation:
+            'Lambda に向くかどうかを判断するときは、処理が最大実行時間内に安定して終わるかを確認します。',
+    },
+    {
+        question:
+            'Lambda の料金の基本として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '主にリクエスト数と実行時間などに基づいて課金される',
+                isCorrect: true,
+                explanation:
+                    'Lambda は、主に関数のリクエスト数と実行時間などに基づいて課金されます。実行時間は、設定したメモリ量とも関係します。',
+            },
+            {
+                text: '関数を作成した瞬間から、実行しなくても必ず EC2 と同じ固定月額がかかる',
+                isCorrect: false,
+                explanation:
+                    'Lambda は使った分に応じた課金が基本です。関数を作っただけで EC2 と同じ固定月額が必ずかかるわけではありません。',
+            },
+            {
+                text: '関数名が長いほど必ず料金が高くなる',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さで料金が決まるわけではありません。',
+            },
+            {
+                text: 'CloudWatch Logs を使うと Lambda の実行料金が必ず無料になる',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs を使っても Lambda の実行料金が必ず無料になるわけではありません。ログ保存にも別途コストがかかる場合があります。',
+            },
+        ],
+        explanation:
+            'Lambda のコストを見るときは、呼び出し回数、実行時間、メモリ設定、ログ量などを確認します。',
+    },
+    {
+        question:
+            'Lambda のコストを考えるときの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'メモリを増やすと処理が速くなる場合もあるが、設定メモリと実行時間が料金に影響するため測定して判断する',
+                isCorrect: true,
+                explanation:
+                    'Lambda ではメモリを増やすと CPU などの処理能力も増えるため、処理時間が短くなる場合があります。一方で料金にも影響するため、実行時間やコストを測定して判断します。',
+            },
+            {
+                text: '常に最大メモリにすれば、必ず最安になる',
+                isCorrect: false,
+                explanation:
+                    '最大メモリが必ず最安とは限りません。処理時間の短縮と料金のバランスを測定して判断します。',
+            },
+            {
+                text: '常に最小メモリにすれば、必ず最速になる',
+                isCorrect: false,
+                explanation:
+                    '最小メモリでは処理能力が足りず、実行時間が長くなる場合があります。',
+            },
+            {
+                text: 'ログを大量に出してもコストや調査性には一切影響しない',
+                isCorrect: false,
+                explanation:
+                    'ログ量はコストや調査性に影響する場合があります。必要な情報を適切に出すことが重要です。',
+            },
+        ],
+        explanation:
+            'Lambda は「メモリを増やすと高い、少なくすると安い」と単純には言い切れません。処理時間も含めて見る必要があります。',
+    },
+    {
+        question:
+            'Lambda を使う判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'イベント発生時だけ短く処理でき、状態は外部サービスに保存できるなら候補になる',
+                isCorrect: true,
+                explanation:
+                    'Lambda は短時間のイベント処理に向いています。状態をメモリに持ち続けるのではなく、DynamoDB、S3、RDS など外部サービスに保存できる設計なら候補になります。',
+            },
+            {
+                text: '状態をすべてメモリに持ち続けたい場合に常に最適である',
+                isCorrect: false,
+                explanation:
+                    'Lambda は状態をメモリに持ち続ける常駐サーバー用途には向きにくいです。状態は外部ストレージに保存する設計を考えます。',
+            },
+            {
+                text: '処理時間が何日かかっても、Lambda だけで必ず実現する',
+                isCorrect: false,
+                explanation:
+                    'Lambda には最大実行時間があります。長時間処理には別サービスや処理分割を検討します。',
+            },
+            {
+                text: 'OS やミドルウェアを細かく手動管理したい場合に最優先で選ぶ',
+                isCorrect: false,
+                explanation:
+                    'OS やミドルウェアを細かく手動管理したい場合は、EC2 やコンテナ系サービスの方が向くことがあります。',
+            },
+        ],
+        explanation:
+            'Lambda の判断では、イベント駆動か、短時間で終わるか、状態を外部化できるか、常駐が必要かを確認します。',
+    },
+    {
+        question:
+            '短時間のイベント処理に Lambda が向いている理由として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'イベントが発生したときだけ関数を実行し、処理が終われば実行を終えられるため',
+                isCorrect: true,
+                explanation:
+                    'Lambda はイベント駆動で、必要なときに関数を実行する仕組みです。短い処理を都度実行する用途では、サーバーを常時管理しなくてよい点が利点になります。',
+            },
+            {
+                text: '必ず 1 台のサーバーを 24 時間起動し続けるため',
+                isCorrect: false,
+                explanation:
+                    'Lambda は利用者が 1 台のサーバーを常時起動管理するサービスではありません。',
+            },
+            {
+                text: 'OS にログインして手動でプロセスを起動するため',
+                isCorrect: false,
+                explanation:
+                    'Lambda は OS にログインして手動でプロセスを起動する使い方ではありません。',
+            },
+            {
+                text: '実行時間の上限がないため',
+                isCorrect: false,
+                explanation:
+                    'Lambda には最大実行時間があります。短時間処理に向いている点を理解することが重要です。',
+            },
+        ],
+        explanation:
+            'Lambda は、ファイルアップロード、API 呼び出し、メッセージ到着、スケジュール時刻などをきっかけに短い処理を実行する用途に向いています。',
+    },
+    {
+        question:
+            '常駐処理が必要な場合の判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda だけにこだわらず、EC2、ECS、Fargate など常駐処理を扱いやすいサービスも検討する',
+                isCorrect: true,
+                explanation:
+                    '常時起動、長時間接続、OS やプロセスの細かい管理が必要な場合は、Lambda より EC2、ECS や Fargate（コンテナを実行・管理する AWS サービス）などが向くことがあります。',
+            },
+            {
+                text: 'Lambda 関数内で無限ループを書けば、常駐処理として常に最適になる',
+                isCorrect: false,
+                explanation:
+                    'Lambda にはタイムアウトがあり、無限ループで常駐処理を実現する設計には向きません。',
+            },
+            {
+                text: '常駐処理が必要でも、必ず S3 イベントだけで実現する',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントはファイル作成などをきっかけに処理する仕組みで、常駐処理の代替ではありません。',
+            },
+            {
+                text: '常駐処理では IAM 権限を一切考えなくてよい',
+                isCorrect: false,
+                explanation:
+                    'どのサービスを使う場合でも、AWS リソースへアクセスするなら権限設計は重要です。',
+            },
+        ],
+        explanation:
+            'Lambda が向かないケースを判断できることも重要です。無理に Lambda へ寄せず、要件に合うサービスを選びます。',
+    },
+    {
+        question:
+            'Lambda の利用判断で「向かない可能性が高い」と考えるべき要件はどれですか?',
+        options: [
+            {
+                text: '1 回の処理が最大実行時間を大きく超える見込みで、途中で分割しにくい',
+                isCorrect: true,
+                explanation:
+                    'Lambda には 1 回の実行時間の上限があります。処理が上限を大きく超え、分割もしにくい場合は、別のコンピューティングサービスを検討します。',
+            },
+            {
+                text: 'S3 にファイルが置かれたときだけ軽い処理をしたい',
+                isCorrect: false,
+                explanation:
+                    'S3 イベントで軽い処理を行う用途は Lambda に向いています。',
+            },
+            {
+                text: 'API Gateway から短い処理を呼び出したい',
+                isCorrect: false,
+                explanation:
+                    '短い API バックエンド処理は Lambda の代表的な用途です。',
+            },
+            {
+                text: 'EventBridge で 1 日 1 回だけ処理を起動したい',
+                isCorrect: false,
+                explanation:
+                    'EventBridge と Lambda の定期実行はよく使われる構成です。',
+            },
+        ],
+        explanation:
+            'Lambda に向くかどうかは、処理時間、状態管理、常駐性、イベント駆動との相性で判断します。',
+    },
 ]
