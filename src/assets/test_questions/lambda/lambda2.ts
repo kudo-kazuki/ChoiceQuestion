@@ -9,7 +9,7 @@ export const testQuestions: Question[] = [
                 text: 'S3 イベントで Lambda を起動し、サムネイル生成後に別の S3 プレフィックスへ保存する',
                 isCorrect: true,
                 explanation:
-                    '短時間のイベント処理で、S3 のオブジェクト作成が明確な起点になるため Lambda が適しています。入力用と出力用のプレフィックス（フォルダ名のようなパスの先頭部分）を分けると、再帰的な起動も避けやすくなります。',
+                    '短時間のイベント処理で、S3 のオブジェクト作成が明確な起点になるため Lambda が適しています。入力用と出力用のプレフィックス（S3 のフォルダパスのようなキー先頭部分）を分けると、再帰的な起動も避けやすくなります。',
             },
             {
                 text: '常時起動した EC2 インスタンスで S3 を数秒ごとにポーリングする',
@@ -937,7 +937,7 @@ export const testQuestions: Question[] = [
                 text: '入力と出力のプレフィックスを分け、同じオブジェクトの再処理でも安全になるよう冪等にする',
                 isCorrect: true,
                 explanation:
-                    '同じバケットへ書き戻す場合は、入力用と出力用のプレフィックス（フォルダ名のようなパスの先頭部分）を分け、再帰的な起動を避けます。重複実行されても結果が壊れない設計も必要です。',
+                    '同じバケットへ書き戻す場合は、入力用と出力用のプレフィックス（S3 のフォルダパスのようなキー先頭部分）を分け、再帰的な起動を避けます。重複実行されても結果が壊れない設計も必要です。',
             },
             {
                 text: '同じバケットに書き戻す場合、Lambda は絶対に再起動されない',
@@ -2368,5 +2368,325 @@ export const testQuestions: Question[] = [
         ],
         explanation:
             'Lambda + RDS の読み取り負荷では、接続数だけでなく同じデータを繰り返し読んでいないかも確認します。キャッシュは性能改善に有効ですが、整合性や更新反映タイミング（cache invalidation）とのトレードオフがあります。',
+    },
+    {
+        question:
+            'Lambda の実行ロールに `s3:*` と `Resource: *` を付けて、すべての S3 バケットへアクセスできるようにしています。最小権限の観点で最も適切な見直しはどれですか?',
+        options: [
+            {
+                text: '必要な操作と対象バケット / プレフィックスに絞った権限へ縮小する',
+                isCorrect: true,
+                explanation:
+                    '最小権限では、必要な Action（例: `s3:GetObject`、`s3:PutObject`）と対象 Resource をできるだけ限定します。多くの AWS API では、必要なリソースへ限定する方が安全です。',
+            },
+            {
+                text: '開発を速くするため、本番でも常に `AdministratorAccess` を付ける',
+                isCorrect: false,
+                explanation:
+                    '広すぎる権限は、誤操作や侵害時の影響範囲を大きくします。本番では特に最小権限を意識します。',
+            },
+            {
+                text: 'S3 アクセスを使う Lambda では、IAM ポリシーは不要である',
+                isCorrect: false,
+                explanation:
+                    'Lambda が S3 へアクセスするには、実行ロールに適切な IAM 権限が必要です。',
+            },
+            {
+                text: 'Resource を `*` にしておけば、セキュリティ上は最も安全である',
+                isCorrect: false,
+                explanation:
+                    '`Resource: *` は対象リソースを広く許可する指定です。多くの AWS API では、必要なリソースに限定できるなら限定する方が安全です。',
+            },
+        ],
+        explanation:
+            'IAM の最小権限では「どの操作を」「どのリソースに対して」許可するかを具体化します。動けばよいではなく、影響範囲を小さくする設計が重要です。',
+    },
+    {
+        question:
+            'S3 イベントで Lambda を起動し、Lambda は起動後に DynamoDB へ書き込みます。この構成で権限を考えるとき、最も適切な整理はどれですか?',
+        options: [
+            {
+                text: 'S3 が Lambda を呼び出す許可と、Lambda が DynamoDB に書き込む実行ロール権限を分けて考える',
+                isCorrect: true,
+                explanation:
+                    '他サービスが Lambda を呼び出す権限と、Lambda が他サービスへアクセスする権限は別です。S3 から Lambda を起動する許可と、Lambda 実行ロールの `dynamodb:PutItem` などを分けて確認します。',
+            },
+            {
+                text: 'Lambda の実行ロールに DynamoDB 権限があれば、S3 は必ず Lambda を呼び出せる',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは Lambda が何をできるかの権限です。S3 が Lambda を呼び出せるかは、Lambda 側のリソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）など別の許可が関係します。',
+            },
+            {
+                text: 'S3 イベント通知を設定すれば、Lambda から DynamoDB への権限も自動的に付く',
+                isCorrect: false,
+                explanation:
+                    'イベント通知設定と Lambda 実行ロール権限は別です。DynamoDB へ書き込むには実行ロールに必要な権限を付与します。',
+            },
+            {
+                text: 'DynamoDB のテーブル名をログに出せば、IAM 権限は不要になる',
+                isCorrect: false,
+                explanation:
+                    'ログ出力は権限付与ではありません。AWS API 操作には IAM 権限が必要です。',
+            },
+        ],
+        explanation:
+            'Lambda の権限設計では「誰が Lambda を呼ぶか」と「Lambda が何へアクセスするか」を分けて考えます。呼び出し方向を整理すると AccessDenied の切り分けがしやすくなります。',
+    },
+    {
+        question:
+            '別アカウントの EventBridge から自アカウントの Lambda を呼び出したいです。クロスアカウント呼び出しの設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda 側のリソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）で、相手アカウントや特定の EventBridge ルールからの呼び出しを許可する',
+                isCorrect: true,
+                explanation:
+                    'クロスアカウントで Lambda を呼び出す場合、呼び出される Lambda 側に「誰が呼び出せるか」を許可するリソースベースポリシーが必要です。Principal（アクセスを許可する相手）や SourceArn（呼び出し元リソース ARN を条件指定する仕組み。ARN は AWS リソースを一意に識別する名前）を限定すると安全です。',
+            },
+            {
+                text: '呼び出し元アカウントの Lambda 実行ロールに権限を付ければ、呼び出される側の許可は不要である',
+                isCorrect: false,
+                explanation:
+                    '呼び出し元に権限があっても、呼び出される Lambda 側が許可していなければクロスアカウント呼び出しは失敗します。',
+            },
+            {
+                text: 'クロスアカウント呼び出しでは、アカウント ID を隠せば安全に呼び出せる',
+                isCorrect: false,
+                explanation:
+                    'セキュリティはアカウント ID を隠すことではなく、明示的な許可と条件で制御します。',
+            },
+            {
+                text: 'リソースベースポリシーでは Principal を `*` にするのが常に最小権限である',
+                isCorrect: false,
+                explanation:
+                    '`Principal: *` は広い許可です。必要なアカウント、サービス、SourceArn（呼び出し元リソース ARN を条件指定する仕組み。ARN は AWS リソースを一意に識別する名前）などに絞るべきです。',
+            },
+        ],
+        explanation:
+            'クロスアカウント呼び出しでは、呼び出し元の権限と呼び出される側のリソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）を両方確認します。信頼関係は無制限許可ではないため、Principal（アクセスを許可する相手）と条件の絞り込みが重要です。',
+    },
+    {
+        question:
+            'API Gateway から Lambda を呼び出す構成で、Lambda のリソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）に広く `Principal: *` を許可しています。改善として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'API Gateway の特定 API / ステージ / メソッドなど、必要な呼び出し元に限定する',
+                isCorrect: true,
+                explanation:
+                    'Lambda のリソースベースポリシーでは、誰が Lambda を呼び出せるかを制御します。API Gateway からの呼び出しだけを許可するなら、execute-api ARN などを SourceArn（呼び出し元リソース ARN を条件指定する仕組み）に指定して対象を絞るのが望ましいです。',
+            },
+            {
+                text: '`Principal: *` にしておけば、最小権限になる',
+                isCorrect: false,
+                explanation:
+                    '`Principal: *` の Principal（アクセスを許可する相手）を全体に広げる指定は、最小権限とは逆方向です。必要な呼び出し元に限定します。',
+            },
+            {
+                text: 'API Gateway を使う場合、Lambda のリソースベースポリシーは一切関係しない',
+                isCorrect: false,
+                explanation:
+                    'API Gateway が Lambda を呼び出すには、Lambda 側で呼び出しを許可する設定が関係します。',
+            },
+            {
+                text: 'Lambda の環境変数に API ID を書けば、呼び出し元制限は自動的に設定される',
+                isCorrect: false,
+                explanation:
+                    '環境変数は設定値を渡す仕組みであり、リソースベースポリシーの代わりにはなりません。',
+            },
+        ],
+        explanation:
+            'リソースベースポリシーは、Lambda 関数側に設定する「誰が呼び出せるか」の許可設定です。実行ロールとは別に「誰がこの関数を呼べるか」を制御します。',
+    },
+    {
+        question:
+            'Lambda で DB パスワードや外部 API キーを扱います。環境変数に平文で保存する案が出ています。最も適切な判断はどれですか?',
+        options: [
+            {
+                text: 'Secrets Manager や Parameter Store などを使い、機密情報を安全に保存・取得する設計を検討する',
+                isCorrect: true,
+                explanation:
+                    'AWS Secrets Manager（パスワードや API キーなどの機密情報を安全に保存・取得するサービス）や Systems Manager Parameter Store（SSM Parameter Store：設定値や機密値を管理できるサービス）を使うと、機密情報をコードや平文環境変数から分離できます。',
+            },
+            {
+                text: '環境変数に平文で置けば、誰からも見えないため最も安全である',
+                isCorrect: false,
+                explanation:
+                    '環境変数は便利で暗号化機能もありますが、機密情報を平文で扱うと閲覧権限を持つ利用者やログ出力ミスなどで漏洩リスクがあります。機密情報専用の管理サービスを使う方が運用やローテーションをしやすい場合があります。',
+            },
+            {
+                text: 'API キーは CloudWatch Logs に出しておくと安全に共有できる',
+                isCorrect: false,
+                explanation:
+                    '機密情報をログに出すのは危険です。ログは運用者やシステムから参照される可能性があります。',
+            },
+            {
+                text: 'Secrets Manager を使う場合、Lambda の IAM 権限は不要になる',
+                isCorrect: false,
+                explanation:
+                    'Secrets Manager から値を取得するには、Lambda の実行ロールに必要な `secretsmanager:GetSecretValue` などの権限が必要です。',
+            },
+        ],
+        explanation:
+            '機密情報はコード、ログ、平文環境変数から分離するのが基本です。保存先だけでなく、取得権限、ログ出力制御、ローテーション（定期的な認証情報変更）、監査を含めて設計します。',
+    },
+    {
+        question:
+            'Secrets Manager と Parameter Store の使い分けとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '機密情報のローテーションや専用管理が重要なら Secrets Manager、一般的な設定値や階層管理には Parameter Store も検討する',
+                isCorrect: true,
+                explanation:
+                    'Secrets Manager はシークレットの管理やローテーション（定期的な認証情報変更）に強みがあります。Systems Manager Parameter Store（SSM Parameter Store）は設定値の階層管理や SecureString（暗号化されたパラメータ保存形式）による機密値管理にも使えます。要件とコストで選びます。',
+            },
+            {
+                text: 'Secrets Manager を使うと、IAM 権限なしで全シークレットを取得できる',
+                isCorrect: false,
+                explanation:
+                    'Secrets Manager でも IAM 権限は必要です。必要なシークレットだけ取得できるように制限します。',
+            },
+            {
+                text: 'Parameter Store は設定値を一切保存できない',
+                isCorrect: false,
+                explanation:
+                    'Systems Manager Parameter Store（SSM Parameter Store）は設定値や機密値を保存できます。階層構造で管理できる点も特徴です。',
+            },
+            {
+                text: 'どちらを使っても、機密情報をログに出してよい',
+                isCorrect: false,
+                explanation:
+                    '保存先に関係なく、取得した機密情報をログに出すのは避けるべきです。',
+            },
+        ],
+        explanation:
+            'Secrets Manager と Systems Manager Parameter Store（SSM Parameter Store）はどちらも設定・機密値管理に使えますが、ローテーション（定期的な認証情報変更）、料金、運用、権限制御の要件で選びます。',
+    },
+    {
+        question:
+            'Lambda が Secrets Manager から特定の DB パスワードだけを取得します。最小権限の IAM ポリシーとして最も適切な考え方はどれですか?',
+        options: [
+            {
+                text: '`secretsmanager:GetSecretValue` を対象のシークレット ARN に限定して許可する',
+                isCorrect: true,
+                explanation:
+                    '必要な操作はシークレットの取得なので、Action は `secretsmanager:GetSecretValue` などに絞り、Resource は対象シークレットの ARN（AWS リソースを一意に識別する名前）に限定します。',
+            },
+            {
+                text: '`secretsmanager:*` を `Resource: *` で許可する',
+                isCorrect: false,
+                explanation:
+                    'すべての Secrets Manager 操作と全リソースを許可するのは過剰です。必要な操作と対象シークレットに限定します。',
+            },
+            {
+                text: 'Secrets Manager を使う場合、Lambda 実行ロールには何も権限を付けない',
+                isCorrect: false,
+                explanation:
+                    'Lambda が Secrets Manager から値を取得するには実行ロール権限が必要です。',
+            },
+            {
+                text: 'シークレット名を環境変数に書けば、IAM 権限なしで取得できる',
+                isCorrect: false,
+                explanation:
+                    '環境変数にシークレット名を置くことはありますが、値を取得する AWS API 操作には IAM 権限が必要です。',
+            },
+        ],
+        explanation:
+            'Secrets Manager 利用時も最小権限が重要です。どの関数が、どのシークレットを、どの操作で使うかを具体的に制限します。',
+    },
+    {
+        question:
+            '本番 Lambda の環境変数に DB パスワードを設定しており、開発者の多くが Lambda 設定閲覧権限を持っています。リスクとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: '設定閲覧権限を持つ人や誤ったログ出力などを通じて、機密情報が漏洩する可能性がある',
+                isCorrect: true,
+                explanation:
+                    '環境変数は便利な設定管理の仕組みで暗号化機能もありますが、機密情報を平文で扱うと閲覧権限やログ出力ミスによる漏洩リスクがあります。機密情報管理サービスの利用を検討します。',
+            },
+            {
+                text: '環境変数に置いた機密情報は、AWS 上では誰にも絶対に見えない',
+                isCorrect: false,
+                explanation:
+                    '権限を持つ利用者や管理者が参照できる場合があります。権限設計と機密情報の保存方法が重要です。',
+            },
+            {
+                text: '環境変数にパスワードを置くと、RDS の接続数上限が自動的に増える',
+                isCorrect: false,
+                explanation:
+                    '環境変数は設定値を渡す仕組みであり、RDS の接続数上限を変更するものではありません。',
+            },
+            {
+                text: '開発者全員に設定閲覧権限を与えることが、常に最小権限である',
+                isCorrect: false,
+                explanation:
+                    '最小権限では、業務上必要な人だけに必要な範囲の権限を付けます。全員に広く付与するのは過剰になりがちです。',
+            },
+        ],
+        explanation:
+            '環境変数は非機密の設定値には便利です。Lambda 環境変数にも暗号化機能はありますが、機密情報は Secrets Manager などで管理し、閲覧・取得権限やローテーションを分けて設計する方が安全な場合があります。',
+    },
+    {
+        question:
+            'Lambda の実行ロールに複数チームの機能で使う権限をまとめて付与しています。結果として、ある関数が本来不要なテーブルやバケットにもアクセスできます。改善として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '関数や責務ごとに実行ロールを分け、必要なリソースへの権限だけを付与する',
+                isCorrect: true,
+                explanation:
+                    '複数の関数で1つの強い実行ロールを共有すると、不要なアクセス権限が広がります。関数の責務ごとにロールを分け、権限境界を小さくします。',
+            },
+            {
+                text: 'すべての関数で同じ強いロールを使うと、最小権限が実現できる',
+                isCorrect: false,
+                explanation:
+                    '同じ強いロールを共有すると、各関数に不要な権限が付く可能性が高くなります。',
+            },
+            {
+                text: '権限が広いほど、セキュリティリスクは必ず小さくなる',
+                isCorrect: false,
+                explanation:
+                    '権限が広いほど、誤操作や侵害時の影響範囲が大きくなります。',
+            },
+            {
+                text: '実行ロールを分けると、Lambda は AWS サービスへ一切アクセスできなくなる',
+                isCorrect: false,
+                explanation:
+                    'ロールを分けても、必要な権限を正しく付与すれば AWS サービスへアクセスできます。',
+            },
+        ],
+        explanation:
+            '最小権限はポリシー文だけでなく、ロールの分割単位にも関係します。責務が違う関数に同じ広いロールを共有させない設計が重要です。',
+    },
+    {
+        question:
+            'Lambda のクロスアカウント呼び出しを許可するため、相手アカウント全体に呼び出し権限を与える案があります。より安全な設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '相手アカウントに加えて、可能なら SourceArn や SourceAccount などの条件で呼び出し元を限定する',
+                isCorrect: true,
+                explanation:
+                    'クロスアカウント許可では、Principal（アクセスを許可する相手）だけでなく SourceArn（呼び出し元リソース ARN を条件指定する仕組み）や SourceAccount（特定 AWS アカウントからの呼び出しに限定する条件）で特定のリソースやアカウントに絞ると安全性が高まります。',
+            },
+            {
+                text: 'クロスアカウントでは条件を付けることはできないため、常に全アカウントへ公開する',
+                isCorrect: false,
+                explanation:
+                    'リソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）では Principal（アクセスを許可する相手）や条件を使って呼び出し元を制限できます。',
+            },
+            {
+                text: '相手アカウントを信頼していれば、ログや監査は不要である',
+                isCorrect: false,
+                explanation:
+                    'クロスアカウント連携では、誰がいつ呼び出したかを追える監査やログも重要です。',
+            },
+            {
+                text: '呼び出し元を限定すると、Lambda の実行ロールが消える',
+                isCorrect: false,
+                explanation:
+                    'リソースベースポリシー（Lambda 関数側に設定する「誰が呼び出せるか」の許可設定）の条件と Lambda 実行ロールは別の設定です。片方を設定しても他方が消えることはありません。',
+            },
+        ],
+        explanation:
+            'クロスアカウント連携では、広い信頼ではなく明示的な制限が重要です。Principal（アクセスを許可する相手）、SourceArn（呼び出し元リソース ARN を条件指定する仕組み）、SourceAccount（特定 AWS アカウントからの呼び出しに限定する条件）、監査ログを組み合わせて考えます。',
     },
 ]
