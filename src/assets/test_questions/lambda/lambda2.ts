@@ -681,7 +681,7 @@ export const testQuestions: Question[] = [
                 text: 'Duration、Init Duration、メモリ使用量、エラー、スロットリング、依存サービスの応答時間',
                 isCorrect: true,
                 explanation:
-                    'Duration（実行時間）、Init Duration（初期化にかかった時間）、メモリ使用量、エラー、Throttles（同時実行などの制限による抑制）、依存サービスの応答時間を見ると、ボトルネックを切り分けやすくなります。',
+                    'Duration（実行時間）、Init Duration（初期化にかかった時間）、メモリ使用量、エラー、Throttles（同時実行数上限などにより実行が抑制・拒否された回数）、依存サービスの応答時間を見ると、ボトルネックを切り分けやすくなります。',
             },
             {
                 text: '関数名だけを見れば、性能問題の原因はほぼ特定できる',
@@ -2787,19 +2787,19 @@ export const testQuestions: Question[] = [
     },
     {
         question:
-            'Lambda の Throttles（同時実行数制限などによる実行抑制回数）が増えています。最も適切な切り分けはどれですか?',
+            'Lambda の Throttles（同時実行数上限などにより実行が抑制・拒否された回数）が増えています。最も適切な切り分けはどれですか?',
         options: [
             {
                 text: '同時実行数の上限、Reserved Concurrency、アカウント全体の同時実行、イベントソース側の流量を確認する',
                 isCorrect: true,
                 explanation:
-                    'Throttles（同時実行数制限などによる実行抑制回数）は、同時実行数などの制限により実行が抑制されたことを示します。関数単位の Reserved Concurrency、アカウント全体の上限、流入量を確認します。',
+                    'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）は、同時実行数（同時に動作している Lambda 実行環境数）などの制限により実行が抑制されたことを示します。関数単位の Reserved Concurrency、アカウント全体の上限、流入量を確認します。',
             },
             {
                 text: 'Throttles は IAM AccessDenied と同じ意味である',
                 isCorrect: false,
                 explanation:
-                    'Throttles（同時実行数制限などによる実行抑制回数）は容量や同時実行の制限に関するメトリクスです。AccessDenied は権限不足を示すエラーです。',
+                    'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）は容量や同時実行の制限に関するメトリクスです。AccessDenied は権限不足を示すエラーです。',
             },
             {
                 text: 'Throttles が増えても、呼び出し元や再試行には一切影響しない',
@@ -2815,7 +2815,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Throttles（同時実行数制限などによる実行抑制回数）は「コードの例外」ではなく、容量制限や同時実行制御の問題として切り分けます。処理時間が伸びて同時実行が詰まるケースもあります。',
+            'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）は「コードの例外」ではなく、容量制限や同時実行制御の問題として切り分けます。処理時間が伸びて同時実行が詰まるケースもあります。',
     },
     {
         question:
@@ -2921,7 +2921,7 @@ export const testQuestions: Question[] = [
                 text: 'ConcurrentExecutions、Throttles、Duration、Errors、RDS の接続数や CPU 使用率',
                 isCorrect: true,
                 explanation:
-                    'ConcurrentExecutions（Lambda の同時実行数）が増えると、下流サービスへの接続数も増えることがあります。Throttles（同時実行数制限などによる実行抑制回数）や Duration（Lambda 実行時間）も含め、Lambda 側と RDS 側のメトリクスを合わせて見ます。',
+                    'ConcurrentExecutions（Lambda の同時実行数メトリクス）が増えると、下流サービスへの接続数も増えることがあります。Throttles（同時実行数上限などにより実行が抑制・拒否された回数）や Duration（Lambda 実行時間）も含め、Lambda 側と RDS 側のメトリクスを合わせて見ます。',
             },
             {
                 text: 'Lambda の関数説明だけを見れば、RDS 障害の予兆を把握できる',
@@ -2939,7 +2939,7 @@ export const testQuestions: Question[] = [
                 text: 'ConcurrentExecutions は IAM 権限の許可数を示すメトリクスである',
                 isCorrect: false,
                 explanation:
-                    'ConcurrentExecutions（Lambda の同時実行数）は Lambda の同時実行数を示すメトリクスです。IAM 権限数ではありません。',
+                    'ConcurrentExecutions（Lambda の同時実行数メトリクス）は Lambda の同時実行数を示すメトリクスです。IAM 権限数ではありません。',
             },
         ],
         explanation:
@@ -3017,7 +3017,7 @@ export const testQuestions: Question[] = [
                 text: 'Invocations、Errors / Error rate、Duration、Throttles、ConcurrentExecutions、DLQ 件数やキュー滞留',
                 isCorrect: true,
                 explanation:
-                    'Invocations（Lambda 呼び出し回数）、エラー率（Invocations に対する Errors の割合）、Duration（Lambda 実行時間）、Throttles（同時実行数制限などによる実行抑制回数）、ConcurrentExecutions（Lambda の同時実行数）は Lambda 運用の基本です。非同期や SQS 連携では DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）件数やキュー滞留（処理待ちメッセージ蓄積）も重要です。',
+                    'Invocations（Lambda 呼び出し回数）、エラー率（Invocations に対する Errors の割合）、Duration（Lambda 実行時間）、Throttles（同時実行数上限などにより実行が抑制・拒否された回数）、ConcurrentExecutions（Lambda の同時実行数メトリクス）は Lambda 運用の基本です。非同期や SQS 連携では DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）件数やキュー滞留（処理待ちメッセージ蓄積）も重要です。',
             },
             {
                 text: '関数名と説明だけ',
@@ -3040,5 +3040,325 @@ export const testQuestions: Question[] = [
         ],
         explanation:
             'Lambda の運用では、呼び出し量、失敗、遅延、スロットリング、同時実行、非同期失敗、下流サービス状態を組み合わせて見ます。',
+    },
+    {
+        question:
+            '複数の Lambda 関数を同じ AWS アカウントで運用しています。ある関数への大量リクエストにより、他の重要な関数まで実行されにくくなりました。最も適切な確認・対策はどれですか?',
+        options: [
+            {
+                text: 'アカウント全体の同時実行数（同時に動作している Lambda 実行環境数）上限と関数ごとの同時実行設定を確認し、重要関数には Reserved Concurrency などで枠を確保する',
+                isCorrect: true,
+                explanation:
+                    'Lambda にはリージョン単位で管理されるアカウント同時実行数（同時に動作している Lambda 実行環境数）上限があります。特定関数が使い切ると他の関数へ影響するため、Reserved Concurrency（関数ごとの同時実行数を予約・制限する仕組み）で重要関数の枠を確保できます。',
+            },
+            {
+                text: 'Lambda は関数ごとに完全に独立しているため、同じアカウント内の他関数へ影響することはない',
+                isCorrect: false,
+                explanation:
+                    'リージョン単位で管理されるアカウント同時実行数（同時に動作している Lambda 実行環境数）上限を共有するため、特定関数の急増が他関数に影響することがあります。',
+            },
+            {
+                text: '関数名を長くすれば、アカウント同時実行数の上限は自動的に増える',
+                isCorrect: false,
+                explanation:
+                    '関数名は同時実行数上限に影響しません。必要なら上限緩和申請や同時実行制御を検討します。',
+            },
+            {
+                text: 'CloudWatch Logs を削除すれば、同時実行数不足は解消する',
+                isCorrect: false,
+                explanation:
+                    'ログ削除は同時実行数の上限や流入量を変えません。ConcurrentExecutions や Throttles を確認します。',
+            },
+        ],
+        explanation:
+            '同時実行制御では、関数単体だけでなくアカウント全体の上限を意識します。重要関数の保護と暴走関数の制限を両方考える必要があります。',
+    },
+    {
+        question:
+            'Reserved Concurrency の説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '特定の Lambda 関数に同時実行数を予約し、その関数が使える最大同時実行数も制限する設定',
+                isCorrect: true,
+                explanation:
+                    'Reserved Concurrency は、関数ごとに同時実行数（同時に動作している Lambda 実行環境数）を予約し、その関数の最大同時実行数も制限します。重要関数の枠確保や下流サービス保護に使えます。',
+            },
+            {
+                text: 'コールドスタートを減らすために、実行環境を事前に必ず起動しておく設定',
+                isCorrect: false,
+                explanation:
+                    'これは主に Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）の役割です。Reserved Concurrency は同時実行数の予約・制限であり、実行環境を事前準備する設定ではありません。',
+            },
+            {
+                text: 'Lambda の最大実行時間を延長する設定',
+                isCorrect: false,
+                explanation:
+                    'Reserved Concurrency は実行時間上限を延長しません。同時実行数に関する設定です。',
+            },
+            {
+                text: 'IAM 権限を自動的に最小権限へ変換する設定',
+                isCorrect: false,
+                explanation:
+                    'Reserved Concurrency は IAM ポリシーを変更しません。権限設計は別途必要です。',
+            },
+        ],
+        explanation:
+            'Reserved Concurrency は「予約」と「上限」の両面を持ちます。重要関数の実行枠を守る一方で、その関数が下流へ流しすぎることも防げます。',
+    },
+    {
+        question:
+            'Provisioned Concurrency と Reserved Concurrency の違いとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Provisioned Concurrency は実行環境を事前準備してコールドスタート影響を減らし、Reserved Concurrency は同時実行数を予約・制限する',
+                isCorrect: true,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）と Reserved Concurrency（関数ごとの同時実行数を予約・制限する仕組み）は目的が異なります。',
+            },
+            {
+                text: 'Provisioned Concurrency は IAM 権限、Reserved Concurrency は環境変数を管理する設定である',
+                isCorrect: false,
+                explanation:
+                    'どちらも IAM 権限や環境変数を管理する設定ではありません。Lambda の実行環境や同時実行に関する設定です。',
+            },
+            {
+                text: 'Reserved Concurrency を設定すれば、必ずコールドスタートが完全になくなる',
+                isCorrect: false,
+                explanation:
+                    'Reserved Concurrency は実行枠を制御する設定であり、実行環境を事前準備するものではありません。コールドスタート対策には Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）などを検討します。',
+            },
+            {
+                text: 'Provisioned Concurrency は同時実行数と無関係で、コストも一切発生しない',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は事前準備する実行環境数に関係し、待機中にもコストが発生します。必要量を見積もる必要があります。',
+            },
+        ],
+        explanation:
+            '名前が似ていますが、Provisioned Concurrency は低レイテンシ対策、Reserved Concurrency は枠の予約・制限という役割です。両方を組み合わせる場面もあります。',
+    },
+    {
+        question:
+            'SQS キューに大量のメッセージが溜まり、Lambda が一気に並列処理した結果、下流の RDS が接続数不足で不安定になりました。最も適切な対策はどれですか?',
+        options: [
+            {
+                text: 'イベントソースマッピングの最大同時実行数や Reserved Concurrency で並列度を制御し、RDS の許容量に合わせる',
+                isCorrect: true,
+                explanation:
+                    'SQS + Lambda はキュー量に応じて並列度が増えることがあります。一方で、下流 RDS が耐えられないことがあります。イベントソースマッピング側の最大同時実行数や Reserved Concurrency を使って流量を制御します。',
+            },
+            {
+                text: 'SQS にメッセージが溜まったら、Lambda の同時実行数を無制限に増やす',
+                isCorrect: false,
+                explanation:
+                    '同時実行数（同時に動作している Lambda 実行環境数）を増やすと処理は速くなる可能性がありますが、下流サービスを壊すことがあります。下流の許容量に合わせた制御が必要です。',
+            },
+            {
+                text: 'RDS が不安定な場合、SQS の可視性タイムアウトを0秒にする',
+                isCorrect: false,
+                explanation:
+                    '可視性タイムアウト（処理中メッセージを一時的に他処理から見えなくする時間）を短すぎる値にすると、処理中メッセージが再配信されやすくなり、重複処理が増える可能性があります。',
+            },
+            {
+                text: 'SQS 連携では Lambda の並列度は常に1固定なので、制御は不要である',
+                isCorrect: false,
+                explanation:
+                    'SQS 連携ではメッセージ量に応じて Lambda の並列度が増えることがあります。必要に応じて制限します。',
+            },
+        ],
+        explanation:
+            'キューで非同期化しても、下流サービスの許容量を無視してよいわけではありません。キュー滞留を減らすことと下流保護のバランスが重要です。',
+    },
+    {
+        question:
+            'Lambda の Throttles が増えていますが、意図的に Reserved Concurrency を低く設定して外部 API への呼び出し量を抑えています。この状況の理解として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Throttles は常に悪ではなく、下流保護のための意図した制限として発生する場合もある',
+                isCorrect: true,
+                explanation:
+                    'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）は障害の兆候になることもありますが、下流サービス保護のための意図的なスロットリング（intentional throttling）として設計される場合もあります。設計意図と実際の影響を確認します。',
+            },
+            {
+                text: 'Throttles が1件でも出たら、必ず Reserved Concurrency を削除すべきである',
+                isCorrect: false,
+                explanation:
+                    '意図した制限なら削除すべきとは限りません。呼び出し元の再試行、遅延、DLQ、利用者影響を見て判断します。',
+            },
+            {
+                text: 'Throttles は AccessDenied と同じ意味なので、IAM 権限を広げれば解消する',
+                isCorrect: false,
+                explanation:
+                    'Throttles は同時実行などの制限による抑制であり、AccessDenied は権限不足です。切り分けが必要です。',
+            },
+            {
+                text: 'Reserved Concurrency を低くすると、外部 API のレート制限は必ず無視できる',
+                isCorrect: false,
+                explanation:
+                    'Reserved Concurrency は Lambda 側の並列度制御に役立ちますが、外部 API のレート制限（一定時間あたりの呼び出し上限）やリトライ設計も合わせて考える必要があります。',
+            },
+        ],
+        explanation:
+            'スロットリングは原因と意図を見て判断します。意図しない Throttles は問題ですが、下流保護のための意図的なスロットリング（intentional throttling）として設計されることもあります。',
+    },
+    {
+        question:
+            '重要な決済処理 Lambda に Reserved Concurrency を設定したところ、他の関数に使える同時実行枠が減りました。設計上の注意点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Reserved Concurrency はアカウント全体の同時実行枠から予約するため、他関数への影響も考えて配分する',
+                isCorrect: true,
+                explanation:
+                    'Reserved Concurrency は重要関数の枠を守れますが、リージョン単位で管理されるアカウント全体の同時実行枠から確保されます。過剰に予約すると他関数が使える枠が減る可能性があります。',
+            },
+            {
+                text: 'Reserved Concurrency はアカウント上限とは無関係に無限に設定できる',
+                isCorrect: false,
+                explanation:
+                    'Reserved Concurrency はリージョン単位で管理されるアカウントの同時実行枠と関係します。無限に設定できるわけではありません。',
+            },
+            {
+                text: 'Reserved Concurrency を設定すると、他関数の実行枠は必ず増える',
+                isCorrect: false,
+                explanation:
+                    '特定関数に枠を予約すると、他関数が使える未予約枠は減る場合があります。',
+            },
+            {
+                text: '重要関数には必ずアカウント上限すべてを予約するのが最小構成である',
+                isCorrect: false,
+                explanation:
+                    'すべてを予約すると他関数が動けなくなる可能性があります。重要度、流量、上限を見て配分します。',
+            },
+        ],
+        explanation:
+            'Reserved Concurrency は保護にも制限にも使える強力な設定です。関数単体ではなく、アカウント全体の配分として設計します。',
+    },
+    {
+        question:
+            '低レイテンシが必要な API Lambda に Provisioned Concurrency を設定したいです。運用上の判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '必要な時間帯と同時実行数を見積もり、コストと低レイテンシ要件のバランスで設定する',
+                isCorrect: true,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）はコールドスタートの影響を減らせますが、待機中の実行環境にもコストがかかります。アクセス予測、p95 / p99、必要な同時実行数を見て調整します。',
+            },
+            {
+                text: '常に最大値を設定すれば、コストも最小になる',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は設定した分のコストが発生します。過剰設定はコスト増につながります。',
+            },
+            {
+                text: 'Provisioned Concurrency を設定すると、下流 RDS の接続数上限も自動的に増える',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は Lambda 実行環境の事前準備に関する設定です。RDS の接続数上限は別に考える必要があります。',
+            },
+            {
+                text: 'Provisioned Concurrency はスロットリングを完全に防ぐための IAM 設定である',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は IAM 設定ではありません。Provisioned Concurrency を超える流量では、通常実行環境側でコールドスタートやスロットリングが発生する可能性があります。',
+            },
+        ],
+        explanation:
+            'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は性能要件とコストのトレードオフです。低レイテンシ要件がある API で有効ですが、過剰設定や下流への影響に注意します。',
+    },
+    {
+        question:
+            'SQS 連携の Lambda で、キュー滞留を早く解消したい一方、外部 API には1秒あたりの呼び出し上限があります。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: '外部 API のレート制限に合わせて Lambda の並列度やバッチ処理、リトライ間隔を調整する',
+                isCorrect: true,
+                explanation:
+                    'キュー滞留（処理待ちメッセージ蓄積）を減らすために並列度を上げすぎると、外部 API のレート制限（一定時間あたりの呼び出し上限）に引っかかる可能性があります。並列度、バッチサイズ、リトライ、バックオフ（失敗時に待機時間を徐々に伸ばす再試行制御）を合わせて設計します。',
+            },
+            {
+                text: '外部 API の制限を無視して、Lambda の同時実行数をできるだけ増やす',
+                isCorrect: false,
+                explanation:
+                    '外部 API の制限を超えると、エラーやリトライ増加、アカウント停止などにつながる可能性があります。',
+            },
+            {
+                text: 'SQS を使うと、外部 API のレート制限は自動的に無効になる',
+                isCorrect: false,
+                explanation:
+                    'SQS はメッセージをためる仕組みですが、外部 API のレート制限（一定時間あたりの呼び出し上限）を無効にするものではありません。',
+            },
+            {
+                text: 'キュー滞留がある場合、DLQ のメッセージをすべて削除すれば処理能力が上がる',
+                isCorrect: false,
+                explanation:
+                    'DLQ 削除は処理能力向上にはなりません。原因調査と安全な再処理が必要です。',
+            },
+        ],
+        explanation:
+            'SQS は流量を平準化できますが、処理側の速度は下流制限に合わせる必要があります。過剰並列はリトライ嵐やコスト増につながります。',
+    },
+    {
+        question:
+            'Lambda の同時実行制御を設計する際、下流サービス保護の観点で最も適切な考え方はどれですか?',
+        options: [
+            {
+                text: 'Lambda の最大処理能力ではなく、RDS、外部 API、SaaS、キューなど下流が安全に受けられる量に合わせて制御する',
+                isCorrect: true,
+                explanation:
+                    'Lambda は大きくスケールできますが、下流サービスが同じだけ耐えられるとは限りません。下流の接続数、レート制限（一定時間あたりの呼び出し上限）、処理能力に合わせて同時実行数（同時に動作している Lambda 実行環境数）や流量を設計します。',
+            },
+            {
+                text: 'Lambda がスケールできるなら、下流サービスの制限は無視してよい',
+                isCorrect: false,
+                explanation:
+                    '下流制限を無視すると、DB 接続枯渇、外部 API レート制限（一定時間あたりの呼び出し上限）、リトライ増加などが起きます。',
+            },
+            {
+                text: '下流サービス保護は IAM 権限だけで実現する',
+                isCorrect: false,
+                explanation:
+                    'IAM はアクセス許可の制御には重要ですが、リクエスト量や同時実行数の制御とは別です。',
+            },
+            {
+                text: '同時実行制御はログ保存期間だけで決まる',
+                isCorrect: false,
+                explanation:
+                    'ログ保存期間は監査や調査の設定です。同時実行制御は Reserved Concurrency、イベントソース設定、上限設計などで行います。',
+            },
+        ],
+        explanation:
+            'サーバーレス設計では、Lambda のスケールをそのまま下流へ流すと障害を増幅することがあります。速く処理することと安全に処理することのバランスを取ります。',
+    },
+    {
+        question:
+            'Lambda の Throttles アラームが発報しました。原因を切り分けるために見るべき情報として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ConcurrentExecutions、Reserved Concurrency、アカウント上限、Provisioned Concurrency 設定、呼び出し元の流量と再試行',
+                isCorrect: true,
+                explanation:
+                    'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）の原因は、関数の Reserved Concurrency、リージョン単位のアカウント全体上限、急激な流入、Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）との関係など複数あります。呼び出し元の再試行も確認します。',
+            },
+            {
+                text: 'Throttles は常にコードの構文エラーなので、ソースコードだけ見ればよい',
+                isCorrect: false,
+                explanation:
+                    'Throttles（同時実行数上限などにより実行が抑制・拒否された回数）は同時実行制限などによる抑制です。コード例外とは別に切り分けます。',
+            },
+            {
+                text: '関数の説明欄を確認すれば、アカウント同時実行上限が分かる',
+                isCorrect: false,
+                explanation:
+                    '説明欄では実際の上限やメトリクスは分かりません。CloudWatch Metrics や Lambda の設定を確認します。',
+            },
+            {
+                text: 'Throttles が出た場合、必ず API Gateway を削除する',
+                isCorrect: false,
+                explanation:
+                    'API Gateway が原因とは限りません。流量、同時実行上限、関数設定、イベントソースを確認します。',
+            },
+        ],
+        explanation:
+            'Throttles は、どの上限に当たったのかを特定することが重要です。Lambda 側の設定だけでなく、呼び出し元の再試行や流量も確認します。',
     },
 ]
