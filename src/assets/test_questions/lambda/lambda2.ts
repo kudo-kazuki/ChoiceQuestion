@@ -841,13 +841,13 @@ export const testQuestions: Question[] = [
                 text: 'DLQ は失敗イベントの退避先として使え、Destination は非同期呼び出し結果に応じた送信先を設定できる',
                 isCorrect: true,
                 explanation:
-                    'DLQ（デッドレターキュー）は処理できなかったイベントを退避する用途で使われます。Destination は非同期呼び出し結果に応じて、別の Lambda、SQS、SNS、EventBridge などへ送れます。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は処理できなかったイベントを退避する用途で使われます。Destination は非同期呼び出し結果に応じて、別の Lambda、SQS、SNS、EventBridge などへ送れます。',
             },
             {
                 text: 'DLQ を設定すると、すべての成功イベントも必ず DLQ に送られる',
                 isCorrect: false,
                 explanation:
-                    'DLQ は主に処理に失敗したイベントの退避先です。成功イベントを送る仕組みではありません。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は主に処理に失敗したイベントの退避先です。成功イベントを送る仕組みではありません。',
             },
             {
                 text: 'Destination は失敗時には使えず、成功時だけに限定される',
@@ -859,7 +859,7 @@ export const testQuestions: Question[] = [
                 text: 'DLQ や Destination を設定すれば、冪等性の設計は不要になる',
                 isCorrect: false,
                 explanation:
-                    'DLQ や Destination は失敗イベントの扱いを助けますが、重複実行や二重書き込みを防ぐ設計の代わりにはなりません。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）や Destination は失敗イベントの扱いを助けますが、重複実行や二重書き込みを防ぐ設計の代わりにはなりません。',
             },
         ],
         explanation:
@@ -873,29 +873,29 @@ export const testQuestions: Question[] = [
                 text: 'DLQ に入った時点で問題は解決済みなので、監視や再処理手順は不要である',
                 isCorrect: false,
                 explanation:
-                    'DLQ は失敗イベントを退避する場所であり、問題を自動解決するものではありません。検知、調査、再処理、破棄判断の運用が必要です。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は失敗イベントを退避する場所であり、問題を自動解決するものではありません。検知、調査、再処理、破棄判断の運用が必要です。',
             },
             {
                 text: 'DLQ のメッセージ数を監視し、原因調査と安全な再処理手順を用意する',
                 isCorrect: true,
                 explanation:
-                    'DLQ にイベントが入ることは、通常処理で処理できなかったことを意味します。メッセージ数のアラーム、原因調査、再投入時の冪等性確認が重要です。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）にイベントが入ることは、通常処理で処理できなかったことを意味します。メッセージ数のアラーム、原因調査、再投入時の冪等性確認が重要です。',
             },
             {
                 text: 'DLQ に入ったイベントは必ず自動的に元の Lambda に戻される',
                 isCorrect: false,
                 explanation:
-                    'DLQ は退避先です。自動的に元の Lambda へ戻るわけではないため、再処理方法を運用として決める必要があります。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は退避先です。自動的に元の Lambda へ戻るわけではないため、再処理方法を運用として決める必要があります。',
             },
             {
                 text: 'DLQ を使う場合、CloudWatch Logs は不要になる',
                 isCorrect: false,
                 explanation:
-                    'DLQ は失敗イベントの保管に役立ちますが、なぜ失敗したのかを調べるにはログやメトリクスも必要です。',
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は失敗イベントの保管に役立ちますが、なぜ失敗したのかを調べるにはログやメトリクスも必要です。',
             },
         ],
         explanation:
-            'DLQ は失敗を隠す仕組みではありません。失敗イベントを見失わないための仕組みであり、監視と再処理手順まで含めて設計します。',
+            'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は失敗を隠す仕組みではありません。失敗イベントを見失わないための仕組みであり、監視と再処理手順まで含めて設計します。',
     },
     {
         question:
@@ -1024,5 +1024,325 @@ export const testQuestions: Question[] = [
         ],
         explanation:
             '非同期処理では、失敗時に全体が自動で巻き戻るとは限りません。ステップごとの成功状態と再実行時の安全性を設計します。',
+    },
+    {
+        question:
+            'SQS キューのメッセージを Lambda で処理します。この連携で使われるイベントソースマッピングの説明として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda が SQS からメッセージを読み取り、取得したメッセージをイベントとして関数に渡す仕組み',
+                isCorrect: true,
+                explanation:
+                    'SQS 連携では、イベントソースマッピングが SQS からメッセージを読み取り、Lambda 関数を起動します。S3 イベント通知のようにイベントを直接送るというより、Lambda 側が SQS をポーリング（定期的に確認して取得すること）して取得します。',
+            },
+            {
+                text: 'SQS が Lambda の実行ロールを使って DynamoDB に直接書き込む仕組み',
+                isCorrect: false,
+                explanation:
+                    'イベントソースマッピングは、SQS メッセージを Lambda に渡すための仕組みです。SQS が Lambda の実行ロールを使って DynamoDB に直接書き込むものではありません。',
+            },
+            {
+                text: 'Lambda 関数のコードを SQS キュー内に保存する仕組み',
+                isCorrect: false,
+                explanation:
+                    'SQS はメッセージキューであり、Lambda のコード保存先ではありません。',
+            },
+            {
+                text: 'Lambda の非同期呼び出し Destination と完全に同じ仕組み',
+                isCorrect: false,
+                explanation:
+                    'Destination は非同期呼び出し結果の送信先を設定する機能です。SQS から Lambda へ読み取るイベントソースマッピングとは役割が異なります。',
+            },
+        ],
+        explanation:
+            'SQS、Kinesis Data Streams（大量データをリアルタイムに順序付きで処理できるストリームサービス）、DynamoDB Streams と Lambda の連携では、イベントソースマッピングが重要です。どのサービスが起点で、Lambda がどう読み取るかを理解する必要があります。',
+    },
+    {
+        question:
+            'SQS と Lambda を連携しています。処理に最大2分かかることがあるのに、SQS の可視性タイムアウトが30秒に設定されています。起きやすい問題はどれですか?',
+        options: [
+            {
+                text: '処理中のメッセージが再び見えるようになり、同じメッセージが重複処理される可能性がある',
+                isCorrect: true,
+                explanation:
+                    '可視性タイムアウトは、処理中のメッセージを一時的に他の処理から見えなくする時間です。処理時間より短すぎると、処理完了前に再配信される可能性があります。',
+            },
+            {
+                text: '可視性タイムアウトが短いほど、同じメッセージは必ず1回だけ処理される',
+                isCorrect: false,
+                explanation:
+                    '可視性タイムアウトが短すぎると、むしろ重複処理の可能性が高まります。',
+            },
+            {
+                text: 'Lambda のメモリ使用量が自動的に0になる',
+                isCorrect: false,
+                explanation:
+                    '可視性タイムアウトは SQS メッセージの再配信に関する設定であり、Lambda のメモリ使用量を直接変えるものではありません。',
+            },
+            {
+                text: 'SQS メッセージが DynamoDB Streams に自動変換される',
+                isCorrect: false,
+                explanation:
+                    '可視性タイムアウトはメッセージの見え方を制御する設定です。別サービスのストリームへ自動変換するものではありません。',
+            },
+        ],
+        explanation:
+            'SQS 連携では、Lambda のタイムアウト、実際の処理時間、SQS の可視性タイムアウトを合わせて設計します。重複処理を完全には避けられないため、冪等性も必要です。',
+    },
+    {
+        question:
+            'SQS イベントソースマッピングでバッチサイズを大きくしたところ、1回の Lambda 実行で多くのメッセージを処理できるようになりました。一方で注意すべき点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '1件の失敗がバッチ全体の再処理につながる可能性があるため、部分バッチ失敗の扱いや冪等性を設計する',
+                isCorrect: true,
+                explanation:
+                    'バッチで複数メッセージを処理する場合、一部だけ失敗した時の扱いが重要です。部分バッチ失敗を返す仕組みや、再処理されても安全な設計を検討します。',
+            },
+            {
+                text: 'バッチサイズを大きくすれば、失敗時も成功したメッセージは必ず自動的に完全保存される',
+                isCorrect: false,
+                explanation:
+                    '設定や実装によっては、失敗時にバッチ内のメッセージが再処理されることがあります。成功済みメッセージの重複処理を考慮します。',
+            },
+            {
+                text: 'バッチサイズは Lambda の IAM 権限を自動的に増やす設定である',
+                isCorrect: false,
+                explanation:
+                    'バッチサイズは1回の呼び出しで渡されるレコード数に関する設定です。IAM 権限を増やすものではありません。',
+            },
+            {
+                text: 'バッチサイズを大きくすると、Lambda の実行時間上限がなくなる',
+                isCorrect: false,
+                explanation:
+                    'バッチサイズを変えても Lambda の最大実行時間上限はなくなりません。1回の実行で処理しきれる量に調整する必要があります。',
+            },
+        ],
+        explanation:
+            'バッチサイズはスループット向上に役立ちますが、失敗時の影響範囲も大きくなります。性能と再処理リスクのバランスを見ます。',
+    },
+    {
+        question:
+            'SQS から Lambda へメッセージを処理しています。特定のメッセージだけが常に失敗し、同じメッセージが何度も再処理されています。このようなメッセージへの対応として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Poison pill メッセージ（繰り返し失敗して全体処理を妨げる問題メッセージ）として扱い、最大受信回数や DLQ を設定して通常処理を詰まらせないようにする',
+                isCorrect: true,
+                explanation:
+                    'Poison pill メッセージは、処理すると繰り返し失敗して全体の処理を妨げるメッセージを指します。SQS の redrive policy（一定回数失敗したメッセージを DLQ へ移動する設定）などを使って退避します。',
+            },
+            {
+                text: '失敗するメッセージは必ず成功するまで無限に即時再試行する',
+                isCorrect: false,
+                explanation:
+                    '無限再試行は通常処理を詰まらせ、コスト増や処理遅延につながります。DLQ（Dead Letter Queue：繰り返し失敗したメッセージを退避するキュー）へ退避して調査できるようにします。',
+            },
+            {
+                text: 'Poison pill メッセージは、Lambda のメモリを増やせば必ず正常化する',
+                isCorrect: false,
+                explanation:
+                    '失敗原因がデータ不正や業務ルール違反の場合、メモリを増やしても解決しません。原因を切り分ける必要があります。',
+            },
+            {
+                text: 'SQS では失敗メッセージが再処理されることはないため、対策は不要である',
+                isCorrect: false,
+                explanation:
+                    'SQS では処理失敗や可視性タイムアウト切れにより、メッセージが再処理される可能性があります。',
+            },
+        ],
+        explanation:
+            'Poison pill メッセージ（繰り返し失敗して全体処理を妨げる問題メッセージ）を放置すると、キュー処理全体の遅延やコスト増につながります。DLQ（Dead Letter Queue：繰り返し失敗したメッセージを退避するキュー）、監視、再処理手順まで設計します。',
+    },
+    {
+        question:
+            'SQS の Lambda 連携で、バッチ内の10件中1件だけ処理に失敗しました。成功した9件をできるだけ再処理したくありません。検討すべき機能はどれですか?',
+        options: [
+            {
+                text: '部分バッチ失敗の応答を使い、失敗したメッセージだけを再処理対象にする',
+                isCorrect: true,
+                explanation:
+                    '部分バッチ失敗を使うと、バッチ内で失敗したメッセージを明示し、成功したメッセージの不要な再処理を減らせます。ただし、実装と冪等性の設計は必要です。',
+            },
+            {
+                text: '成功した9件を CloudWatch Logs に出せば、自動的に SQS から削除される',
+                isCorrect: false,
+                explanation:
+                    'ログ出力は SQS メッセージ削除の制御にはなりません。イベントソースマッピングの応答形式や処理結果で制御します。',
+            },
+            {
+                text: 'Lambda のタイムアウトを短くすれば、失敗した1件だけが必ず再処理される',
+                isCorrect: false,
+                explanation:
+                    'タイムアウトを短くしても部分バッチ失敗の制御にはなりません。むしろバッチ全体が失敗しやすくなります。',
+            },
+            {
+                text: 'バッチ処理では一部成功を扱えないため、常に全件を手動削除するしかない',
+                isCorrect: false,
+                explanation:
+                    'SQS と Lambda の連携では、部分バッチ失敗を使って失敗した項目を返す設計が可能です。',
+            },
+        ],
+        explanation:
+            '部分バッチ失敗は、バッチ処理の再処理範囲を小さくするために重要です。特に大量メッセージ処理では、無駄な再処理を減らせます。',
+    },
+    {
+        question:
+            'Kinesis Data Streams（大量データをリアルタイムに順序付きで処理できるストリームサービス）を Lambda で処理しています。ある shard の特定レコードで関数が失敗し続け、後続レコードの処理が進みにくくなっています。最も適切な理解はどれですか?',
+        options: [
+            {
+                text: 'ストリーム系では順序性のため、失敗レコードが同じ shard（Kinesis ストリーム内のデータ分割単位）の後続処理を妨げることがある',
+                isCorrect: true,
+                explanation:
+                    'Kinesis Data Streams では shard（Kinesis ストリーム内のデータ分割単位）内の順序性が重要です。特定レコードが失敗し続けると、その shard の後続レコード処理が遅れる可能性があります。',
+            },
+            {
+                text: 'Kinesis では失敗したレコードがあっても、同じ shard の後続レコードは常に無制限に先へ進む',
+                isCorrect: false,
+                explanation:
+                    'Kinesis Data Streams では shard（Kinesis ストリーム内のデータ分割単位）内の順序性を保つ必要があるため、失敗レコードの扱いが後続処理に影響することがあります。',
+            },
+            {
+                text: 'Kinesis の shard は SQS の可視性タイムアウトと同じ設定で制御される',
+                isCorrect: false,
+                explanation:
+                    'Kinesis の shard（Kinesis ストリーム内のデータ分割単位）と SQS の可視性タイムアウトは別の概念です。SQS の可視性タイムアウトで Kinesis の順序性は制御しません。',
+            },
+            {
+                text: 'Kinesis 連携では、失敗レコードの再処理や破棄の設計は不要である',
+                isCorrect: false,
+                explanation:
+                    'ストリーム処理でも失敗レコードへの対応、再試行回数、失敗時の送信先などを設計する必要があります。',
+            },
+        ],
+        explanation:
+            'Kinesis Data Streams や DynamoDB Streams では、SQS よりも順序性や shard（Kinesis ストリーム内のデータ分割単位）単位の進み方を意識する必要があります。Poison pill 的なレコードが後続処理を止めるリスクがあります。',
+    },
+    {
+        question:
+            'DynamoDB Streams の変更イベントを Lambda で処理し、別テーブルへ集計結果を書き込んでいます。ストリーム処理で特に意識すべき点はどれですか?',
+        options: [
+            {
+                text: '同じ変更イベントの再処理や順序性を考慮し、集計更新を冪等に近づける',
+                isCorrect: true,
+                explanation:
+                    'DynamoDB Streams はテーブルの変更履歴をイベントとして扱う仕組みです。再処理や順序性を考慮し、同じイベントで集計値が二重加算されないように設計します。',
+            },
+            {
+                text: 'DynamoDB Streams は常に完全に1回だけ Lambda を起動するため、冪等性は不要である',
+                isCorrect: false,
+                explanation:
+                    'ストリーム処理でも再試行や重複処理を考慮します。完全に1回だけ処理される前提は危険です。',
+            },
+            {
+                text: 'DynamoDB Streams を使うと、Lambda の実行時間上限はなくなる',
+                isCorrect: false,
+                explanation:
+                    'ストリーム連携を使っても Lambda の実行時間上限はなくなりません。',
+            },
+            {
+                text: '集計結果をグローバル変数に保存すれば、すべての変更イベントで正しい合計を維持できる',
+                isCorrect: false,
+                explanation:
+                    'グローバル変数は永続的な集計保存先ではありません。集計結果は DynamoDB などの外部ストレージへ保存します。',
+            },
+        ],
+        explanation:
+            'ストリーム処理は、変更イベントを使った後続処理に便利ですが、重複・順序・再処理の設計が必要です。集計の二重加算は典型的な事故ポイントです。',
+    },
+    {
+        question:
+            'Kinesis Data Streams（大量データをリアルタイムに順序付きで処理できるストリームサービス）連携の Lambda でスループットを上げたいです。ただし、順序性を壊したくありません。検討として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'shard 数、Parallelization Factor、バッチサイズなどを見直し、順序性への影響を理解したうえで調整する',
+                isCorrect: true,
+                explanation:
+                    'Kinesis Data Streams では shard（Kinesis ストリーム内のデータ分割単位）数が処理並列度に関係します。Parallelization Factor（1つの shard に対する Lambda の並列処理数を増やす設定）やバッチサイズもスループットに影響しますが、順序性要件とのバランスが必要です。',
+            },
+            {
+                text: 'バッチサイズを最大にすれば、順序性を一切気にせず無限にスループットを上げられる',
+                isCorrect: false,
+                explanation:
+                    'バッチサイズには上限があり、処理時間や失敗時の再処理範囲も大きくなります。順序性や遅延も考慮します。',
+            },
+            {
+                text: '順序性が必要な場合、Kinesis と Lambda は一切使えない',
+                isCorrect: false,
+                explanation:
+                    'Kinesis Data Streams は shard（Kinesis ストリーム内のデータ分割単位）内の順序性を扱えるサービスです。ただし、並列度を上げる時は順序性要件を理解した設計が必要です。',
+            },
+            {
+                text: 'Lambda の環境変数を増やすと、Kinesis の shard 数も自動で増える',
+                isCorrect: false,
+                explanation:
+                    '環境変数は Lambda の設定値です。Kinesis Data Streams の shard（Kinesis ストリーム内のデータ分割単位）数を自動的に増やすものではありません。',
+            },
+        ],
+        explanation:
+            'ストリーム系のスループット改善では、Lambda だけでなく Kinesis Data Streams 側の shard（Kinesis ストリーム内のデータ分割単位）設計も重要です。どこで並列化するかを理解して調整します。',
+    },
+    {
+        question:
+            'SQS キューのメッセージ処理が遅れており、キューにメッセージが溜まっています。Lambda の同時実行数を増やせば処理は速くなりそうですが、下流の RDS が接続数に弱いです。最も適切な方針はどれですか?',
+        options: [
+            {
+                text: 'SQS の滞留量、Lambda の同時実行数、RDS の接続上限を見ながら、並列度を制御して処理する',
+                isCorrect: true,
+                explanation:
+                    'SQS 連携では Lambda の並列処理でスループットを上げられますが、下流の RDS が耐えられない場合があります。Reserved Concurrency やイベントソースマッピングの最大同時実行数などで制御します。',
+            },
+            {
+                text: 'Lambda は自動スケールするため、RDS の接続数は考慮しなくてよい',
+                isCorrect: false,
+                explanation:
+                    'Lambda がスケールできても、下流サービスが同じだけ耐えられるとは限りません。下流保護が必要です。',
+            },
+            {
+                text: 'SQS にメッセージが溜まったら、必ずすべて手動で削除する',
+                isCorrect: false,
+                explanation:
+                    '手動削除はデータ損失につながる可能性があります。遅延原因と処理能力、下流制限を確認して設計します。',
+            },
+            {
+                text: 'RDS が弱い場合は、Lambda のログ出力を増やせば接続数問題は解決する',
+                isCorrect: false,
+                explanation:
+                    'ログ出力は調査には役立ちますが、RDS の接続数上限そのものを解決するものではありません。',
+            },
+        ],
+        explanation:
+            'SQS + Lambda はスケールしやすい構成ですが、下流サービス保護が重要です。キュー滞留を減らすことと、下流を壊さないことのバランスを取ります。',
+    },
+    {
+        question:
+            'イベントソースマッピングで処理するレコードの失敗が続いています。運用上、再処理だけでなく「どこまで処理できたか」を把握したいです。最も重要な観点はどれですか?',
+        options: [
+            {
+                text: '成功・失敗したレコード ID、バッチ ID、再試行回数、最終退避先をログやメトリクスで追跡できるようにする',
+                isCorrect: true,
+                explanation:
+                    'バッチ処理やストリーム処理では、どのレコードが成功し、どれが失敗したかを追えることが重要です。再処理や DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）調査のため、識別子をログに含めます。',
+            },
+            {
+                text: '失敗時はログを出さず、Lambda が自動的に原因を修正するのを待つ',
+                isCorrect: false,
+                explanation:
+                    'Lambda が業務データやコードの問題を自動修正するわけではありません。原因を調査できるログとメトリクスが必要です。',
+            },
+            {
+                text: 'バッチ処理では個別レコードの識別子を記録してはいけない',
+                isCorrect: false,
+                explanation:
+                    '機密情報には注意が必要ですが、レコード ID やイベント ID のような識別子は再処理や調査に役立ちます。',
+            },
+            {
+                text: '再処理設計では、成功したレコードと失敗したレコードを区別する必要はない',
+                isCorrect: false,
+                explanation:
+                    '成功済みと失敗済みを区別できないと、不要な再処理や二重更新が起きやすくなります。',
+            },
+        ],
+        explanation:
+            'イベントソースマッピングの運用では、処理単位がバッチになることがあります。バッチ全体だけでなく、レコード単位で追跡できる設計が重要です。',
     },
 ]
