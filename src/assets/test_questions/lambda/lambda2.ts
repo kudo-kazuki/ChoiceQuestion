@@ -2689,4 +2689,356 @@ export const testQuestions: Question[] = [
         explanation:
             'クロスアカウント連携では、広い信頼ではなく明示的な制限が重要です。Principal（アクセスを許可する相手）、SourceArn（呼び出し元リソース ARN を条件指定する仕組み）、SourceAccount（特定 AWS アカウントからの呼び出しに限定する条件）、監査ログを組み合わせて考えます。',
     },
+    {
+        question:
+            '本番 Lambda の障害検知を強化したいです。CloudWatch Logs / Metrics / Alarms の役割分担として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'CloudWatch Logs（ログ保存・検索）で詳細ログを確認し、CloudWatch Metrics（数値監視）で傾向を見て、CloudWatch Alarms（異常通知）で通知する',
+                isCorrect: true,
+                explanation:
+                    'CloudWatch Logs（ログ保存・検索）、CloudWatch Metrics（数値監視）、CloudWatch Alarms（異常通知）は役割が異なります。ログで詳細を調べ、メトリクスで傾向を見て、アラームで異常を検知します。',
+            },
+            {
+                text: 'CloudWatch Logs を有効にすれば、メトリクスやアラームは一切不要になる',
+                isCorrect: false,
+                explanation:
+                    'ログは詳細調査に有効ですが、異常を自動検知するにはメトリクスとアラームも重要です。',
+            },
+            {
+                text: 'CloudWatch Metrics はログ本文を全文検索するための機能である',
+                isCorrect: false,
+                explanation:
+                    'ログ本文の検索は主に CloudWatch Logs（ログ保存・検索）側の役割です。CloudWatch Metrics（数値監視）は数値データの時系列監視に使います。',
+            },
+            {
+                text: 'CloudWatch Alarms は Lambda のコードを自動修正する機能である',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Alarms（異常通知）は異常検知や通知に使う機能です。アプリケーションコードを自動修正するものではありません。',
+            },
+        ],
+        explanation:
+            '運用では、ログ、メトリクス、アラームを組み合わせます。障害発生後に調べるだけでなく、発生を早く検知できる設計が重要です。',
+    },
+    {
+        question:
+            'Lambda のエラー率（Invocations に対する Errors の割合）が急に上がりました。最初に確認すべき情報の組み合わせとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Errors、Invocations、Duration、直近の CloudWatch Logs、デプロイ履歴、依存サービスの状態',
+                isCorrect: true,
+                explanation:
+                    'エラー率（Invocations に対する Errors の割合）を見るには Errors と Invocations（Lambda 呼び出し回数）の両方が必要です。あわせて Duration（Lambda 実行時間）、ログ、直近の変更、下流サービスの障害有無を確認すると切り分けやすくなります。',
+            },
+            {
+                text: '関数名だけを確認すれば、エラー原因は必ず特定できる',
+                isCorrect: false,
+                explanation:
+                    '関数名だけでは原因は分かりません。ログ、メトリクス、変更履歴、依存先の状態を合わせて確認します。',
+            },
+            {
+                text: 'Errors だけを見れば、呼び出し数の増減は考えなくてよい',
+                isCorrect: false,
+                explanation:
+                    'Errors の絶対数だけでなく、Invocations（Lambda 呼び出し回数）に対する割合を見る必要があります。呼び出し数が急増しただけの場合もあります。',
+            },
+            {
+                text: 'ログを見ずにメモリを最大にすれば、すべてのエラーは解消する',
+                isCorrect: false,
+                explanation:
+                    'メモリ不足が原因なら改善する可能性はありますが、権限不足、入力不正、下流障害などには効きません。原因の切り分けが必要です。',
+            },
+        ],
+        explanation:
+            'エラー調査では、単一メトリクスだけを見ないことが重要です。エラー数、呼び出し数、ログ、直近変更、依存サービスをまとめて確認します。',
+    },
+    {
+        question:
+            'Lambda の Duration が徐々に長くなっていますが、Errors は増えていません。運用上の見方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'まだ失敗していなくても、下流サービス遅延や処理量増加の兆候として監視・調査する',
+                isCorrect: true,
+                explanation:
+                    'Duration（実行時間）の増加は、外部 API、DB、ネットワーク、処理データ量などの変化を示すことがあります。Errors が増える前の予兆として扱えます。',
+            },
+            {
+                text: 'Errors が0なら、Duration はどれだけ長くても運用上問題にならない',
+                isCorrect: false,
+                explanation:
+                    'Duration が長くなると、タイムアウト、コスト増、同時実行数増加、下流詰まりにつながることがあります。',
+            },
+            {
+                text: 'Duration が長くなった場合、IAM 権限を増やせば必ず改善する',
+                isCorrect: false,
+                explanation:
+                    'Duration の増加は権限不足とは限りません。処理時間、外部依存、データ量、ネットワークなどを確認します。',
+            },
+            {
+                text: 'Duration はログ出力の有無だけで決まる',
+                isCorrect: false,
+                explanation:
+                    'ログ量も影響することがありますが、Duration はコード処理、外部 API、DB、ネットワークなど多くの要因で変わります。',
+            },
+        ],
+        explanation:
+            '運用では失敗してから見るだけでなく、性能劣化の兆候を早めに検知します。Duration（Lambda 実行時間）の p95 / p99（遅い側 95% / 99% 地点の応答時間指標）など高いパーセンタイルも役立ちます。Init Duration 増加か、通常実行時間増加かを分けて見ることも重要です。',
+    },
+    {
+        question:
+            'Lambda の Throttles（同時実行数制限などによる実行抑制回数）が増えています。最も適切な切り分けはどれですか?',
+        options: [
+            {
+                text: '同時実行数の上限、Reserved Concurrency、アカウント全体の同時実行、イベントソース側の流量を確認する',
+                isCorrect: true,
+                explanation:
+                    'Throttles（同時実行数制限などによる実行抑制回数）は、同時実行数などの制限により実行が抑制されたことを示します。関数単位の Reserved Concurrency、アカウント全体の上限、流入量を確認します。',
+            },
+            {
+                text: 'Throttles は IAM AccessDenied と同じ意味である',
+                isCorrect: false,
+                explanation:
+                    'Throttles（同時実行数制限などによる実行抑制回数）は容量や同時実行の制限に関するメトリクスです。AccessDenied は権限不足を示すエラーです。',
+            },
+            {
+                text: 'Throttles が増えても、呼び出し元や再試行には一切影響しない',
+                isCorrect: false,
+                explanation:
+                    'スロットリングにより処理が遅延したり、呼び出し元で再試行や失敗が発生したりする可能性があります。',
+            },
+            {
+                text: 'Throttles が出た場合、CloudWatch Logs を削除すれば解消する',
+                isCorrect: false,
+                explanation:
+                    'ログ削除は同時実行制限の解消にはなりません。上限、予約設定、流入量、処理時間を確認します。',
+            },
+        ],
+        explanation:
+            'Throttles（同時実行数制限などによる実行抑制回数）は「コードの例外」ではなく、容量制限や同時実行制御の問題として切り分けます。処理時間が伸びて同時実行が詰まるケースもあります。',
+    },
+    {
+        question:
+            'Lambda で AccessDenied エラーが発生しています。最も適切な調査方針はどれですか?',
+        options: [
+            {
+                text: '誰が、どのリソースに、どの AWS 操作をしようとして拒否されたのかをログと IAM ポリシーで確認する',
+                isCorrect: true,
+                explanation:
+                    'AccessDenied は権限不足です。Lambda 実行ロール、対象リソース、Action、Resource、条件、リソースベースポリシーを確認します。',
+            },
+            {
+                text: 'AccessDenied はネットワークタイムアウトと同じなので、NAT Gateway だけを確認する',
+                isCorrect: false,
+                explanation:
+                    'AccessDenied は主に IAM 権限やポリシーの問題です。タイムアウトとは切り分けて考えます。',
+            },
+            {
+                text: 'AccessDenied が出たら、全サービスに `*` 権限を付けるのが最小権限である',
+                isCorrect: false,
+                explanation:
+                    '広すぎる権限を付けるとセキュリティリスクが増えます。必要な操作とリソースに絞って修正します。',
+            },
+            {
+                text: 'AccessDenied は Lambda のメモリ不足だけが原因である',
+                isCorrect: false,
+                explanation:
+                    'メモリ不足と AccessDenied は別の問題です。AccessDenied では権限を確認します。',
+            },
+        ],
+        explanation:
+            '障害対応では、エラーの種類ごとに切り分け軸を変えます。AccessDenied は IAM、timeout はネットワークや下流遅延、throttling は同時実行や流量を疑います。',
+    },
+    {
+        question:
+            'Lambda の timeout が増えています。最も適切な調査の進め方はどれですか?',
+        options: [
+            {
+                text: 'ログで処理のどこまで進んだかを確認し、外部 API、DB、ネットワーク、処理量、無限ループなどを切り分ける',
+                isCorrect: true,
+                explanation:
+                    'timeout は原因が広い症状です。開始、主要処理、外部呼び出し前後、終了のログを見て、どこで止まっているかを確認します。',
+            },
+            {
+                text: 'timeout は必ず IAM 権限不足なので、実行ロールだけを確認する',
+                isCorrect: false,
+                explanation:
+                    'IAM 権限不足なら AccessDenied が出ることが多いです。timeout では外部依存、ネットワーク、処理時間なども確認します。',
+            },
+            {
+                text: 'timeout が出たら、必ずタイムアウト値を最大にすれば根本解決する',
+                isCorrect: false,
+                explanation:
+                    'タイムアウト値を伸ばすと一時的に失敗を減らせる場合はありますが、外部 API 遅延や設計不備を隠すことがあります。',
+            },
+            {
+                text: 'timeout 調査では CloudWatch Logs を見てはいけない',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs はどこで処理が止まったかを調べる重要な手がかりです。',
+            },
+        ],
+        explanation:
+            'timeout は「長くかかった結果」です。なぜ長くなったかを、ログ、Duration（Lambda 実行時間）、外部依存、ネットワーク、入力データ量から切り分けます。',
+    },
+    {
+        question:
+            '複数の Lambda と API Gateway、DynamoDB、外部 API をまたぐリクエストで、どこが遅いのか分かりません。調査をしやすくする仕組みとして最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'AWS X-Ray や分散トレーシング（複数サービスをまたぐリクエスト追跡）を使い、リクエストが各サービスで使った時間を追跡する',
+                isCorrect: true,
+                explanation:
+                    'AWS X-Ray は、対応サービス間のリクエストや処理時間を可視化する分散トレーシング（複数サービスをまたぐリクエスト追跡）サービスです。複数サービスをまたぐ遅延調査に役立ちます。',
+            },
+            {
+                text: '関数名を短くすれば、各サービスの遅延箇所が自動的に分かる',
+                isCorrect: false,
+                explanation:
+                    '関数名の長さでは分散システムの遅延箇所は分かりません。トレースやログの相関が必要です。',
+            },
+            {
+                text: 'X-Ray を使うと IAM 権限設計は不要になる',
+                isCorrect: false,
+                explanation:
+                    'X-Ray は可観測性の仕組みです。Lambda が AWS サービスへアクセスする権限設計は別途必要です。',
+            },
+            {
+                text: '分散トレーシングは単一サービス内でしか使えない',
+                isCorrect: false,
+                explanation:
+                    '分散トレーシング（複数サービスをまたぐリクエスト追跡）は、複数サービスにまたがるリクエストの流れを追うために使われます。',
+            },
+        ],
+        explanation:
+            'ログだけでは複数サービス間の時間配分が分かりにくい場合があります。X-Ray や相関 ID を使うと、サービス横断の調査がしやすくなります。',
+    },
+    {
+        question:
+            'Lambda の同時実行が増え、下流の RDS 接続数も増えて障害になりました。運用時に特に見るべきメトリクスの組み合わせはどれですか?',
+        options: [
+            {
+                text: 'ConcurrentExecutions、Throttles、Duration、Errors、RDS の接続数や CPU 使用率',
+                isCorrect: true,
+                explanation:
+                    'ConcurrentExecutions（Lambda の同時実行数）が増えると、下流サービスへの接続数も増えることがあります。Throttles（同時実行数制限などによる実行抑制回数）や Duration（Lambda 実行時間）も含め、Lambda 側と RDS 側のメトリクスを合わせて見ます。',
+            },
+            {
+                text: 'Lambda の関数説明だけを見れば、RDS 障害の予兆を把握できる',
+                isCorrect: false,
+                explanation:
+                    '説明欄では運用メトリクスは分かりません。Lambda と RDS の実測値を見る必要があります。',
+            },
+            {
+                text: 'RDS の接続数だけ見れば、Lambda 側の流入量や Duration は不要である',
+                isCorrect: false,
+                explanation:
+                    'RDS 接続数の増加原因を知るには、Lambda の同時実行数、Duration（Lambda 実行時間）、Invocations（Lambda 呼び出し回数）も見る必要があります。',
+            },
+            {
+                text: 'ConcurrentExecutions は IAM 権限の許可数を示すメトリクスである',
+                isCorrect: false,
+                explanation:
+                    'ConcurrentExecutions（Lambda の同時実行数）は Lambda の同時実行数を示すメトリクスです。IAM 権限数ではありません。',
+            },
+        ],
+        explanation:
+            '運用監視では Lambda 単体だけでなく、下流の RDS、外部 API、キューなども合わせて見ます。下流障害は Lambda のスケールによって増幅されることがあります。',
+    },
+    {
+        question:
+            'Lambda のアラームを設計しています。単純に Errors > 0 だけで通知すると、低頻度の一時的な失敗でも頻繁に通知されます。改善として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'エラー率、連続発生、重要度、対象環境を考慮し、ノイズを抑えつつ重要な異常を検知する',
+                isCorrect: true,
+                explanation:
+                    'アラームは多すぎると alert fatigue（通知過多による見逃し）につながります。Errors の絶対数だけでなく、Invocations（Lambda 呼び出し回数）に対するエラー率、継続時間、重要度、環境を考慮します。呼び出し数が少ない重要システムでは、単発エラーでも重要になる場合があります。',
+            },
+            {
+                text: '通知が多い場合、すべてのアラームを削除する',
+                isCorrect: false,
+                explanation:
+                    'アラームを削除すると重大障害の検知が遅れます。しきい値や条件を調整してノイズを減らします。',
+            },
+            {
+                text: 'Errors が1回でも出たら、常に本番停止する',
+                isCorrect: false,
+                explanation:
+                    '単発エラーと継続的な障害では対応が異なります。自動対応は慎重に設計する必要があります。',
+            },
+            {
+                text: 'アラーム設計では呼び出し数や環境を考慮してはいけない',
+                isCorrect: false,
+                explanation:
+                    '呼び出し数や環境は重要です。本番の高エラー率と開発環境の単発エラーでは重要度が異なります。',
+            },
+        ],
+        explanation:
+            'アラーム設計では、検知漏れと通知ノイズ（alert fatigue：通知過多による見逃し）のバランスが重要です。誰が、いつ、何を見て、どう対応するかまで運用に含めます。',
+    },
+    {
+        question:
+            'Lambda の障害対応で、同じリクエストが API Gateway、Lambda、DynamoDB を通ったか追跡したいです。ログ設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '相関 ID を各ログに含め、サービス横断で同じリクエストを検索できるようにする',
+                isCorrect: true,
+                explanation:
+                    '相関 ID（Correlation ID：リクエストを追跡するための識別子）を API Gateway、Lambda、下流処理のログに含めると、障害時に同じリクエストの流れを追いやすくなります。',
+            },
+            {
+                text: '各サービスでランダムな ID を別々に出せば、必ず追跡しやすくなる',
+                isCorrect: false,
+                explanation:
+                    'サービスごとに無関係な ID だけを出すと、横断的な追跡が難しくなります。共通の相関 ID が役立ちます。',
+            },
+            {
+                text: '機密情報をすべてログに出せば、調査しやすく安全である',
+                isCorrect: false,
+                explanation:
+                    '機密情報をログに出すのは危険です。調査に必要な識別子や状態を、機密情報を避けて記録します。',
+            },
+            {
+                text: 'ログに相関 ID を含めると、Lambda は実行できなくなる',
+                isCorrect: false,
+                explanation:
+                    '相関 ID はログやレスポンスに含める識別子です。適切に扱えば実行を妨げるものではありません。',
+            },
+        ],
+        explanation:
+            '障害対応では、どのリクエストがどの処理を通ったか追えることが重要です。X-Ray などのトレースと、相関 ID を含むログを組み合わせると調査しやすくなります。',
+    },
+    {
+        question:
+            'Lambda の運用ダッシュボードを作ります。最低限、運用時に見るべき指標として最も適切な組み合わせはどれですか?',
+        options: [
+            {
+                text: 'Invocations、Errors / Error rate、Duration、Throttles、ConcurrentExecutions、DLQ 件数やキュー滞留',
+                isCorrect: true,
+                explanation:
+                    'Invocations（Lambda 呼び出し回数）、エラー率（Invocations に対する Errors の割合）、Duration（Lambda 実行時間）、Throttles（同時実行数制限などによる実行抑制回数）、ConcurrentExecutions（Lambda の同時実行数）は Lambda 運用の基本です。非同期や SQS 連携では DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）件数やキュー滞留（処理待ちメッセージ蓄積）も重要です。',
+            },
+            {
+                text: '関数名と説明だけ',
+                isCorrect: false,
+                explanation:
+                    '関数名や説明は識別には役立ちますが、運用状態の監視にはメトリクスが必要です。',
+            },
+            {
+                text: 'メモリ設定値だけ',
+                isCorrect: false,
+                explanation:
+                    'メモリ設定値だけでは、エラー、遅延、スロットリング、同時実行、下流詰まりは分かりません。',
+            },
+            {
+                text: 'CloudWatch Logs の保存期間だけ',
+                isCorrect: false,
+                explanation:
+                    'ログ保存期間も運用上重要ですが、現在の稼働状態を見るにはメトリクスやアラームが必要です。',
+            },
+        ],
+        explanation:
+            'Lambda の運用では、呼び出し量、失敗、遅延、スロットリング、同時実行、非同期失敗、下流サービス状態を組み合わせて見ます。',
+    },
 ]
