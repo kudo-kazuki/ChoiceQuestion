@@ -1345,4 +1345,356 @@ export const testQuestions: Question[] = [
         explanation:
             'イベントソースマッピングの運用では、処理単位がバッチになることがあります。バッチ全体だけでなく、レコード単位で追跡できる設計が重要です。',
     },
+    {
+        question:
+            'API Gateway + Lambda で注文処理 API を作っています。リクエスト受付はすぐ終わりますが、在庫確認、決済、通知まで行うと数分かかることがあります。最も適切な設計はどれですか?',
+        options: [
+            {
+                text: 'API では受付結果をすぐ返し、重い後続処理は SQS や Step Functions へ渡して非同期に進める',
+                isCorrect: true,
+                explanation:
+                    '同期 API で長時間待たせると、タイムアウト、クライアント再試行、利用者体験の悪化につながります。受付と後続処理を分け、ジョブ ID や処理状態を返す設計が有効です。',
+            },
+            {
+                text: 'クライアントを数分間待たせ、Lambda が全処理を終えるまでレスポンスを返さない',
+                isCorrect: false,
+                explanation:
+                    '長時間の同期待機は API のタイムアウトや再試行、利用者体験の悪化につながりやすいです。非同期処理への切り分けを検討します。',
+            },
+            {
+                text: 'Lambda のメモリを最大にすれば、API のタイムアウト制限はなくなる',
+                isCorrect: false,
+                explanation:
+                    'メモリ増加で処理が速くなる可能性はありますが、API Gateway やクライアント側のタイムアウト制限そのものはなくなりません。',
+            },
+            {
+                text: 'API Gateway を使う場合、SQS や Step Functions へ処理を渡すことはできない',
+                isCorrect: false,
+                explanation:
+                    'Lambda の実行ロールに適切な権限があれば、SQS や Step Functions へ後続処理を渡せます。',
+            },
+        ],
+        explanation:
+            'API 設計では、ユーザーに即時応答すべき部分と、時間がかかる処理を分けます。Lambda は同期 API の処理にも、非同期ワークフローの入口にも使えます。',
+    },
+    {
+        question:
+            'API Gateway から Lambda を同期呼び出ししています。Lambda 側の処理は最大10分かかります。タイムアウト制限への対応として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'API Gateway やクライアントの待機時間制限を考慮し、長時間処理は非同期化してステータス確認 API などを用意する',
+                isCorrect: true,
+                explanation:
+                    'Lambda 自体が動ける時間と、同期 API としてクライアントを待たせられる時間は別です。長時間処理はジョブ化し、受付後に状態確認や通知で結果を扱う設計が一般的です。',
+            },
+            {
+                text: 'Lambda のタイムアウトを10分にすれば、API Gateway も必ず10分待ってくれる',
+                isCorrect: false,
+                explanation:
+                    'Lambda のタイムアウト設定と API Gateway やクライアントのタイムアウトは別です。片方を伸ばしても、他方の制限が残ることがあります。',
+            },
+            {
+                text: 'タイムアウトが心配な場合、すべてのエラーを 200 OK として返せばよい',
+                isCorrect: false,
+                explanation:
+                    'HTTP ステータスを偽装しても、処理時間やタイムアウトの問題は解決しません。失敗時のレスポンス設計も不明確になります。',
+            },
+            {
+                text: 'クライアントが何度も再試行すれば、長時間同期 API の問題は必ず解決する',
+                isCorrect: false,
+                explanation:
+                    '不用意な再試行は二重処理や負荷増加につながります。冪等性や非同期化を設計する必要があります。',
+            },
+        ],
+        explanation:
+            'API のタイムアウト対応では、Lambda の最大実行時間だけを見てはいけません。入口サービス、クライアント、下流処理の制限を合わせて判断します。',
+    },
+    {
+        question:
+            'API Gateway + Lambda の API で、ユーザーごとにアクセス制御を行いたいです。設計として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Cognito、JWT オーソライザー、Lambda オーソライザー、IAM 認証など、要件に合う認証認可方式を API の入口で設計する',
+                isCorrect: true,
+                explanation:
+                    'API Gateway では、Cognito、JWT オーソライザー（JWT トークンを検証して API アクセスを制御する仕組み）、Lambda オーソライザー（Lambda 関数で独自認証ロジックを実行する仕組み）、IAM 認証などを使って入口で認証認可を設計できます。Lambda 内の業務チェックと組み合わせることもあります。',
+            },
+            {
+                text: 'Lambda 関数名を長くすれば、認証は不要になる',
+                isCorrect: false,
+                explanation:
+                    '関数名は認証認可の仕組みではありません。API を保護するには適切な認証認可設定が必要です。',
+            },
+            {
+                text: 'API Gateway を使う場合、すべての API は必ず匿名公開される',
+                isCorrect: false,
+                explanation:
+                    'API Gateway では認証認可の設定が可能です。匿名公開するかどうかは設計次第です。',
+            },
+            {
+                text: 'Lambda の実行ロールに S3 権限を付ければ、利用者の API アクセス制御も自動で完了する',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは Lambda が AWS リソースへアクセスするための権限です。API 利用者の認証認可とは別に考えます。',
+            },
+        ],
+        explanation:
+            'API 認証認可では「誰が API を呼べるか」と「Lambda が何へアクセスできるか」を分けて考えます。入口の認証とバックエンド権限は別の責務です。',
+    },
+    {
+        question:
+            'API Gateway から呼ばれる Lambda で、例外発生時にスタックトレースをそのままクライアントへ返しています。エラーハンドリングとして最も適切な見直しはどれですか?',
+        options: [
+            {
+                text: 'クライアントには適切な HTTP ステータスと安全なエラーメッセージを返し、詳細はログに記録する',
+                isCorrect: true,
+                explanation:
+                    '内部エラーの詳細やスタックトレースを外部へ返すと、セキュリティリスクになります。クライアント向けのエラー形式と、運用者向けのログを分けます。',
+            },
+            {
+                text: 'すべてのエラーを 200 OK で返せば、クライアントは必ず正しく処理できる',
+                isCorrect: false,
+                explanation:
+                    'HTTP ステータスを適切に使わないと、クライアントや監視が失敗を検知しにくくなります。',
+            },
+            {
+                text: 'エラー時はログを一切出さない方が安全である',
+                isCorrect: false,
+                explanation:
+                    '機密情報を避ける必要はありますが、原因調査に必要なログは重要です。何を出すかを設計します。',
+            },
+            {
+                text: 'スタックトレースを返すと、API Gateway が自動的に脆弱性を修正する',
+                isCorrect: false,
+                explanation:
+                    'API Gateway がアプリケーションの脆弱性を自動修正するわけではありません。返却内容を制御する必要があります。',
+            },
+        ],
+        explanation:
+            'API のエラーハンドリングでは、利用者に返す情報と運用者が見る情報を分けます。HTTP ステータス、エラーコード、ログの粒度を設計します。',
+    },
+    {
+        question:
+            'API Gateway の Lambda proxy integration（HTTP リクエスト情報をまとめて Lambda へ渡し、Lambda の戻り値を HTTP レスポンスとして返す統合方式）で Lambda からレスポンスを返します。基本的なレスポンス形式として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'statusCode、headers、body などを含む形式で返し、body は通常文字列として返す',
+                isCorrect: true,
+                explanation:
+                    'Lambda proxy integration では、HTTP レスポンスとして扱える形式で返す必要があります。代表的には statusCode、headers、body を含め、body は通常文字列として返し、JSON を返す場合も文字列化します。',
+            },
+            {
+                text: 'DynamoDB の PutItem 結果をそのまま返せば、必ず HTTP レスポンスとして解釈される',
+                isCorrect: false,
+                explanation:
+                    'AWS SDK の戻り値をそのまま返しても、API Gateway が期待する HTTP レスポンス形式とは限りません。レスポンス形式を整える必要があります。',
+            },
+            {
+                text: 'body には必ず Lambda の実行ロールを入れて返す',
+                isCorrect: false,
+                explanation:
+                    '実行ロールは Lambda の権限設定であり、API レスポンスに返すものではありません。権限情報を外部へ返すのは危険です。',
+            },
+            {
+                text: 'API Gateway を使う場合、Lambda は戻り値を返せない',
+                isCorrect: false,
+                explanation:
+                    '同期呼び出しでは Lambda の戻り値を API Gateway が受け取り、HTTP レスポンスとしてクライアントへ返せます。',
+            },
+        ],
+        explanation:
+            'API Gateway + Lambda では、Lambda の戻り値が HTTP レスポンスに変換されます。統一したレスポンス形式を設計すると、クライアント実装や監視が安定します。',
+    },
+    {
+        question:
+            '社内の簡単な webhook 受信エンドポイントを作りたいです。高度な API 管理、細かい認証機能、複雑なルーティングは不要で、できるだけ簡単に HTTPS エンドポイントを用意したいです。候補として最も自然なのはどれですか?',
+        options: [
+            {
+                text: 'Lambda Function URL を検討する',
+                isCorrect: true,
+                explanation:
+                    'Lambda Function URL は、Lambda 関数に HTTPS エンドポイントを簡単に付ける機能です。Lambda をシンプルに HTTPS 公開したい用途では有力ですが、高度な API 管理や認証認可が必要な場合は API Gateway なども比較します。',
+            },
+            {
+                text: '必ず ALB を作成し、ターゲットグループを複数構成する',
+                isCorrect: false,
+                explanation:
+                    'ALB（Application Load Balancer：HTTP/HTTPS リクエストを複数ターゲットへ振り分けるロードバランサー）は有力な選択肢ですが、単純な Lambda 公開用途では過剰な場合があります。',
+            },
+            {
+                text: 'Function URL を使えば、認証や公開範囲の検討は一切不要になる',
+                isCorrect: false,
+                explanation:
+                    'Function URL でも公開範囲、認証方式、呼び出し元制限、CORS などの検討は必要です。',
+            },
+            {
+                text: 'HTTPS エンドポイントを作るには、必ず EC2 で Web サーバーを常時起動する必要がある',
+                isCorrect: false,
+                explanation:
+                    'Lambda Function URL や API Gateway を使えば、EC2 の常時起動なしに HTTPS エンドポイントを作れます。',
+            },
+        ],
+        explanation:
+            'Lambda Function URL は、Lambda をシンプルに HTTPS 公開したい用途に向く方法です。ただし、本格的な API 管理、認証認可、レート制限、複雑なルーティングが必要なら API Gateway などを検討します。',
+    },
+    {
+        question:
+            '公開 API として、認証、レート制限、API キー、ステージ管理、詳細なルーティング、CORS 制御を行いたいです。Lambda の入口として最も適した候補はどれですか?',
+        options: [
+            {
+                text: 'API Gateway を検討する',
+                isCorrect: true,
+                explanation:
+                    'API Gateway は API の公開・管理に向いたサービスです。認証認可、レート制限、ステージ、CORS（Cross-Origin Resource Sharing：異なるオリジン間のリクエスト制御）、ルーティングなどを扱えます。',
+            },
+            {
+                text: 'Lambda Function URL だけを使えば、API Gateway のすべての API 管理機能を代替できる',
+                isCorrect: false,
+                explanation:
+                    'Function URL はシンプルな HTTPS エンドポイントには便利ですが、API Gateway のような高度な API 管理機能がすべて揃っているわけではありません。',
+            },
+            {
+                text: 'SQS を直接ブラウザに公開すれば、HTTP API として利用できる',
+                isCorrect: false,
+                explanation:
+                    'SQS はメッセージキューであり、公開 HTTP API の管理サービスではありません。',
+            },
+            {
+                text: 'CloudWatch Logs を公開すれば、API のレスポンスとして利用できる',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs はログ保存・監視のためのサービスであり、API エンドポイントではありません。',
+            },
+        ],
+        explanation:
+            '入口サービスの選定では、単に Lambda を呼べるかだけでなく、API 管理、認証、流量制御、運用機能が必要かを見ます。',
+    },
+    {
+        question:
+            '既存システムでは ALB 配下に複数の Web サービスがあり、一部パスだけ Lambda に処理させたいです。VPC 内の構成や既存の ALB 運用を活かしたい場合、候補として最も自然なのはどれですか?',
+        options: [
+            {
+                text: 'ALB のターゲットとして Lambda を使う構成を検討する',
+                isCorrect: true,
+                explanation:
+                    'ALB は Lambda をターゲットにできます。既存の ALB、パスベースルーティング、他のターゲットとの共存を活かしたい場合に候補になります。',
+            },
+            {
+                text: 'ALB を使う場合、Lambda は絶対に呼び出せない',
+                isCorrect: false,
+                explanation:
+                    'ALB は Lambda をターゲットとして呼び出せます。API Gateway だけが Lambda の入口ではありません。',
+            },
+            {
+                text: 'ALB を使えば、Lambda のタイムアウトやレスポンス形式を一切考えなくてよい',
+                isCorrect: false,
+                explanation:
+                    'ALB 経由でも、Lambda の実行時間、レスポンス形式、エラー処理、権限設定は考慮する必要があります。',
+            },
+            {
+                text: 'ALB は S3 オブジェクト保存専用のサービスである',
+                isCorrect: false,
+                explanation:
+                    'ALB は HTTP/HTTPS リクエストを複数のターゲットへ振り分けるロードバランサーです。S3 のオブジェクト保存サービスではありません。',
+            },
+        ],
+        explanation:
+            'Lambda の HTTP 入口は API Gateway だけではありません。既存 ALB との統合やパスベースルーティングを重視する場合、ALB + Lambda も候補になります。',
+    },
+    {
+        question:
+            'API Gateway + Lambda で 500 エラーが増えています。CloudWatch Logs には Lambda の例外が出ていますが、クライアントには原因不明のエラーだけが返っています。改善として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '相関 ID をレスポンスとログに含め、クライアントの問い合わせと Lambda ログを紐づけられるようにする',
+                isCorrect: true,
+                explanation:
+                    '相関 ID（Correlation ID：リクエストを追跡するための識別子）を使うと、クライアント側のエラーとサーバー側ログを対応付けやすくなります。詳細な内部情報は返さず、調査できる手がかりを返す設計が有効です。',
+            },
+            {
+                text: 'すべてのエラー詳細をクライアントへ返し、ログは削除する',
+                isCorrect: false,
+                explanation:
+                    '内部情報を外部へ返すのは危険です。ログを残しつつ、クライアントには安全なエラー情報と問い合わせ用の識別子を返します。',
+            },
+            {
+                text: '500 エラーは必ず API Gateway の障害なので、Lambda のログを見る必要はない',
+                isCorrect: false,
+                explanation:
+                    '500 エラーの原因は Lambda の例外、レスポンス形式不正、権限、統合設定などさまざまです。ログとメトリクスで切り分けます。',
+            },
+            {
+                text: 'エラー時は CloudWatch Logs に何も出さない方が、トラブルシューティングしやすい',
+                isCorrect: false,
+                explanation:
+                    'ログがないと原因調査が難しくなります。機密情報を避けつつ、必要な情報を記録します。',
+            },
+        ],
+        explanation:
+            'API の運用では、利用者向けレスポンスと運用者向けログをつなぐ情報が重要です。相関 ID（Correlation ID）、HTTP ステータス、エラーコードを整理します。',
+    },
+    {
+        question:
+            'Lambda API で、クライアントがタイムアウトした後に同じリクエストを再送することがあります。サーバー側では最初の処理が実は成功している可能性があります。最も重要な設計はどれですか?',
+        options: [
+            {
+                text: 'クライアントリクエスト ID や冪等キーを受け取り、同じ操作が二重実行されないようにする',
+                isCorrect: true,
+                explanation:
+                    '同期 API でも、クライアント再試行によって同じ操作が複数回来ることがあります。冪等キー（同じ業務操作を識別する重複しない値）を使うと、二重注文や二重決済を防ぎやすくなります。',
+            },
+            {
+                text: 'タイムアウトしたリクエストは、サーバー側で必ず失敗しているため考慮不要である',
+                isCorrect: false,
+                explanation:
+                    'クライアントがタイムアウトしても、サーバー側処理が成功している場合があります。再送時の重複を考慮する必要があります。',
+            },
+            {
+                text: '再送を検知したら、常に新しい注文として処理する',
+                isCorrect: false,
+                explanation:
+                    '同じ業務操作の再送を新規処理すると、二重注文や二重決済につながる可能性があります。',
+            },
+            {
+                text: 'API Gateway を使えば、すべてのクライアント再試行は自動的に無害化される',
+                isCorrect: false,
+                explanation:
+                    'API Gateway が業務上の重複実行を自動的に防いでくれるわけではありません。アプリケーション側で冪等性を設計します。',
+            },
+        ],
+        explanation:
+            '同期 API でも分散システムの問題は起きます。クライアントタイムアウト、再試行、サーバー側成功のズレを前提に、冪等な API を設計します。',
+    },
+    {
+        question:
+            'Lambda Function URL、API Gateway、ALB のどれを使うか迷っています。選定観点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '必要な API 管理機能、認証認可、既存 ALB 連携、ルーティング、コスト、運用方針を比較して選ぶ',
+                isCorrect: true,
+                explanation:
+                    'Function URL はシンプルな公開、API Gateway は API 管理、ALB は既存ロードバランサー連携や複数ターゲット統合で候補になります。要件に応じて比較します。',
+            },
+            {
+                text: 'Lambda を HTTP 公開する場合、常に Function URL が最も高機能である',
+                isCorrect: false,
+                explanation:
+                    'Function URL はシンプルですが、API Gateway や ALB の機能をすべて置き換えるものではありません。',
+            },
+            {
+                text: 'API Gateway、Function URL、ALB は名前が違うだけで機能差はない',
+                isCorrect: false,
+                explanation:
+                    'それぞれ機能、運用、認証認可、ルーティング、統合方法が異なります。要件に合わせて選びます。',
+            },
+            {
+                text: 'ALB を選ぶと、Lambda の IAM 権限設計は不要になる',
+                isCorrect: false,
+                explanation:
+                    'ALB 経由で呼び出しても、Lambda が AWS リソースへアクセスするなら実行ロールなどの権限設計が必要です。',
+            },
+        ],
+        explanation:
+            'Lambda の HTTP 入口は複数あります。簡単さだけでなく、認証、ルーティング、流量制御、既存構成、運用性を見て選定します。',
+    },
 ]
