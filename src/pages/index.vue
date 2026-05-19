@@ -89,7 +89,7 @@ const questionSets = [
         subtitle: 'Lambdaの設計・運用・高度な連携',
         description: 'VPC、非同期処理、リトライ、バージョン管理、実運用シナリオ',
         to: '/lambda/lambda2',
-        level: 'Basic',
+        level: 'Advanced',
         tone: 'indigo',
     },
 ] as const
