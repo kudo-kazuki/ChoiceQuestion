@@ -3681,4 +3681,324 @@ export const testQuestions: Question[] = [
         explanation:
             'デプロイ事故はコードだけでなく設定差分でも起きます。IaC、CI/CD（ビルド・テスト・デプロイを自動化する仕組み）、レビュー、環境ごとの設定管理を組み合わせると安全性が上がります。',
     },
+    {
+        question:
+            'Lambda のメモリ設定を増やすと1回あたりの単価は上がりますが、処理時間が大きく短くなる可能性があります。コスト最適化の考え方として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'メモリ量、実行時間、呼び出し回数を測定し、総コストと性能のバランスがよい設定を探す',
+                isCorrect: true,
+                explanation:
+                    'Lambda ではメモリを増やすと CPU などの割り当てリソースも増えます。単価は上がっても Duration（Lambda 実行時間）が短くなり、総コストが下がる場合があります。',
+            },
+            {
+                text: 'メモリは常に最小値にすれば、必ず最も安くなる',
+                isCorrect: false,
+                explanation:
+                    'メモリが少なすぎると処理時間が長くなり、結果的にコストが上がる場合があります。性能劣化やタイムアウトにも注意が必要です。',
+            },
+            {
+                text: 'メモリは常に最大値にすれば、必ず最も安くなる',
+                isCorrect: false,
+                explanation:
+                    '最大メモリで処理が速くなっても、単価上昇に見合うとは限りません。実測して判断します。',
+            },
+            {
+                text: 'Lambda のコストは関数名だけで決まる',
+                isCorrect: false,
+                explanation:
+                    '関数名はコストを決めません。Duration（Lambda 実行時間）、メモリ、呼び出し回数、Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）、ログ量などが関係します。',
+            },
+        ],
+        explanation:
+            'Lambda のコスト最適化では、安い設定を推測で決めるのではなく、Duration（Lambda 実行時間）とメモリ設定を実測します。性能とコストのバランスを見ることが重要です。',
+    },
+    {
+        question:
+            '低レイテンシ API のために Provisioned Concurrency を常時多めに設定しています。アクセスは日中だけ多く、夜間はほぼありません。コスト判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '必要な時間帯と必要数に合わせて Provisioned Concurrency を調整し、低レイテンシ要件と待機コストのバランスを見る',
+                isCorrect: true,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は待機中にもコストがかかります。アクセスがない時間帯でも待機環境分のコストが発生するため、過剰に設定すると無駄になりやすいです。',
+            },
+            {
+                text: 'Provisioned Concurrency は無料なので、常に最大値にしてよい',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency は設定した実行環境に対してコストが発生します。必要量を見積もる必要があります。',
+            },
+            {
+                text: '夜間アクセスが少なくても、必ず日中と同じ数を維持しなければならない',
+                isCorrect: false,
+                explanation:
+                    '低レイテンシ要件やアクセス予測に応じて時間帯ごとに調整できる場合があります。',
+            },
+            {
+                text: 'Provisioned Concurrency を設定すると、ログや実行時間のコストは一切発生しなくなる',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency はコールドスタート対策であり、実行やログに関するコストを消すものではありません。',
+            },
+        ],
+        explanation:
+            'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は性能改善に有効ですが、常時待機コストがあります。アクセスパターン、p95 / p99（遅い側 95% / 99% 地点の応答時間指標）、ビジネス要件を見て設定します。',
+    },
+    {
+        question:
+            'Lambda で詳細ログを大量に出力しています。障害調査には便利ですが、CloudWatch Logs（ログ保存・検索サービス）の保存量と取り込み量が増えています。コスト最適化として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'ログレベル、出力項目、保存期間を見直し、必要な情報を残しつつ過剰なログを減らす',
+                isCorrect: true,
+                explanation:
+                    'CloudWatch Logs（ログ保存・検索サービス）はログの取り込み量や保存量がコストに影響します。機密情報を出さず、調査に必要な構造化ログ（検索・分析しやすい形式のログ）と保存期間を設計します。',
+            },
+            {
+                text: 'コスト削減のため、本番ログをすべて無効にする',
+                isCorrect: false,
+                explanation:
+                    'ログをすべて消すと障害調査や監査が難しくなります。必要な情報を残しつつ、過剰な出力を減らします。',
+            },
+            {
+                text: 'ログを増やすほど、CloudWatch Logs のコストは必ず下がる',
+                isCorrect: false,
+                explanation:
+                    '一般にログ量が増えると、取り込みや保存のコストが増える可能性があります。',
+            },
+            {
+                text: '機密情報をログに出しておけば、調査が楽になりセキュリティ上も安全である',
+                isCorrect: false,
+                explanation:
+                    '機密情報をログに出すのは危険です。必要な識別子や状態だけを記録します。',
+            },
+        ],
+        explanation:
+            'ログは運用に必要ですが、無制限に出すものではありません。ログ量、保存期間、検索性、セキュリティ、コストのバランスを取ります。',
+    },
+    {
+        question:
+            '外部 API 障害時に Lambda が何度もリトライし、さらに呼び出し元も再試行するため、実行回数と外部 API 呼び出し数が急増しました。コスト面で最も適切な見直しはどれですか?',
+        options: [
+            {
+                text: 'リトライ回数、バックオフ、タイムアウト、冪等性、DLQ / Destination を見直し、過剰実行を抑える',
+                isCorrect: true,
+                explanation:
+                    'リトライは信頼性向上に役立ちますが、多層リトライは実行回数、外部 API 呼び出し、ログ量を増やします。バックオフ（失敗時に待機時間を徐々に伸ばす再試行制御）、DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）、Destination（非同期実行結果を別サービスへ送る仕組み）を設計します。',
+            },
+            {
+                text: 'リトライは多いほど常に安くなるため、回数を無制限に増やす',
+                isCorrect: false,
+                explanation:
+                    '過剰なリトライはコスト増、下流サービス負荷、重複処理につながります。',
+            },
+            {
+                text: '外部 API が落ちている間も、待ち時間なしで全件即時再試行し続ける',
+                isCorrect: false,
+                explanation:
+                    '即時再試行を続けるとリトライ嵐になり、コストと負荷が増えます。バックオフや停止条件が必要です。',
+            },
+            {
+                text: 'DLQ を使えば、リトライや実行回数の設計は不要になる',
+                isCorrect: false,
+                explanation:
+                    'DLQ（Dead Letter Queue：繰り返し失敗したイベントを退避するキュー）は失敗イベントを退避しますが、リトライ設計や冪等性の代わりにはなりません。',
+            },
+        ],
+        explanation:
+            'コスト最適化では、正常時だけでなく障害時の再試行コストも見ます。リトライ設計が悪いと、障害時に実行回数とログ量が急増します。',
+    },
+    {
+        question:
+            '毎日数時間かかる大規模データ処理を Lambda で細かく分割して実行しています。状態管理や再試行制御のために複雑な仕組みが増え、コストも読みにくくなっています。最も適切な判断はどれですか?',
+        options: [
+            {
+                text: 'AWS Batch、ECS / Fargate、Step Functions なども含め、処理時間、運用、再試行、コストを比較する',
+                isCorrect: true,
+                explanation:
+                    '長時間・大規模処理を無理に Lambda へ寄せると、分割制御や状態管理が複雑になり、コストも増えることがあります。AWS Batch（大規模バッチ処理を管理するサービス）、ECS / Fargate（コンテナ実行基盤サービス）、Step Functions（ワークフロー管理サービス）などと比較します。',
+            },
+            {
+                text: '長時間処理でも、必ず Lambda が最安で最も単純である',
+                isCorrect: false,
+                explanation:
+                    'Lambda は短時間イベント処理に強い一方、長時間・高頻度・大規模処理では他サービスの方が適する場合があります。',
+            },
+            {
+                text: 'Step Functions や Batch はコストが常にゼロなので、比較は不要である',
+                isCorrect: false,
+                explanation:
+                    'どのサービスにも料金体系があります。状態遷移数（Step Functions 内のステップ実行回数）、Duration（Lambda 実行時間）、コンピュート利用量などを見て比較します。',
+            },
+            {
+                text: '処理が複雑でも、CloudWatch Logs を削除すればアーキテクチャの複雑さは解消する',
+                isCorrect: false,
+                explanation:
+                    'ログ削除は設計複雑性を解消しません。処理分割、状態管理、再試行、運用負荷を見直します。',
+            },
+        ],
+        explanation:
+            'コストは単価だけでなく、運用複雑性や失敗時の再処理も含めて考えます。Lambda が適切か、Step Functions（ワークフロー管理サービス）/ ECS / Fargate（コンテナ実行基盤サービス）/ AWS Batch（大規模バッチ処理を管理するサービス）が適切かは要件次第です。',
+    },
+    {
+        question:
+            'Lambda で1秒未満の軽い処理を月に数回だけ実行します。EC2 を常時起動する案と比較しています。コスト判断として最も適切なものはどれですか?',
+        options: [
+            {
+                text: '低頻度・短時間処理では、実行時中心に課金される Lambda が有利になる場合がある',
+                isCorrect: true,
+                explanation:
+                    'Lambda はリクエスト数と実行時間を中心に課金されます。低頻度・短時間処理では、常時起動の EC2 よりコストと運用負荷を抑えやすい場合があります。',
+            },
+            {
+                text: '月に数回しか実行しない処理でも、必ず EC2 を24時間起動する方が安い',
+                isCorrect: false,
+                explanation:
+                    '常時起動の EC2 は使っていない時間もコストや運用負荷が発生します。利用頻度と処理時間で比較します。',
+            },
+            {
+                text: 'Lambda は低頻度処理では起動できない',
+                isCorrect: false,
+                explanation:
+                    '低頻度でも Lambda は起動できます。ただし久しぶりの実行ではコールドスタートを考慮します。',
+            },
+            {
+                text: 'EC2 と Lambda は料金体系が同じなので比較不要である',
+                isCorrect: false,
+                explanation:
+                    'EC2 はインスタンス稼働時間、Lambda はリクエスト数や実行時間など、料金体系が異なります。',
+            },
+        ],
+        explanation:
+            'コスト最適化では、稼働していない時間のコストも重要です。低頻度・短時間処理では Lambda のイベント発生時中心の従量課金が有利になることがあります。',
+    },
+    {
+        question:
+            '高頻度で常にリクエストがあり、各処理も数分かかるワークロードを Lambda で実行しています。Provisioned Concurrency も多く設定しています。コストと適性の観点で最も適切な判断はどれですか?',
+        options: [
+            {
+                text: 'Lambda の実行時間・呼び出し数・Provisioned Concurrency コストを合算し、ECS / Fargate や EC2 など常時稼働基盤とも比較する',
+                isCorrect: true,
+                explanation:
+                    '高頻度・長めの処理では、Lambda の実行コストや Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）の待機コストが大きくなることがあります。ECS / Fargate（コンテナ実行基盤サービス）や EC2 の方が適する場合もあります。',
+            },
+            {
+                text: '高頻度・長時間処理では、常に Lambda が最安になる',
+                isCorrect: false,
+                explanation:
+                    'Lambda は便利ですが、高頻度・長時間処理では他の実行基盤の方がコストや運用に合う場合があります。',
+            },
+            {
+                text: 'Provisioned Concurrency を増やすほど、必ず総コストは下がる',
+                isCorrect: false,
+                explanation:
+                    'Provisioned Concurrency（実行環境を事前準備してコールドスタート影響を減らす仕組み）は待機コストが発生します。低レイテンシ要件に見合うか確認が必要です。',
+            },
+            {
+                text: '処理時間が長いほど、Lambda のタイムアウト制限やコストは考慮不要になる',
+                isCorrect: false,
+                explanation:
+                    '処理時間が長いほど、タイムアウト制限や実行コストが重要になります。',
+            },
+        ],
+        explanation:
+            'Lambda は低頻度・短時間処理だけでなく高頻度処理にも使えますが、常に最適とは限りません。実行時間、頻度、待機コスト、運用要件で比較します。',
+    },
+    {
+        question:
+            'Step Functions で Lambda を多数連携するワークフローを作っています。状態遷移が非常に多く、各 Lambda は短時間です。コスト比較で見るべき点として最も適切なものはどれですか?',
+        options: [
+            {
+                text: 'Lambda の実行コストだけでなく、Step Functions の状態遷移数や実行回数も含めて比較する',
+                isCorrect: true,
+                explanation:
+                    'Step Functions（ワークフロー管理サービス）は便利ですが、状態遷移数（Step Functions 内のステップ実行回数）などがコストに影響します。Lambda の Duration（Lambda 実行時間）だけを見ていると全体コストを見誤ります。',
+            },
+            {
+                text: 'Step Functions を使うと、状態遷移コストは常にゼロになる',
+                isCorrect: false,
+                explanation:
+                    'Step Functions（ワークフロー管理サービス）には料金体系があります。状態遷移数（Step Functions 内のステップ実行回数）や Standard / Express などの実行タイプを確認します。',
+            },
+            {
+                text: 'Lambda が短時間なら、Step Functions の設計はコストに影響しない',
+                isCorrect: false,
+                explanation:
+                    'Lambda が短時間でも、状態遷移数（Step Functions 内のステップ実行回数）が非常に多いと Step Functions 側のコストが無視できない場合があります。',
+            },
+            {
+                text: 'ワークフローが複雑な場合、必ず EC2 だけを使うべきである',
+                isCorrect: false,
+                explanation:
+                    '複雑なワークフローでは Step Functions が有効な場合があります。コストと運用性を比較して判断します。',
+            },
+        ],
+        explanation:
+            'サービスを組み合わせる場合、Lambda 単体のコストだけでなく周辺サービスの料金も含めます。Step Functions（ワークフロー管理サービス）は運用性とコストの両方で評価します。',
+    },
+    {
+        question:
+            'Lambda のコストが想定より増えています。調査すると、同じ S3 オブジェクトを何度も処理しており、ログも大量に出ています。最も適切な改善はどれですか?',
+        options: [
+            {
+                text: '重複トリガーや再帰起動を防ぎ、冪等性とログ量を見直す',
+                isCorrect: true,
+                explanation:
+                    '同じイベントの重複処理や S3 書き戻しによる再帰起動は、実行回数とログ量を増やします。入力 / 出力プレフィックス（S3 キー先頭のパス部分）分離、処理済み判定、ログレベル調整を検討します。',
+            },
+            {
+                text: 'コストが増えたら、必ずメモリを最大にするだけで解決する',
+                isCorrect: false,
+                explanation:
+                    'メモリ調整で改善する場合もありますが、重複実行やログ過多が原因なら別の対策が必要です。',
+            },
+            {
+                text: '同じオブジェクトを何度も処理するほど、コストは必ず下がる',
+                isCorrect: false,
+                explanation:
+                    '不要な再処理は実行回数、実行時間、ログ量を増やし、コスト増につながります。',
+            },
+            {
+                text: 'ログ量はコストに影響しないため、調査対象から外してよい',
+                isCorrect: false,
+                explanation:
+                    'CloudWatch Logs の取り込み量や保存量はコストに影響します。ログ量も確認します。',
+            },
+        ],
+        explanation:
+            'Lambda コスト増では、メモリや実行時間だけでなく、重複起動、再帰起動、リトライ、ログ量を確認します。不要な実行を減らすことも大きな最適化です。',
+    },
+    {
+        question:
+            'コスト最適化のために Lambda を別サービスへ置き換えるか検討しています。最も適切な判断軸はどれですか?',
+        options: [
+            {
+                text: '実行時間、頻度、待機要件、スケール特性、運用負荷、周辺サービス費用を合わせて比較する',
+                isCorrect: true,
+                explanation:
+                    'Lambda、ECS / Fargate（コンテナ実行基盤サービス）、EC2、AWS Batch（大規模バッチ処理を管理するサービス）、Step Functions（ワークフロー管理サービス）は料金体系と運用特性が異なります。単価だけでなく、全体の処理量、待機時間、運用負荷、障害時再処理も含めます。',
+            },
+            {
+                text: 'Lambda 以外のサービスは常に無料なので、すぐ置き換える',
+                isCorrect: false,
+                explanation:
+                    'どのサービスにも料金体系があります。置き換えで安くなるとは限りません。',
+            },
+            {
+                text: 'サービス選定では、運用負荷や障害対応コストは無視してよい',
+                isCorrect: false,
+                explanation:
+                    '運用負荷も実質的なコストです。複雑な構成や手動運用が増えると、総合的には高くなる場合があります。',
+            },
+            {
+                text: '実行時間と頻度を見ずに、名前の印象だけでサービスを選ぶ',
+                isCorrect: false,
+                explanation:
+                    'サービス名ではなく、実際の要件と料金体系で比較します。',
+            },
+        ],
+        explanation:
+            'コスト最適化は、Lambda の設定だけで完結しないことがあります。ワークロードに合う実行基盤を選び、全体コストと運用性を比較します。',
+    },
 ]
