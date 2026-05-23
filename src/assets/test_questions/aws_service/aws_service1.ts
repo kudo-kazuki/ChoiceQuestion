@@ -358,10 +358,10 @@ export const testQuestions: Question[] = [
             'AWS App Runner の利用を検討している新規の AWS 顧客に対する説明として、現在の公式ドキュメントに照らして最も適切なものはどれですか?',
         options: [
             {
-                text: 'App Runner はソースコードやコンテナイメージから Web アプリケーションをデプロイするサービスだが、現在は新規顧客には提供開始できず、既存顧客は継続利用できる',
+                text: 'App Runner はソースコードやコンテナイメージから Web アプリケーションをデプロイするサービスだが、2026年4月30日以降は新規顧客向けに提供開始できず、既存顧客は継続利用できる',
                 isCorrect: true,
                 explanation:
-                    'AWS 公式ドキュメントでは、App Runner は新規顧客には利用開始できず、既存顧客は通常どおり継続利用できると案内されています。機能の概要だけでなく、利用可能性の確認もサービス選定では重要です。',
+                    'AWS 公式ドキュメントでは、AWS App Runner は 2026年4月30日以降、新規顧客には利用開始できず、既存顧客は通常どおり継続利用できると案内されています。サービスの役割だけでなく、新規採用できるかどうかもサービス選定では重要です。新規に近い用途を検討する場合は、Amazon ECS / AWS Fargate や ECS Express Mode なども選択肢になります。',
             },
             {
                 text: 'App Runner はすべての新規顧客が新しい Web アプリケーションで優先的に採用すべき現行サービスである',
@@ -383,7 +383,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'AWS サービスの学習では、役割だけでなく、新規利用の可否や名称変更など最新の提供状況も公式情報で確認する必要があります。',
+            'AWS サービスの学習では、役割だけでなく、新規利用の可否や名称変更など最新の提供状況も公式情報で確認する必要があります。App Runner は新規顧客向けの提供状況に日付を伴う注意が必要な例です。',
     },
     {
         question:
@@ -415,7 +415,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'AWSService1 では、S3 は「大量のファイルやデータをオブジェクトとして保存する基本サービス」と整理します。バケット設定やアクセス制御の詳細は S3 の個別問題集で深掘りします。',
+            'この問題集では、S3 は「大量のファイルやデータをオブジェクトとして保存する基本サービス」と整理します。バケット設定やアクセス制御の詳細は S3 の個別問題集で深掘りします。',
     },
     {
         question:
@@ -550,10 +550,10 @@ export const testQuestions: Question[] = [
             'Amazon EBS と Amazon EFS の違いとして最も適切な説明はどれですか?',
         options: [
             {
-                text: 'EBS は主に EC2 にアタッチするブロックストレージで、EFS は複数のコンピューティングリソースから共有できるファイルシステムである',
+                text: 'EBS は基本的には EC2 にアタッチしてディスクのように使うブロックストレージで、EFS は複数のコンピューティングリソースから共有できるファイルシステムである',
                 isCorrect: true,
                 explanation:
-                    'EBS はディスクのように利用するブロックストレージで、EC2 の OS やアプリケーションデータに使われます。EFS は NFS ベースの共有ファイルシステムとして、複数の処理から同じファイルにアクセスする用途に使われます。',
+                    'EBS は基本的には EC2 に接続してディスクのように利用するブロックストレージで、EC2 の OS やアプリケーションデータに使われます。EFS は NFS ベースの共有ファイルシステムとして、複数の処理から同じファイルにアクセスする用途に使われます。EBS には Multi-Attach などの機能もありますが、初学者向けの基本的な使い分けはこの整理です。',
             },
             {
                 text: 'EBS は DNS サービスで、EFS は CDN サービスである',
@@ -1353,7 +1353,7 @@ export const testQuestions: Question[] = [
                 text: 'AWS Direct Connect',
                 isCorrect: true,
                 explanation:
-                    'AWS Direct Connect は、オンプレミス環境から AWS への専用ネットワーク接続を確立するサービスです。インターネットベースの接続より、一貫したネットワーク体験や高い帯域が必要な場合に検討されます。',
+                    'AWS Direct Connect は、オンプレミス環境から AWS への専用ネットワーク接続を提供します。インターネットベースの接続より、一貫したネットワーク体験や高い帯域が必要な場合に検討されます。ただし、Direct Connect は通信内容を暗号化するサービスそのものではなく、暗号化が必要な場合は VPN などとの組み合わせを設計します。',
             },
             {
                 text: 'AWS Site-to-Site VPN',
@@ -1375,7 +1375,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Direct Connect は専用接続、Site-to-Site VPN は暗号化された VPN 接続という基本的な違いを押さえます。可用性要件に応じて併用する設計もあります。',
+            'Direct Connect は専用接続、Site-to-Site VPN は暗号化された VPN 接続という基本的な違いを押さえます。Direct Connect 自体が暗号化を提供するわけではないため、暗号化や可用性の要件に応じて VPN と併用する設計もあります。',
     },
     {
         question:
@@ -1443,13 +1443,13 @@ export const testQuestions: Question[] = [
     },
     {
         question:
-            'プライベートサブネット内のアプリケーションから、インターネットゲートウェイや NAT デバイスを経由せずに、対応する AWS サービスや別アカウントのサービスへプライベートに接続したい場合、利用を検討するものはどれですか?',
+            'プライベートサブネット内のアプリケーションから、VPC エンドポイントを通じて、対応する AWS サービスや別 VPC / 別アカウントで公開されたサービスへインターネットを経由せず接続したい場合、利用を検討するものはどれですか?',
         options: [
             {
                 text: 'AWS PrivateLink',
                 isCorrect: true,
                 explanation:
-                    'AWS PrivateLink は、VPC から対応サービスやリソースへ、公開 IP やインターネットゲートウェイ、NAT デバイスなどを使わずにプライベートに接続できる技術です。',
+                    'AWS PrivateLink は、VPC エンドポイントを通じて、対応する AWS サービスや、別 VPC / 別アカウントで公開された VPC エンドポイントサービスへ、インターネットを経由せずプライベートに接続するための仕組みです。',
             },
             {
                 text: 'Amazon CloudFront',
@@ -1471,7 +1471,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'PrivateLink は、特定のサービスへのプライベート接続を提供する考え方です。複数ネットワーク全体を相互接続する Transit Gateway とは目的が異なります。',
+            'PrivateLink は、特定のサービスを利用者 VPC へプライベートに公開・接続する考え方です。複数ネットワーク全体を相互接続する Transit Gateway とは目的が異なります。',
     },
     {
         question:
@@ -1827,13 +1827,13 @@ export const testQuestions: Question[] = [
     },
     {
         question:
-            'GuardDuty、Inspector、Macie など複数のセキュリティサービスが生成する所見を集約し、AWS 環境のセキュリティ状態やベストプラクティスへの準拠状況を一元的に把握したい場合、候補はどれですか?',
+            'GuardDuty、Inspector、Macie など複数のセキュリティサービスが生成する所見を集約し、AWS 環境のセキュリティリスクを一元的に把握したい場合、候補はどれですか?',
         options: [
             {
-                text: 'AWS Security Hub CSPM',
+                text: 'AWS Security Hub',
                 isCorrect: true,
                 explanation:
-                    'AWS Security Hub CSPM（Cloud Security Posture Management）は、AWS 環境のセキュリティ状態を包括的に可視化し、セキュリティ標準に対するチェックを行い、GuardDuty、Inspector、Macie などの所見を集約できます。',
+                    'AWS Security Hub は、GuardDuty、Inspector、Macie など複数のセキュリティサービスからの所見を関連付けて分析し、セキュリティリスクの把握や対応に役立てるサービスです。一方、AWS Security Hub CSPM（Cloud Security Posture Management: クラウドセキュリティ態勢管理）は、セキュリティ標準やベストプラクティスへの準拠状況を評価する役割が中心です。',
             },
             {
                 text: 'Amazon EFS',
@@ -1855,7 +1855,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            '各検出サービスがそれぞれ所見を作り、Security Hub CSPM が複数サービス・複数アカウントにまたがる状況を集約して把握しやすくする、という整理が基本です。',
+            '初学者向けには、複数サービスからの所見を集約・関連付けてリスクを把握する用途は Security Hub、設定や標準準拠の継続評価は Security Hub CSPM、と比較して整理します。',
     },
     {
         question:
@@ -3014,10 +3014,10 @@ export const testQuestions: Question[] = [
             'アプリケーションから継続的に送られるログを、独自の配信プログラムを管理せずに Amazon S3 や Amazon Redshift などへ届けたい場合に最も適したサービスはどれですか?',
         options: [
             {
-                text: 'Amazon Data Firehose',
+                text: 'Amazon Data Firehose（旧 Amazon Kinesis Data Firehose）',
                 isCorrect: true,
                 explanation:
-                    'Amazon Data Firehose は、リアルタイムのストリーミングデータを S3、Redshift、OpenSearch Service などの宛先へ配信するフルマネージドサービスです。配信前の変換も構成できます。',
+                    'Amazon Data Firehose（旧 Amazon Kinesis Data Firehose）は、リアルタイムのストリーミングデータを S3、Redshift、OpenSearch Service などの宛先へ配信するフルマネージドサービスです。配信前の変換も構成できます。',
             },
             {
                 text: 'Amazon Kinesis Data Streams',
@@ -3043,13 +3043,13 @@ export const testQuestions: Question[] = [
     },
     {
         question:
-            '分析データからダッシュボードやインタラクティブな可視化を作成して組織で共有したい場合に利用できる、Amazon Quick の可視化機能はどれですか?',
+            '分析データからダッシュボードやインタラクティブな可視化を作成して組織で共有したい場合に利用できる、Amazon Quick Suite / Quick Sight 系の可視化機能として最も適切なものはどれですか?',
         options: [
             {
-                text: 'Amazon Quick Sight',
+                text: 'Amazon Quick Sight（旧 Amazon QuickSight の BI / 可視化機能）',
                 isCorrect: true,
                 explanation:
-                    'Amazon Quick Sight は、Amazon Quick 内でデータ可視化、ダッシュボード共有、埋め込み分析などを提供する機能です。旧 Amazon QuickSight の既存機能は Quick Sight として継続しています。',
+                    'Amazon Quick Sight は、旧 Amazon QuickSight の BI（Business Intelligence: データを可視化・分析して意思決定に役立てる仕組み）・可視化機能を引き継ぐ位置付けの機能です。ダッシュボード作成、インタラクティブな分析、埋め込み分析などに利用できます。名称変更の経緯があるため、学習時は「旧 QuickSight の可視化・BI 機能」と理解すると整理しやすくなります。',
             },
             {
                 text: 'AWS CloudTrail',
@@ -3071,7 +3071,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Amazon QuickSight は Amazon Quick にリブランドされ、可視化に関する既存機能は Amazon Quick Sight として位置付けられています。学習時は現在の名称と従来の名称の対応を把握しておくと混乱を避けられます。',
+            'Amazon QuickSight は Amazon Quick Suite へ発展し、可視化に関する既存機能は Amazon Quick Sight として位置付けられています。名称変更があるため、旧称との対応を明示して理解します。',
     },
     {
         question:
@@ -3238,13 +3238,13 @@ export const testQuestions: Question[] = [
             '分析・データ処理サービスの用途の対応関係として最も適切なものはどれですか?',
         options: [
             {
-                text: 'Athena は S3 データへの SQL 問い合わせ、Glue はデータ統合とカタログ、Redshift はデータウェアハウス、Quick Sight は可視化、EMR は大規模分散処理、Lake Formation はデータレイクのアクセス統制',
+                text: 'Athena は S3 データへの SQL 問い合わせ、Glue はデータ統合とカタログ、Redshift はデータウェアハウス、Amazon Quick Sight（旧 Amazon QuickSight）は可視化、EMR は大規模分散処理、Lake Formation はデータレイクのアクセス統制',
                 isCorrect: true,
                 explanation:
                     '各サービスの代表的な役割を正しく対応付けています。分析では、準備、問い合わせ、蓄積・集計、可視化、処理基盤、ガバナンスを目的に応じて組み合わせます。',
             },
             {
-                text: 'Athena はコンテナ保管、Glue はメール送信、Redshift は DNS、Quick Sight は暗号鍵管理、EMR は証明書発行、Lake Formation はロードバランサー',
+                text: 'Athena はコンテナ保管、Glue はメール送信、Redshift は DNS、Amazon Quick Sight は暗号鍵管理、EMR は証明書発行、Lake Formation はロードバランサー',
                 isCorrect: false,
                 explanation:
                     'これらは誤った対応です。分析・データ処理のサービスを、コンテナ、メール、ネットワーク、セキュリティのサービスと混同しています。',
@@ -3259,7 +3259,7 @@ export const testQuestions: Question[] = [
                 text: 'すべてのサービスは同じバックアップ保管サービスであり、SQL や可視化には利用できない',
                 isCorrect: false,
                 explanation:
-                    'Athena や Redshift は SQL 分析、Quick Sight は可視化に関係します。バックアップ専用のサービス群ではありません。',
+                    'Athena や Redshift は SQL 分析、Amazon Quick Sight は可視化に関係します。バックアップ専用のサービス群ではありません。',
             },
         ],
         explanation:
@@ -3648,134 +3648,6 @@ export const testQuestions: Question[] = [
         ],
         explanation:
             'サーバーをほぼそのまま AWS へ移す要件では Application Migration Service を選びます。データベースの論理的なデータ移行を行う DMS とは移行対象の単位が異なります。',
-    },
-    {
-        question:
-            'オンプレミスの NFS や SMB ファイルサーバーに保存された大量のファイルを、ネットワーク経由で Amazon S3 や Amazon EFS へ高速かつ安全に移行したい場合に適したサービスはどれですか?',
-        options: [
-            {
-                text: 'AWS DataSync',
-                isCorrect: true,
-                explanation:
-                    'AWS DataSync はオンプレミスや他ストレージと AWS ストレージ間で、ファイルやオブジェクトデータを高速かつ安全に転送するサービスです。NFS（Network File System）や SMB（Server Message Block）を含むファイル移行に利用できます。',
-            },
-            {
-                text: 'AWS Storage Gateway',
-                isCorrect: false,
-                explanation:
-                    'Storage Gateway はオンプレミスから AWS ストレージへ継続的にアクセスするハイブリッド構成に適しています。一括または定期的なデータ転送を中心に行う要件では DataSync が代表的です。',
-            },
-            {
-                text: 'Amazon Bedrock',
-                isCorrect: false,
-                explanation:
-                    'Bedrock は基盤モデルを利用した生成 AI アプリケーション構築に関係します。ファイルデータの転送サービスではありません。',
-            },
-            {
-                text: 'AWS CodeBuild',
-                isCorrect: false,
-                explanation:
-                    'CodeBuild はソースコードのビルドとテストに利用します。オンプレミスファイルの AWS ストレージへの移行には使いません。',
-            },
-        ],
-        explanation:
-            'DataSync は、ネットワークを利用して既存ファイルデータを AWS のストレージへ動かす役割で理解します。転送中の暗号化やデータ整合性検証にも対応します。',
-    },
-    {
-        question:
-            'オンプレミスのアプリケーションから NFS や SMB のファイル共有としてアクセスしながら、実体のデータは Amazon S3 に保存するハイブリッドストレージ構成に適したサービスはどれですか?',
-        options: [
-            {
-                text: 'Amazon S3 File Gateway (AWS Storage Gateway)',
-                isCorrect: true,
-                explanation:
-                    'Amazon S3 File Gateway は、オンプレミス等に配置したゲートウェイを通じて S3 オブジェクトを NFS や SMB のファイル共有として扱えるようにします。既存のファイルアクセス方式を維持しながら S3 を利用できます。',
-            },
-            {
-                text: 'AWS DataSync',
-                isCorrect: false,
-                explanation:
-                    'DataSync はファイルやオブジェクトの転送を自動化するサービスです。アプリケーションが継続的にマウントするファイル共有インターフェースを S3 に対して提供する主役は S3 File Gateway です。',
-            },
-            {
-                text: 'Amazon Rekognition',
-                isCorrect: false,
-                explanation:
-                    'Rekognition は画像や動画の分析サービスです。オンプレミス向けのファイル共有インターフェースは提供しません。',
-            },
-            {
-                text: 'AWS CodePipeline',
-                isCorrect: false,
-                explanation:
-                    'CodePipeline はソフトウェアのリリース工程を自動化するサービスです。S3 をファイル共有として利用する構成とは関係ありません。',
-            },
-        ],
-        explanation:
-            'Storage Gateway の S3 File Gateway は、クラウド移行を一度に完了させず、既存環境から S3 をファイルとして使うハイブリッド連携に適しています。',
-    },
-    {
-        question:
-            '取引先が現在使用している SFTP クライアントの利用方法を大きく変えずに、アップロード先を Amazon S3 に移行したい場合に最も適したサービスはどれですか?',
-        options: [
-            {
-                text: 'AWS Transfer Family',
-                isCorrect: true,
-                explanation:
-                    'AWS Transfer Family は SFTP、FTPS、FTP、AS2 などのファイル転送を AWS ストレージへ直接受け入れるフルマネージドサービスです。SFTP（SSH File Transfer Protocol: SSH を用いるファイル転送方式）を維持しつつ S3 を保存先にできます。',
-            },
-            {
-                text: 'Amazon S3 File Gateway',
-                isCorrect: false,
-                explanation:
-                    'S3 File Gateway は NFS や SMB のファイル共有として S3 を利用する構成向けです。外部の SFTP クライアントからファイル転送を受け付けるには Transfer Family が適しています。',
-            },
-            {
-                text: 'Amazon ElastiCache',
-                isCorrect: false,
-                explanation:
-                    'ElastiCache はキャッシュとしてデータアクセスを高速化するサービスです。SFTP によるファイル受け入れには利用しません。',
-            },
-            {
-                text: 'Amazon EventBridge',
-                isCorrect: false,
-                explanation:
-                    'EventBridge はイベントのルーティングに利用します。SFTP エンドポイントを提供してファイルを受け入れるサービスではありません。',
-            },
-        ],
-        explanation:
-            'Transfer Family は、既存のファイル転送プロトコルを利用する業務を AWS ストレージへ移行したい場合に選択します。',
-    },
-    {
-        question:
-            'ネットワーク回線が十分でない拠点から、非常に大容量のデータを AWS へ移行するため、AWS が管理する物理デバイスによる搬送を利用したい場合に適したサービス群はどれですか?',
-        options: [
-            {
-                text: 'AWS Snow Family',
-                isCorrect: true,
-                explanation:
-                    'AWS Snow Family は、安定したネットワーク接続が不足する場所などで、AWS が管理する物理デバイスを用いて大量データを移送する用途に対応します。',
-            },
-            {
-                text: 'AWS DataSync',
-                isCorrect: false,
-                explanation:
-                    'DataSync はネットワーク経由の高速転送に利用します。ネットワーク帯域が移行要件を満たしにくく、物理搬送が必要な場合は Snow Family が適しています。',
-            },
-            {
-                text: 'Amazon Comprehend',
-                isCorrect: false,
-                explanation:
-                    'Comprehend は文章から感情やエンティティなどを抽出する自然言語処理サービスです。物理データ移送には利用しません。',
-            },
-            {
-                text: 'AWS Web Application Firewall (AWS WAF)',
-                isCorrect: false,
-                explanation:
-                    'WAF は Web リクエストを検査・制御するセキュリティサービスです。大量データを物理的に搬送するサービスではありません。',
-            },
-        ],
-        explanation:
-            'データ移行ではネットワーク転送が常に最適とは限りません。回線容量や移行期限によっては、物理デバイスを利用する Snow Family が選択肢になります。',
     },
     {
         question:
@@ -4233,7 +4105,7 @@ export const testQuestions: Question[] = [
                 text: 'Amazon Simple Email Service (Amazon SES)',
                 isCorrect: true,
                 explanation:
-                    'Amazon SES は、アプリケーションからマーケティングメールや注文確認などのトランザクションメールを送受信するためのメールプラットフォームです。API や SMTP インターフェースを利用して送信できます。',
+                    'Amazon SES は、アプリケーションからマーケティングメールや注文確認などのトランザクションメールを送信する代表的なメールプラットフォームです。API や SMTP インターフェースを利用して送信でき、要件によっては受信処理にも利用できます。',
             },
             {
                 text: 'Amazon Simple Queue Service (Amazon SQS)',
@@ -4255,7 +4127,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'SES は Simple Email Service の略で、アプリケーションにメール送受信機能を追加するためのサービスです。通知のメッセージングサービスである SNS とは用途を分けて理解します。',
+            'SES は Simple Email Service の略で、通知メールや確認メールなどの送信に広く利用され、一部のメール受信処理にも対応します。メッセージ通知サービスである SNS とは用途を分けて理解します。',
     },
     {
         question:
@@ -4294,22 +4166,22 @@ export const testQuestions: Question[] = [
             'Web アプリケーションの一般利用者について、サインアップとサインインを提供し、ユーザーディレクトリを管理したい場合に適したサービスはどれですか?',
         options: [
             {
-                text: 'Amazon Cognito user pools',
+                text: 'Amazon Cognito ユーザープール',
                 isCorrect: true,
                 explanation:
-                    'Amazon Cognito の user pool はアプリケーション利用者のユーザーディレクトリとして機能し、サインアップ、サインイン、認証トークンの発行などを提供できます。',
+                    'Amazon Cognito のユーザープールはアプリケーション利用者のユーザーディレクトリとして機能し、サインアップ、サインイン、認証トークンの発行などを提供できます。',
             },
             {
                 text: 'AWS IAM Identity Center',
                 isCorrect: false,
                 explanation:
-                    'IAM Identity Center は主に組織の従業員などが AWS アカウントや業務アプリケーションへアクセスするための集中管理に使います。一般向けアプリ利用者のサインアップ機能では Cognito user pools が代表的です。',
+                    'IAM Identity Center は主に組織の従業員などが AWS アカウントや業務アプリケーションへアクセスするための集中管理に使います。一般向けアプリ利用者のサインアップ機能では Cognito ユーザープールが代表的です。',
             },
             {
                 text: 'Amazon SES',
                 isCorrect: false,
                 explanation:
-                    'SES はメールの送受信に利用します。登録確認メールと組み合わせることはありますが、ユーザーディレクトリやサインインの中心サービスではありません。',
+                    'SES は通知メールや確認メールの送信などに利用します。登録確認メールと組み合わせることはありますが、ユーザーディレクトリやサインインの中心サービスではありません。',
             },
             {
                 text: 'AWS Glue',
@@ -4319,7 +4191,7 @@ export const testQuestions: Question[] = [
             },
         ],
         explanation:
-            'Cognito の user pools は「アプリのユーザーを認証する」役割です。認証済みまたはゲストユーザーに一時的な AWS 資格情報を渡す用途では identity pools も関係します。',
+            'Cognito のユーザープールは「アプリのユーザーを認証する」役割です。認証済みまたはゲストユーザーに一時的な AWS 資格情報を渡す用途では ID プール（identity pools）も関係します。',
     },
     {
         question:
@@ -4335,7 +4207,7 @@ export const testQuestions: Question[] = [
                 text: 'Amazon Simple Email Service (Amazon SES)',
                 isCorrect: false,
                 explanation:
-                    'SES はメール送受信に使用します。アプリのデータ取得・更新用 GraphQL API を提供するサービスではありません。',
+                    'SES はアプリケーションからのメール送信や一部のメール受信に使用します。アプリのデータ取得・更新用 GraphQL API を提供するサービスではありません。',
             },
             {
                 text: 'AWS Snow Family',
@@ -4390,7 +4262,7 @@ export const testQuestions: Question[] = [
             'メール・フロントエンド・ユーザー機能に関する AWS サービスの用途の対応関係として最も適切なものはどれですか?',
         options: [
             {
-                text: 'SES はメール送受信、Amplify は Web / モバイルアプリの構築・デプロイ支援、Cognito はアプリ利用者の認証、AppSync は GraphQL とリアルタイム API',
+                text: 'SES は通知メール・確認メールなどの送信や一部のメール受信、Amplify は Web / モバイルアプリの構築・デプロイ支援、Cognito はアプリ利用者の認証、AppSync は GraphQL とリアルタイム API',
                 isCorrect: true,
                 explanation:
                     '各サービスの代表的な役割を正しく対応付けています。アプリ利用者に近い機能では、通知、画面と開発支援、認証、データ API を目的に応じて組み合わせます。',
