@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useWindowSize } from '@vueuse/core'
-import { onMounted, shallowRef, watchEffect } from 'vue'
+import { onMounted, ref, shallowRef, watchEffect } from 'vue'
+import QuestionSetDebugMenu from './QuestionSetDebugMenu.vue'
 import type { Question } from '@/types/test_questions'
 
 interface Props {
@@ -9,10 +10,19 @@ interface Props {
     storageKey?: string
 }
 
+type DebugCompletionMode = 'correct' | 'incorrect' | 'random'
+
+interface TestQuestionsExposed {
+    debugCompleteQuiz: (mode: DebugCompletionMode) => void
+    resetQuiz: () => void
+}
+
 const props = defineProps<Props>()
 
 const { height } = useWindowSize()
 const testQuestions = shallowRef<Question[] | null>(null)
+const testQuestionsRef = ref<TestQuestionsExposed | null>(null)
+const isDebugAvailable = import.meta.env.DEV
 
 watchEffect(() => {
     document.title = props.title
@@ -21,16 +31,31 @@ watchEffect(() => {
 onMounted(async () => {
     testQuestions.value = await props.loadQuestions()
 })
+
+const runDebugCompletion = (mode: DebugCompletionMode) => {
+    testQuestionsRef.value?.debugCompleteQuiz(mode)
+}
+
+const resetFromDebugMenu = () => {
+    testQuestionsRef.value?.resetQuiz()
+}
 </script>
 
 <template>
     <div class="Page" :style="{ height: height + 'px' }">
         <h1 class="Page__h1">
+            <QuestionSetDebugMenu
+                v-if="isDebugAvailable"
+                :disabled="!testQuestions"
+                @complete="runDebugCompletion"
+                @reset="resetFromDebugMenu"
+            />
             {{ title }}
             <router-link to="/" class="Page__topLink">TOP</router-link>
         </h1>
         <TestQuestions
             v-if="testQuestions"
+            ref="testQuestionsRef"
             class="Page__testQuestions"
             :questions="testQuestions"
             :storage-key="storageKey"
@@ -95,6 +120,10 @@ onMounted(async () => {
         &__h1 {
             padding: 6px;
             font-size: 16px;
+        }
+
+        &__topLink {
+            right: 6px;
         }
     }
 }

@@ -280,6 +280,7 @@ const nextLabel = computed(() =>
     isLastQuestion.value ? '結果を見る →' : '次の問題 →',
 )
 
+type DebugCompletionMode = 'correct' | 'incorrect' | 'random'
 type OptionState = 'neutral' | 'pending' | 'correct' | 'wrongSelected' | 'wrong'
 
 function optionState(i: number): OptionState {
@@ -358,11 +359,36 @@ function prevQuestion() {
 function resetQuiz() {
     clearSavedState()
     questions.value = buildShuffled()
+    resetQuizProgress()
+}
+
+function resetQuizProgress() {
     selections.value = {}
     surrenderedQuestions.value = {}
     pendingSelection.value = null
     currentIndex.value = 0
     showResults.value = false
+}
+
+function retryPrioritizingIncorrect() {
+    clearSavedState()
+
+    const incorrectQuestions = questions.value.filter((_, index) => {
+        return !questionResult(index)
+    })
+    const correctQuestions = questions.value.filter((_, index) => {
+        return questionResult(index)
+    })
+    const reshuffleOptions = (question: Question): Question => ({
+        ...question,
+        options: shuffle(question.options),
+    })
+
+    questions.value = [
+        ...incorrectQuestions.map(reshuffleOptions),
+        ...shuffle(correctQuestions).map(reshuffleOptions),
+    ]
+    resetQuizProgress()
 }
 
 function confirmReset() {
@@ -372,6 +398,39 @@ function confirmReset() {
 
     resetQuiz()
 }
+
+function debugCompleteQuiz(mode: DebugCompletionMode) {
+    const nextSelections: Record<number, number> = {}
+    const nextSurrenderedQuestions: Record<number, true> = {}
+
+    questions.value.forEach((question, questionIndex) => {
+        const shouldBeCorrect =
+            mode === 'correct' ||
+            (mode === 'random' && Math.random() >= 0.5)
+        const optionIndex = question.options.findIndex(
+            (option) => option.isCorrect === shouldBeCorrect,
+        )
+
+        if (optionIndex >= 0) {
+            nextSelections[questionIndex] = optionIndex
+            return
+        }
+
+        nextSurrenderedQuestions[questionIndex] = true
+    })
+
+    selections.value = nextSelections
+    surrenderedQuestions.value = nextSurrenderedQuestions
+    pendingSelection.value = null
+    currentIndex.value = 0
+    showResults.value = true
+    scrollContentToTop()
+}
+
+defineExpose({
+    debugCompleteQuiz,
+    resetQuiz,
+})
 </script>
 
 <template>
@@ -629,13 +688,23 @@ function confirmReset() {
                         </li>
                     </ul>
 
-                    <button
-                        type="button"
-                        class="TestQuestions__retry"
-                        @click="resetQuiz"
-                    >
-                        もう一度挑戦する
-                    </button>
+                    <div class="TestQuestions__retryActions">
+                        <button
+                            type="button"
+                            class="TestQuestions__retry"
+                            @click="resetQuiz"
+                        >
+                            もう一度挑戦する
+                        </button>
+                        <button
+                            v-if="incorrectCount > 0"
+                            type="button"
+                            class="TestQuestions__retry TestQuestions__retry--priority"
+                            @click="retryPrioritizingIncorrect"
+                        >
+                            間違った問題を優先してもう一度挑戦する
+                        </button>
+                    </div>
                 </div>
             </el-scrollbar>
         </section>
@@ -1285,6 +1354,14 @@ function confirmReset() {
         box-shadow: 0 1px 2px rgba(46, 139, 87, 0.2);
     }
 
+    &__retryActions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+    }
+
     &__retry {
         padding: 14px 36px;
         font-size: 15px;
@@ -1298,6 +1375,17 @@ function confirmReset() {
 
         &:hover {
             background-color: #3b5ce0;
+        }
+
+        &--priority {
+            color: #385481;
+            background-color: #edf3ff;
+            border: 1px solid #afc4ed;
+
+            &:hover {
+                background-color: #dde8ff;
+                border-color: #88a8e6;
+            }
         }
 
         .TestQuestions__results--perfect & {
@@ -1445,6 +1533,12 @@ function confirmReset() {
 
         &__resultsInner {
             padding: 12px;
+        }
+
+        &__retry {
+            max-width: 100%;
+            padding: 12px 18px;
+            font-size: 13px;
         }
     }
 }

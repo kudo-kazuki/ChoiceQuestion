@@ -2,6 +2,7 @@
 // Do not edit it manually.
 
 export const questionSetCounts = {
+    '/aws_service/aws_service1': 1,
     '/cloudfront/cloudfront1': 62,
     '/cloudfront/cloudfront2': 55,
     '/dns/dns1': 86,

@@ -92,6 +92,14 @@ const questionSets = [
         level: 'Advanced',
         tone: 'indigo',
     },
+    {
+        title: 'AWSService1',
+        subtitle: 'AWSの代表サービスと基本的な用途',
+        description: 'サービスの役割と使いどころを幅広く確認',
+        to: '/aws_service/aws_service1',
+        level: 'Basic',
+        tone: 'blue',
+    },
 ] as const
 </script>
 
