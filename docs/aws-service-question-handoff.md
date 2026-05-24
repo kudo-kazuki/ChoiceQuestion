@@ -4,7 +4,8 @@
 
 次セッションでは、まず `.codex/AGENTS.md` とこのファイルを読んでから作業を再開すること。
 
-`AWSService1` は、AWS の代表的なサービスとその用途を広く学ぶための初級問題集である。
+`AWSService1` は、AWS の代表的なサービス名と説明を広く学ぶための初級問題集である。
+`AWSService2` は、用途からサービスを選ぶ問題、比較問題、組み合わせ問題を扱う問題集である。
 
 特定サービスを深掘りする問題集ではなく、次のような判断ができるようになることを目的とする。
 
@@ -20,19 +21,22 @@ AWS には多数のサービスがあるため、全サービス網羅は目指�
 
 ```txt
 src/pages/aws_service/aws_service1.vue
+src/pages/aws_service/aws_service2.vue
 src/assets/test_questions/aws_service/aws_service1.ts
+src/assets/test_questions/aws_service/aws_service2.ts
 ```
 
-- ページルートは `/aws_service/aws_service1`。
+- ページルートは `/aws_service/aws_service1` と `/aws_service/aws_service2`。
 - `aws_service1.vue` は `@/assets/test_questions/aws_service/aws_service1` を dynamic import する。
-- `src/pages/index.vue` のトップページカードに `AWSService1` を追加済み。
-- 現在の `aws_service1.ts` には、ページ表示確認用の S3 ダミー問題が1問だけ入っている。
-- 正式な問題追加を開始するときは、このダミー問題を削除してから追加する。
+- `aws_service2.vue` は `@/assets/test_questions/aws_service/aws_service2` を dynamic import する。
+- `src/pages/index.vue` のトップページカードに `AWSService1` と `AWSService2` を追加済み。
+- `aws_service1.ts` はサービス名から説明を選ぶ問題のみを置く。
+- `aws_service2.ts` は用途判断、比較、組み合わせ、対応関係の問題を置く。
 - `src/assets/test_questions/manifest.ts` は生成物のため手編集しない。問題追加後の `npm run build` に含まれる生成処理で更新する。
 
 ## 問題集の立ち位置
 
-`AWSService1` の難易度は Basic とする。応用版の `AWSService2` は現時点では作らない。
+`AWSService1` の難易度は Basic とする。`AWSService2` は Basic+ とし、`AWSService1` より少し判断要素のある問題を扱う。
 
 扱う内容:
 
@@ -54,14 +58,20 @@ src/assets/test_questions/aws_service/aws_service1.ts
 
 ## 問題形式
 
-中心にする問題形式は以下。
+`AWSService1` の問題文は、原則として次の形式に統一する。
 
-1. サービス説明問題
-   - 例: 「Amazon EC2 の説明として最も適切なものはどれですか?」
-2. 用途からサービスを選ぶ問題
+- `〇〇 の説明として最も適切なものはどれですか?`
+
+用途からサービスを選ぶ問題、複数サービスの比較問題、サービスの組み合わせ問題は `AWSService2` に置く。
+
+`AWSService2` で中心にする問題形式は以下。
+
+1. 用途からサービスを選ぶ問題
    - 例: 「仮想サーバーを起動して OS を管理したい。適切なサービスはどれですか?」
-3. 簡単なサービス組み合わせ問題
+2. 簡単なサービス組み合わせ問題
    - 例: 「静的 Web コンテンツを保存し、世界中に高速配信したい。適切な組み合わせはどれですか?」
+3. サービス比較・対応関係問題
+   - 例: 「SQS、SNS、EventBridge の用途の対応関係として最も適切なものはどれですか?」
 
 問題作成時の方針:
 
@@ -518,4 +528,3 @@ src/assets/test_questions/aws_service/aws_service1.ts
   - 例: `CloudWatch` と `CloudTrail`
   - 例: `RDS` と `DynamoDB`
 - 仕様や名称が変わる可能性のあるサービスは、問題作成時点で AWS 公式ドキュメントを確認する。
-
