@@ -1,7 +1,7 @@
 import type { Question } from '@/types/test_questions'
 
 export const testQuestions: Question[] = [
-    {
+{
             question:
                 'Lambda 関数が失敗したとき、まず確認する情報として最も適切なものはどれですか?',
             options: [
@@ -32,38 +32,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'ログには、エラーメッセージ、処理中に出力した情報、実行時間やメモリ使用量の手がかりが含まれます。',
-        },
-    {
-            question:
-                'CloudWatch Logs を使った Lambda の調査として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '関数のログを確認し、エラー行、リクエスト ID、処理時間などを手がかりに原因を絞る',
-                    isCorrect: true,
-                    explanation:
-                        'CloudWatch Logs では、エラー行や自分で出力したログ、リクエスト ID、CloudWatch Logs に自動出力される REPORT 行（実行時間やメモリ使用量などの実行結果情報）などを確認できます。これらを手がかりに原因を絞ります。',
-                },
-                {
-                    text: 'CloudWatch Logs を開けば、コードのバグが必ず自動修正される',
-                    isCorrect: false,
-                    explanation:
-                        'CloudWatch Logs はログ確認のためのサービスです。コードの自動修正は行いません。',
-                },
-                {
-                    text: 'ログを見るには必ず EC2 に SSH ログインする',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda のログは Lambda コンソールや CloudWatch コンソール、AWS CLI などから確認できます。EC2 への SSH ログインは不要です。',
-                },
-                {
-                    text: 'CloudWatch Logs は S3 バケットのフォルダ名を変更するための機能である',
-                    isCorrect: false,
-                    explanation:
-                        'CloudWatch Logs はログの保存・確認に使うサービスです。S3 のフォルダ名変更機能ではありません。',
-                },
-            ],
-            explanation:
-                '障害調査では、ログに出す情報も重要です。処理開始、外部サービス呼び出し前後、エラー時の情報を残すと原因を追いやすくなります。',
         },
     {
             question:
@@ -227,38 +195,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                '本番環境の Lambda が開発用 DynamoDB テーブルを参照してしまう場合、疑うべき設定として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '環境変数に設定したテーブル名が本番用ではなく開発用になっていないか',
-                    isCorrect: true,
-                    explanation:
-                        '環境変数でテーブル名を切り替えている場合、本番環境に開発用の値が入っていると誤ったテーブルを参照します。環境ごとの設定値を確認します。',
-                },
-                {
-                    text: 'Lambda 関数の説明欄が短すぎないか',
-                    isCorrect: false,
-                    explanation:
-                        '説明欄の長さは、参照先 DynamoDB テーブルの切り替えとは通常関係ありません。',
-                },
-                {
-                    text: 'CloudWatch Logs のログ保持期間が長すぎないか',
-                    isCorrect: false,
-                    explanation:
-                        'ログ保持期間は参照先テーブル名の設定とは別です。',
-                },
-                {
-                    text: 'SQS キューが存在するかどうか',
-                    isCorrect: false,
-                    explanation:
-                        'このシナリオでは、まず Lambda が参照しているテーブル名の設定を確認します。',
-                },
-            ],
-            explanation:
-                '環境変数は環境ごとの設定切り替えに便利ですが、値の入れ間違いは実務上よくあるトラブルです。',
-        },
-    {
-            question:
                 'テストイベントを使ったトラブルシューティングとして最も適切なものはどれですか?',
             options: [
                 {
@@ -288,38 +224,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'テストイベントは、関数ロジックを小さく確認するための有効な手段です。入力データの形が実際と違うと、見逃す問題もあります。',
-        },
-    {
-            question:
-                'Lambda のテストイベントで S3 イベントを再現したい場合、含める情報として自然なものはどれですか?',
-            options: [
-                {
-                    text: '対象のバケット名とオブジェクトキー',
-                    isCorrect: true,
-                    explanation:
-                        'S3 イベントを再現するなら、どのバケットのどのオブジェクトに対するイベントかを表す情報が重要です。オブジェクトキーは S3 内でのファイル名やパスのような識別子です。',
-                },
-                {
-                    text: 'Lambda 関数へ SSH ログインするためのパスワード',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda 関数へ SSH ログインする使い方はしません。テストイベントにも SSH パスワードを入れるべきではありません。',
-                },
-                {
-                    text: 'AWS アカウントのルートユーザーパスワード',
-                    isCorrect: false,
-                    explanation:
-                        'ルートユーザーパスワードをテストイベントに含めてはいけません。機密情報を不用意に入れないようにします。',
-                },
-                {
-                    text: 'CloudWatch Logs の保存期間だけ',
-                    isCorrect: false,
-                    explanation:
-                        'S3 イベントの再現には、バケット名やオブジェクトキーなど、実際のイベントに近い情報が必要です。',
-                },
-            ],
-            explanation:
-                'イベントの形が実際と違うと、コードが正しく動くか判断しにくくなります。AWS サービスごとのイベント形式を意識します。',
         },
     {
             question:
@@ -384,38 +288,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'ログは多ければよいわけではありません。調査に必要な情報を、機密情報を避けて出すことが大切です。',
-        },
-    {
-            question:
-                'Lambda 関数でエラーが発生したときの基本的な考え方として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '呼び出し方法や連携サービスによって、リトライや失敗時の扱いが変わる',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda の失敗時の挙動は、同期呼び出し、非同期呼び出し、SQS などのイベントソースマッピングで異なります。エラーが出たら、まず「どう呼び出されているか」を確認します。',
-                },
-                {
-                    text: 'どの呼び出し方法でも、失敗したイベントは必ず永久に保存される',
-                    isCorrect: false,
-                    explanation:
-                        '失敗したイベントが必ず永久保存されるわけではありません。呼び出し方式や設定によって、リトライ、破棄、失敗先への送信など挙動が変わります。',
-                },
-                {
-                    text: 'Lambda はエラーを返しても必ず成功扱いになる',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda 関数のエラーは呼び出し元やログで確認できます。成功扱いになるとは限りません。',
-                },
-                {
-                    text: 'エラーが出たら必ずメモリだけ最大にすればよい',
-                    isCorrect: false,
-                    explanation:
-                        'メモリ不足が原因のこともありますが、権限、入力データ、外部サービス、コードバグなど多くの原因があります。ログや呼び出し方式を確認します。',
-                },
-            ],
-            explanation:
-                '失敗時は「どの呼び出し方式か」「どこまで処理されたか」「再実行される可能性があるか」を確認します。',
         },
     {
             question:
@@ -611,38 +483,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'SQS メッセージ処理で重複実行に備える設計として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'メッセージ ID や業務 ID を使って、すでに処理済みか確認してから更新する',
-                    isCorrect: true,
-                    explanation:
-                        'SQS では同じメッセージが複数回処理される可能性があります。メッセージ ID や注文 ID などを使って処理済みか確認すると、重複登録や二重請求のような問題を避けやすくなります。',
-                },
-                {
-                    text: '重複実行は絶対に起きないので何も考えない',
-                    isCorrect: false,
-                    explanation:
-                        'SQS 連携では重複実行の可能性を考慮する必要があります。',
-                },
-                {
-                    text: '失敗したら必ず全ユーザーのデータを削除する',
-                    isCorrect: false,
-                    explanation:
-                        '全ユーザーのデータ削除は危険です。重複実行に備えた安全な処理を設計します。',
-                },
-                {
-                    text: 'Lambda 関数の名前を retry に変える',
-                    isCorrect: false,
-                    explanation:
-                        '関数名を変えても重複実行への備えにはなりません。処理済みチェックなどの設計が必要です。',
-                },
-            ],
-            explanation:
-                'キュー処理では、成功・失敗・再試行を前提に、同じメッセージが再度来ても安全な処理にします。',
-        },
-    {
-            question:
                 'SQS と Lambda の連携で、何度も失敗するメッセージへの基本的な考え方として最も適切なものはどれですか?',
             options: [
                 {
@@ -675,38 +515,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                '同じイベントが複数回処理される可能性がある場合、避けるべき実装はどれですか?',
-            options: [
-                {
-                    text: '重複チェックなしで、呼び出されるたびに同じ注文を新規作成する',
-                    isCorrect: true,
-                    explanation:
-                        '重複チェックなしで毎回新規作成すると、リトライや再処理で同じ注文が複数作られる可能性があります。注文 ID などを使って処理済みか確認する設計が必要です。',
-                },
-                {
-                    text: 'イベント ID を記録して、同じイベントなら二重処理を避ける',
-                    isCorrect: false,
-                    explanation:
-                        'イベント ID などを使って重複処理を避けるのは、冪等性を高めるための自然な設計です。',
-                },
-                {
-                    text: 'DynamoDB の条件付き書き込みなどで二重登録を防ぐ',
-                    isCorrect: false,
-                    explanation:
-                        '条件付き書き込みを使うと、すでに存在するデータを誤って重複作成しにくくできます。',
-                },
-                {
-                    text: '同じ入力で何度実行しても同じ結果になるように設計する',
-                    isCorrect: false,
-                    explanation:
-                        '同じ入力で何度実行しても安全な設計は、冪等性の考え方に合っています。',
-                },
-            ],
-            explanation:
-                'リトライがある構成では、処理が成功した後に同じイベントが再度来る可能性も考えます。',
-        },
-    {
-            question:
                 'Lambda の失敗時に「どこまで処理されたか」を考える理由として最も適切なものはどれですか?',
             options: [
                 {
@@ -736,38 +544,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 '失敗時の再試行を考えるときは、処理が完全に失敗したのか、一部だけ成功したのかを意識します。',
-        },
-    {
-            question:
-                'Lambda のリトライを前提にしたログ出力として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'イベント ID や処理対象 ID、開始・成功・失敗のログを出し、同じイベントの再処理を追えるようにする',
-                    isCorrect: true,
-                    explanation:
-                        'リトライがある場合、同じイベントが何度処理されたかを追えるログが役立ちます。イベント ID、注文 ID、ファイル名、開始・成功・失敗などを記録すると調査しやすくなります。',
-                },
-                {
-                    text: 'リトライがある場合はログを一切出さない',
-                    isCorrect: false,
-                    explanation:
-                        'ログがないと、同じイベントが何回処理されたか、どこで失敗したかを追いにくくなります。',
-                },
-                {
-                    text: 'パスワードや API キーを毎回ログに出す',
-                    isCorrect: false,
-                    explanation:
-                        'パスワードや API キーなどの機密情報をログに出してはいけません。',
-                },
-                {
-                    text: 'ログには必ず全ユーザーの個人情報を出す',
-                    isCorrect: false,
-                    explanation:
-                        '個人情報や機密情報を不用意にログへ出すのは避けます。調査に必要な範囲に絞ります。',
-                },
-            ],
-            explanation:
-                'リトライや重複処理を調査するには、同じイベントを識別できる情報を安全な範囲でログに残すことが有効です。',
         },
     {
             question:
@@ -995,38 +771,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'Lambda のコストを考えるときの説明として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'メモリを増やすと処理が速くなる場合もあるが、設定メモリと実行時間が料金に影響するため測定して判断する',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda ではメモリを増やすと CPU などの処理能力も増えるため、処理時間が短くなる場合があります。一方で料金にも影響するため、実行時間やコストを測定して判断します。',
-                },
-                {
-                    text: '常に最大メモリにすれば、必ず最安になる',
-                    isCorrect: false,
-                    explanation:
-                        '最大メモリが必ず最安とは限りません。処理時間の短縮と料金のバランスを測定して判断します。',
-                },
-                {
-                    text: '常に最小メモリにすれば、必ず最速になる',
-                    isCorrect: false,
-                    explanation:
-                        '最小メモリでは処理能力が足りず、実行時間が長くなる場合があります。',
-                },
-                {
-                    text: 'ログを大量に出してもコストや調査性には一切影響しない',
-                    isCorrect: false,
-                    explanation:
-                        'ログ量はコストや調査性に影響する場合があります。必要な情報を適切に出すことが重要です。',
-                },
-            ],
-            explanation:
-                'Lambda は「メモリを増やすと高い、少なくすると安い」と単純には言い切れません。処理時間も含めて見る必要があります。',
-        },
-    {
-            question:
                 'Lambda を使う判断として最も適切なものはどれですか?',
             options: [
                 {
@@ -1057,100 +801,4 @@ export const testQuestions: Question[] = [
             explanation:
                 'Lambda の判断では、イベント駆動か、短時間で終わるか、状態を外部化できるか、常駐が必要かを確認します。',
         },
-    {
-            question:
-                '短時間のイベント処理に Lambda が向いている理由として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'イベントが発生したときだけ関数を実行し、処理が終われば実行を終えられるため',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda はイベント駆動で、必要なときに関数を実行する仕組みです。短い処理を都度実行する用途では、サーバーを常時管理しなくてよい点が利点になります。',
-                },
-                {
-                    text: '必ず 1 台のサーバーを 24 時間起動し続けるため',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は利用者が 1 台のサーバーを常時起動管理するサービスではありません。',
-                },
-                {
-                    text: 'OS にログインして手動でプロセスを起動するため',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は OS にログインして手動でプロセスを起動する使い方ではありません。',
-                },
-                {
-                    text: '実行時間の上限がないため',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda には最大実行時間があります。短時間処理に向いている点を理解することが重要です。',
-                },
-            ],
-            explanation:
-                'Lambda は、ファイルアップロード、API 呼び出し、メッセージ到着、スケジュール時刻などをきっかけに短い処理を実行する用途に向いています。',
-        },
-    {
-            question:
-                '常駐処理が必要な場合の判断として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'Lambda だけにこだわらず、EC2、ECS、Fargate など常駐処理を扱いやすいサービスも検討する',
-                    isCorrect: true,
-                    explanation:
-                        '常時起動、長時間接続、OS やプロセスの細かい管理が必要な場合は、Lambda より EC2、ECS や Fargate（コンテナを実行・管理する AWS サービス）などが向くことがあります。',
-                },
-                {
-                    text: 'Lambda 関数内で無限ループを書けば、常駐処理として常に最適になる',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda にはタイムアウトがあり、無限ループで常駐処理を実現する設計には向きません。',
-                },
-                {
-                    text: '常駐処理が必要でも、必ず S3 イベントだけで実現する',
-                    isCorrect: false,
-                    explanation:
-                        'S3 イベントはファイル作成などをきっかけに処理する仕組みで、常駐処理の代替ではありません。',
-                },
-                {
-                    text: '常駐処理では IAM 権限を一切考えなくてよい',
-                    isCorrect: false,
-                    explanation:
-                        'どのサービスを使う場合でも、AWS リソースへアクセスするなら権限設計は重要です。',
-                },
-            ],
-            explanation:
-                'Lambda が向かないケースを判断できることも重要です。無理に Lambda へ寄せず、要件に合うサービスを選びます。',
-        },
-    {
-            question:
-                'Lambda の利用判断で「向かない可能性が高い」と考えるべき要件はどれですか?',
-            options: [
-                {
-                    text: '1 回の処理が最大実行時間を大きく超える見込みで、途中で分割しにくい',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda には 1 回の実行時間の上限があります。処理が上限を大きく超え、分割もしにくい場合は、別のコンピューティングサービスを検討します。',
-                },
-                {
-                    text: 'S3 にファイルが置かれたときだけ軽い処理をしたい',
-                    isCorrect: false,
-                    explanation:
-                        'S3 イベントで軽い処理を行う用途は Lambda に向いています。',
-                },
-                {
-                    text: 'API Gateway から短い処理を呼び出したい',
-                    isCorrect: false,
-                    explanation:
-                        '短い API バックエンド処理は Lambda の代表的な用途です。',
-                },
-                {
-                    text: 'EventBridge で 1 日 1 回だけ処理を起動したい',
-                    isCorrect: false,
-                    explanation:
-                        'EventBridge と Lambda の定期実行はよく使われる構成です。',
-                },
-            ],
-            explanation:
-                'Lambda に向くかどうかは、処理時間、状態管理、常駐性、イベント駆動との相性で判断します。',
-        }
-]
+    ]

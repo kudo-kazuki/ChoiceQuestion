@@ -1,7 +1,7 @@
 import type { Question } from '@/types/test_questions'
 
 export const testQuestions: Question[] = [
-    {
+{
             question:
                 'AWS Lambda の基本的な説明として最も適切なものはどれですか?',
             options: [
@@ -131,38 +131,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'S3 バケットに画像がアップロードされたときだけサムネイル作成処理を動かしたい場合、Lambda の使い方として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'S3 のオブジェクト作成イベントをトリガーにして Lambda 関数を実行する',
-                    isCorrect: true,
-                    explanation:
-                        'S3 のイベント通知を使うと、オブジェクト作成などをきっかけに Lambda 関数を起動できます。アップロード時だけ処理したい用途に合います。',
-                },
-                {
-                    text: 'Lambda 関数を常に起動したままにして、while ループで S3 を監視し続ける',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は常駐プロセスとして監視し続ける用途には向きません。S3 イベントを使って必要なときだけ起動する方が自然です。',
-                },
-                {
-                    text: 'EC2 インスタンスを必ず停止してから Lambda を実行する',
-                    isCorrect: false,
-                    explanation:
-                        'S3 イベントによる Lambda 実行に EC2 の停止は必要ありません。Lambda は EC2 の状態とは独立して利用できます。',
-                },
-                {
-                    text: 'S3 バケット名を Lambda 関数名と完全に同じにする',
-                    isCorrect: false,
-                    explanation:
-                        'S3 バケット名と Lambda 関数名を同じにする必要はありません。イベント通知や権限設定が重要です。',
-                },
-            ],
-            explanation:
-                'Lambda では、S3 にファイルが置かれた、API が呼ばれた、スケジュール時刻になった、というイベントを起点に処理を実行できます。',
-        },
-    {
-            question:
                 'Lambda と EC2 の違いとして最も適切なものはどれですか?',
             options: [
                 {
@@ -195,70 +163,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                '「Web アプリのバックエンド API を、アクセスがあったときだけ実行したい」という要件に対する Lambda の説明として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'API Gateway などからのリクエストをイベントとして受け取り、必要なときに Lambda 関数を実行できる',
-                    isCorrect: true,
-                    explanation:
-                        'API Gateway（HTTP API を公開・管理できるサービス）と Lambda を組み合わせると、HTTP リクエストをきっかけに Lambda 関数を実行する API バックエンドを作れます。',
-                },
-                {
-                    text: 'Lambda は HTTP リクエストに一切対応できないため、API のバックエンドには使えない',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は API Gateway や Lambda Function URLs などと組み合わせて HTTP リクエストを処理できます。',
-                },
-                {
-                    text: 'Lambda を使うには必ず EC2 上で Web サーバーを起動しておく必要がある',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda の実行に EC2 上の Web サーバーを必ず用意する必要はありません。API Gateway などから直接呼び出せます。',
-                },
-                {
-                    text: 'Lambda は常に 1 台の固定サーバー上で待ち受け続けるサービスである',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は利用者が 1 台の固定サーバーを意識して常時待ち受けさせるサービスではありません。イベントに応じて実行されます。',
-                },
-            ],
-            explanation:
-                'Lambda は API のバックエンド、自動化処理、イベント処理などでよく使われます。リクエストが来たときだけ処理する設計と相性が良いです。',
-        },
-    {
-            question:
-                'Lambda が「常時起動サーバーではない」ことを踏まえた説明として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '関数はイベントや呼び出しに応じて実行され、利用者がサーバープロセスを常駐管理する前提ではない',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda は、イベントが発生したときに関数を実行するサービスです。利用者が OS 上でプロセスを常駐させて管理する設計ではありません。',
-                },
-                {
-                    text: 'Lambda 関数は一度作成すると、コードがなくても 24 時間同じ処理を実行し続ける',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda はコードなしで処理を実行し続けるものではありません。関数コードを用意し、呼び出しに応じて実行されます。',
-                },
-                {
-                    text: 'Lambda ではイベントがなくても、すべての関数が常に CPU を使い続ける',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda はイベントや呼び出しがない間、利用者の関数コードが常に CPU を使い続ける前提ではありません。',
-                },
-                {
-                    text: 'Lambda を使う場合は必ず SSH でログインし、常駐プロセスを起動する',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda では SSH でログインして常駐プロセスを起動する使い方はしません。関数コードと設定をデプロイして実行します。',
-                },
-            ],
-            explanation:
-                'Lambda を設計するときは、サーバープロセスを起動し続けるのではなく、呼び出されたときに処理を完了する関数として考えることが重要です。',
-        },
-    {
-            question:
                 '長時間起動し続けるチャットサーバーのように、常時接続を維持するプロセスを自分で管理したい場合の判断として最も適切なものはどれですか?',
             options: [
                 {
@@ -288,70 +192,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'Lambda は便利ですが、何にでも最適なわけではありません。常時起動や長時間処理が中心なら、別のコンピューティングサービスも候補になります。',
-        },
-    {
-            question:
-                'Lambda の使いどころとして最も自然なものはどれですか?',
-            options: [
-                {
-                    text: 'S3 へのファイルアップロードをきっかけに、短い変換処理を実行する',
-                    isCorrect: true,
-                    explanation:
-                        'S3 イベントをトリガーにして Lambda を起動し、画像変換やメタデータ抽出などの短い処理を行う構成はよく使われます。',
-                },
-                {
-                    text: 'OS にログインして GUI アプリを常時起動し続ける',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda は OS にログインして GUI アプリを常時起動する用途には向きません。',
-                },
-                {
-                    text: '1 台の仮想サーバーに固定 IP を付けて、手動でミドルウェアを管理する',
-                    isCorrect: false,
-                    explanation:
-                        'これは EC2 のような仮想サーバーの使い方に近いです。Lambda はサーバーを直接管理する用途ではありません。',
-                },
-                {
-                    text: 'リレーショナルデータベースのデータファイルを直接保存する',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda はデータベースのデータファイルを保存するストレージサービスではありません。データ保存には RDS、DynamoDB、S3 などを検討します。',
-                },
-            ],
-            explanation:
-                'Lambda は、イベントをきっかけに短い処理を実行する用途に向いています。サーバー管理を減らしたい自動化処理にも適しています。',
-        },
-    {
-            question:
-                'Lambda 関数の役割として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'イベントを受け取り、決められた処理を実行する小さなプログラムとして動く',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda 関数は、イベント（何かが起きたという通知や出来事）を受け取り、その内容に応じてコードを実行する単位です。1 つの役割を持つ小さなプログラムとして考えると理解しやすいです。',
-                },
-                {
-                    text: 'AWS アカウント全体の請求情報を集計するためだけの設定項目',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda 関数は請求情報を集計するだけの設定項目ではありません。コードを実行するための単位です。',
-                },
-                {
-                    text: 'S3 バケットに保存されたファイル名を自動的に変更する専用機能',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda を使って S3 オブジェクトに関する処理を実装することはできますが、Lambda 関数自体は S3 ファイル名変更専用の機能ではありません。',
-                },
-                {
-                    text: 'EC2 インスタンスにログインするためのユーザー名',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda 関数は EC2 のログインユーザー名ではありません。Lambda の実行基盤上でコードを実行する単位です。',
-                },
-            ],
-            explanation:
-                'Lambda 関数は、イベントを受けて処理を行い、必要に応じて結果を返します。処理内容、ランタイム、メモリ、タイムアウトなどの設定を関数単位で管理します。',
         },
     {
             question:
@@ -451,38 +291,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'Python で書いた Lambda 関数を実行したい場合、基本的に選ぶべき設定として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: 'Python のランタイムを選ぶ',
-                    isCorrect: true,
-                    explanation:
-                        'Python で書いたコードを Lambda で実行するには、Python のランタイム（Python コードを実行するための環境）を選びます。',
-                },
-                {
-                    text: '必ず Java のランタイムを選ぶ',
-                    isCorrect: false,
-                    explanation:
-                        'Python のコードを Java ランタイムでそのまま実行することはできません。コードの言語に合ったランタイムを選びます。',
-                },
-                {
-                    text: 'ランタイムはどの言語を選んでも実行結果は必ず同じになる',
-                    isCorrect: false,
-                    explanation:
-                        'ランタイムは関数コードを実行する言語環境なので、コードの言語と合っている必要があります。',
-                },
-                {
-                    text: 'ランタイムを選ばずに S3 バケット名だけ指定する',
-                    isCorrect: false,
-                    explanation:
-                        'S3 バケット名だけでは Lambda 関数のコードを実行できません。コードを実行するためのランタイム設定が必要です。',
-                },
-            ],
-            explanation:
-                'Lambda では、コードの言語とランタイムの対応を意識します。初級段階では「Python のコードなら Python ランタイム」のように考えると十分です。',
-        },
-    {
-            question:
                 'Lambda 関数がイベントオブジェクトを受け取る説明として最も適切なものはどれですか?',
             options: [
                 {
@@ -512,38 +320,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'イベントオブジェクトは、多くの場合 JSON（キーと値で構成されたデータ形式）をもとにしたオブジェクトとして扱います。どのような項目が入るかは、呼び出し元のサービスによって変わります。',
-        },
-    {
-            question:
-                'S3 のオブジェクト作成イベントで Lambda が起動された場合、イベントオブジェクトから確認する情報として自然なものはどれですか?',
-            options: [
-                {
-                    text: '作成されたオブジェクトのバケット名やキー',
-                    isCorrect: true,
-                    explanation:
-                        'S3 イベントでは、どのバケットのどのオブジェクトに関するイベントかをイベントデータから確認できます。キーは S3 オブジェクトの名前やパスのような識別子です。',
-                },
-                {
-                    text: 'Lambda 関数に SSH 接続するためのパスワード',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda に SSH 接続して管理する使い方はしません。イベントオブジェクトに SSH パスワードが入るわけではありません。',
-                },
-                {
-                    text: 'AWS アカウントのルートユーザーパスワード',
-                    isCorrect: false,
-                    explanation:
-                        'イベントオブジェクトにルートユーザーのパスワードが入ることはありません。認証情報をイベントに含める設計は避けるべきです。',
-                },
-                {
-                    text: 'EC2 インスタンスの OS パッチ適用履歴だけ',
-                    isCorrect: false,
-                    explanation:
-                        'S3 イベントは S3 オブジェクトに関する出来事を表します。EC2 の OS パッチ履歴を表すものではありません。',
-                },
-            ],
-            explanation:
-                'イベントオブジェクトの中身は、何をきっかけに Lambda が起動されたかで変わります。S3 ならバケット名やオブジェクトキー、API Gateway なら HTTP リクエスト情報などが代表例です。',
         },
     {
             question:
@@ -675,38 +451,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'Lambda で新しい実行環境が作成される場面として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '既存の実行環境を使えないときに、Lambda がコードやランタイムを準備して新しい環境を作成する',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda は必要に応じて新しい実行環境を作成します。その際、関数コードの準備、ランタイム（言語ごとの実行環境）の起動、ハンドラー外に書かれた初期化コードの実行などが行われます。',
-                },
-                {
-                    text: '利用者が EC2 に SSH でログインしたときだけ作成される',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda の実行環境作成は、EC2 への SSH ログインとは関係ありません。Lambda の呼び出しやスケーリングに応じて AWS 側で管理されます。',
-                },
-                {
-                    text: 'S3 バケットを作成するたびに必ず同じ数だけ作成される',
-                    isCorrect: false,
-                    explanation:
-                        'S3 バケット作成と Lambda の実行環境数は直接対応しません。Lambda の実行環境は関数の呼び出し状況に応じて扱われます。',
-                },
-                {
-                    text: 'Lambda 関数を保存しただけで、常に無限個作成される',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda 関数を作成・保存しただけで無限に実行環境が作成されるわけではありません。呼び出し状況に応じて必要な環境が用意されます。',
-                },
-            ],
-            explanation:
-                '新しい実行環境を準備する処理は、初回実行や既存環境を使えない場合の実行時間に影響することがあります。',
-        },
-    {
-            question:
                 'Lambda の「コールドスタート」の説明として最も適切なものはどれですか?',
             options: [
                 {
@@ -835,38 +579,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'Lambda のハンドラー外に置く初期化処理として自然なものはどれですか?',
-            options: [
-                {
-                    text: 'AWS SDK クライアントの作成や設定ファイルの読み込みなど、呼び出しごとに毎回変わらない準備',
-                    isCorrect: true,
-                    explanation:
-                        'AWS SDK（AWS サービスをコードから操作するためのライブラリ）クライアントの作成や設定ファイルの読み込みなど、呼び出しごとに毎回変わらない準備は、ハンドラー外に置くことで実行環境の再利用時に効率化できる場合があります。',
-                },
-                {
-                    text: 'イベントオブジェクトから今回アップロードされたファイル名を読む処理',
-                    isCorrect: false,
-                    explanation:
-                        'イベントオブジェクトは呼び出しごとに変わるため、今回のイベント内容を読む処理は通常ハンドラー内で行います。',
-                },
-                {
-                    text: '今回の API リクエスト本文を解析する処理',
-                    isCorrect: false,
-                    explanation:
-                        'API リクエスト本文は呼び出しごとに変わる情報です。通常はハンドラー内でイベントから読み取ります。',
-                },
-                {
-                    text: '今回だけ使うユーザー入力をグローバル変数に保存する処理',
-                    isCorrect: false,
-                    explanation:
-                        '今回だけのユーザー入力をグローバル変数に保存すると、実行環境の再利用時に別の呼び出しへ影響する可能性があります。',
-                },
-            ],
-            explanation:
-                'ハンドラー外には「呼び出しごとに変わらない準備」、ハンドラー内には「今回のイベントに依存する処理」を置くと整理しやすいです。',
-        },
-    {
-            question:
                 'Lambda でグローバル変数を使うときの注意点として最も適切なものはどれですか?',
             options: [
                 {
@@ -896,38 +608,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'グローバル変数は「再利用してよいもの」と「呼び出しごとに分けるべきもの」を区別して使います。',
-        },
-    {
-            question:
-                'Lambda の実行環境が再利用されたときに起きる可能性があるものはどれですか?',
-            options: [
-                {
-                    text: 'ハンドラー外で作成したクライアントや一時的なキャッシュを再利用できる場合がある',
-                    isCorrect: true,
-                    explanation:
-                        '同じ実行環境が再利用されると、ハンドラー外で初期化したオブジェクトや一時的なキャッシュ（一時的に保持して再利用するデータ）が残っている場合があります。これにより後続の呼び出しが速くなることがあります。',
-                },
-                {
-                    text: '前回の戻り値が必ず次回のイベントオブジェクトとして渡される',
-                    isCorrect: false,
-                    explanation:
-                        '前回の戻り値が次回のイベントオブジェクトとして必ず渡されるわけではありません。イベントは呼び出し元から渡されるデータです。',
-                },
-                {
-                    text: 'すべての利用者の関数が同じメモリ空間を共有する',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda の実行環境は分離されています。すべての利用者の関数が同じメモリ空間を共有するわけではありません。',
-                },
-                {
-                    text: 'Lambda 関数が自動的に EC2 インスタンスへ変換される',
-                    isCorrect: false,
-                    explanation:
-                        '実行環境が再利用されても、Lambda 関数が EC2 インスタンスへ変換されるわけではありません。',
-                },
-            ],
-            explanation:
-                '再利用により効率化できることはありますが、再利用されるかどうかや保持期間をアプリケーション側で保証することはできません。',
         },
     {
             question:
@@ -1187,38 +867,6 @@ export const testQuestions: Question[] = [
         },
     {
             question:
-                'Lambda の `/tmp` を使うときの注意点として最も適切なものはどれですか?',
-            options: [
-                {
-                    text: '実行環境が破棄されると消える可能性があるため、永続保存先として使わない',
-                    isCorrect: true,
-                    explanation:
-                        '`/tmp` は一時領域です。同じ実行環境が再利用されるとファイルが残っている場合もありますが、永続保存は保証されません。重要なデータは S3 などに保存します。',
-                },
-                {
-                    text: '`/tmp` に保存したファイルは、すべての AWS アカウントから必ず参照できる',
-                    isCorrect: false,
-                    explanation:
-                        '`/tmp` はすべての AWS アカウントで共有される領域ではありません。Lambda の実行環境ごとの一時領域です。',
-                },
-                {
-                    text: '`/tmp` にファイルを置くと、Lambda のタイムアウトが無効になる',
-                    isCorrect: false,
-                    explanation:
-                        '`/tmp` を使ってもタイムアウトは無効になりません。関数は設定された最大実行時間内に完了する必要があります。',
-                },
-                {
-                    text: '`/tmp` は Lambda では読み書きできない',
-                    isCorrect: false,
-                    explanation:
-                        'Lambda では `/tmp` に一時ファイルを書き込めます。ただし、一時領域として扱うことが重要です。',
-                },
-            ],
-            explanation:
-                '実行環境の再利用により `/tmp` のファイルが残っていることはありますが、それを必ず期待する設計は避けます。',
-        },
-    {
-            question:
                 'Lambda のログ出力について最も適切な説明はどれですか?',
             options: [
                 {
@@ -1248,38 +896,6 @@ export const testQuestions: Question[] = [
             ],
             explanation:
                 'Lambda のトラブルシューティングではログ確認が重要です。どこまで処理が進んだか、どんなエラーが出たかをログで追います。',
-        },
-    {
-            question:
-                'Lambda 関数が CloudWatch Logs にログを書き込めない場合、まず疑うべきものはどれですか?',
-            options: [
-                {
-                    text: 'Lambda の実行ロールにログ書き込み権限が不足している',
-                    isCorrect: true,
-                    explanation:
-                        'Lambda が CloudWatch Logs にログを書き込むには、実行ロール（IAM を使って Lambda 関数へ AWS リソースへのアクセス権限を与える仕組み）に必要な権限が必要です。',
-                },
-                {
-                    text: '関数名が 1 文字でない',
-                    isCorrect: false,
-                    explanation:
-                        '関数名が 1 文字でないことは、ログを書き込めない主な原因ではありません。',
-                },
-                {
-                    text: '`/tmp` ディレクトリにファイルが 1 つもない',
-                    isCorrect: false,
-                    explanation:
-                        '`/tmp` のファイル有無は、CloudWatch Logs へのログ書き込み権限とは直接関係しません。',
-                },
-                {
-                    text: 'メモリ設定が 10,240 MB ではない',
-                    isCorrect: false,
-                    explanation:
-                        '最大メモリでないことがログ出力不可の主な原因ではありません。まずは権限やログ出力処理を確認します。',
-                },
-            ],
-            explanation:
-                'Lambda から他の AWS サービスへアクセスするには権限が必要です。ログ出力も CloudWatch Logs への書き込み権限が関係します。',
         },
     {
             question:
